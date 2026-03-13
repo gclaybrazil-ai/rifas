@@ -3,134 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top Sorte - Rifa Online</title>
-    <!-- Tailwind CSS (via CDN para simplicidade) -->
+    <title>Top Sorte - Início</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="frontend/css/style.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .card-image-gradient {
+            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%);
+        }
+        .text-shadow {
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans pb-32">
+<body class="bg-gray-50 text-gray-800 antialiased pb-24">
 
     <!-- Header -->
-    <header class="bg-white shadow">
-        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+    <header class="bg-white shadow sticky top-0 z-40">
+        <div class="max-w-md md:max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
             <h1 class="text-2xl font-black italic tracking-tighter" style="color: #00a650;">TOP<span style="color: #2c3e50;">SORTE</span></h1>
-            <a href="admin/index.html" class="text-xs font-medium text-gray-400 border border-gray-200 rounded px-2 py-1">Admin</a>
+            <div class="flex gap-2">
+                <a href="admin/index.html" class="flex items-center gap-1 text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Painel
+                </a>
+            </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-md md:max-w-2xl mx-auto mt-6 px-4 bg-white rounded-xl shadow p-6 border border-gray-100 mb-10">
-        <div class="text-center mb-6">
-            <h2 class="text-lg md:text-xl font-extrabold text-[#2c3e50] uppercase tracking-wide">Grade de Números</h2>
-            <div class="inline-block bg-[#00a650] text-white text-[10px] md:text-xs px-3 py-1 mt-2 rounded-full font-bold uppercase tracking-wider shadow-sm">
-                Sorteio pelo jogo do bicho
+    <main class="max-w-md md:max-w-2xl mx-auto px-4 mt-6">
+        
+        <!-- Welcome / CTA section -->
+        <div class="mb-6 flex justify-between items-end">
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold text-[#2c3e50] tracking-tight">Prêmios Ativos</h2>
+                <p class="text-sm text-gray-500 font-medium">Escolha seu prêmio e participe!</p>
             </div>
-            <p class="text-xs text-gray-400 mt-2 font-medium">Selecione os números em verde</p>
         </div>
 
-        <!-- Legenda -->
-        <div class="flex justify-center gap-3 text-[10px] sm:text-xs font-semibold mb-6 flex-wrap">
-            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#00a650]"></span> DISPONÍVEL</div>
-            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#f1c40f]"></span> EM RESERVA</div>
-            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#8e44ad]"></span> PAGO</div>
-            <div class="flex items-center gap-1"><span class="w-3 h-3 border-2 border-[#8e44ad] rounded-full bg-white"></span> SELECIONADO</div>
-        </div>
-
-        <!-- Grade de Números -->
-        <div id="grid-container" class="grid-numbers">
+        <!-- Grid de Campanhas -->
+        <div id="campaign-list" class="flex flex-col gap-6">
             <!-- Injetado via JS -->
-            <div class="text-center w-full py-10 font-bold text-gray-400 col-span-5 md:col-span-10">Carregando números...</div>
+            <!-- Skeleton Loader -->
+            <div class="animate-pulse bg-gray-200 h-80 rounded-3xl w-full"></div>
+            <div class="animate-pulse bg-gray-200 h-80 rounded-3xl w-full"></div>
+        </div>
+
+        <!-- Ganhadores Section -->
+        <div class="mt-10 mb-4">
+            <h2 class="text-xl font-bold text-[#2c3e50] tracking-tight mb-4">Últimos Ganhadores</h2>
+            <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" alt="Ganhador" class="w-16 h-16 rounded-full object-cover border-2 border-[#00a650] shadow">
+                <div>
+                    <h3 class="font-bold text-gray-800">Maria Silva <span class="bg-yellow-100 text-yellow-800 text-[10px] uppercase px-2 py-0.5 rounded-full ml-1">#12</span></h3>
+                    <p class="text-xs text-gray-500 font-medium line-clamp-1">Ganhou o Smartphone no último sorteio. Você pode ser o próximo!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Como Participar -->
+        <div class="mt-10 bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold text-[#2c3e50] text-center tracking-tight mb-6">Como Participar?</h2>
+            
+            <div class="flex flex-col gap-5">
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center shrink-0">1</div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Escolha a Rifa</h4>
+                        <p class="text-xs text-gray-500">Selecione o prêmio que deseja concorrer.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 rounded-full bg-green-100 text-[#00a650] font-bold flex items-center justify-center shrink-0">2</div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Selecione seus Números</h4>
+                        <p class="text-xs text-gray-500">Quanto mais números, mais chances de ganhar.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shrink-0">3</div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Faça o Pagamento</h4>
+                        <p class="text-xs text-gray-500">Pgamento via PIX com aprovação imediata.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
-    <!-- Footer Bar -->
-    <div class="fixed bottom-0 w-full left-0 bg-white border-t border-gray-200 p-3 shadow-lg z-40 transform translate-y-full transition-transform duration-300" id="bottom-bar">
-        <div class="max-w-4xl mx-auto flex justify-between items-center h-full gap-4 px-2">
-            <div class="flex flex-col flex-1 pl-2">
-                <span class="text-xs font-bold text-gray-500 uppercase flex items-center gap-1">
-                    <span id="selected-count">0</span> Selecionados
-                </span>
-                <span class="text-sm font-black text-[#2c3e50]" id="selected-total">Total: R$ 0,00</span>
-            </div>
-            <button id="btn-open-reserve-modal" class="bg-[#8e44ad] text-white font-bold py-3 px-6 rounded-lg shadow uppercase text-sm w-1/2 flex-none hover:bg-[#7b3699] transition-colors">
-                Reservar Agora
-            </button>
+    <!-- Navigation Bar (Botton App Style) -->
+    <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 z-50 px-6 py-2 pb-4">
+        <div class="max-w-md md:max-w-2xl mx-auto flex justify-around items-center">
+            <!-- Home -->
+            <a href="#" class="flex flex-col items-center gap-1 text-[#00a650]">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+                <span class="text-[10px] font-bold">Início</span>
+            </a>
+            <!-- Pedidos -->
+            <a href="#" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                <span class="text-[10px] font-bold">Meus Números</span>
+            </a>
+            <!-- Suporte -->
+            <a href="#" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span class="text-[10px] font-bold">Ajuda</span>
+            </a>
         </div>
-    </div>
+    </nav>
 
-    <!-- Modais Overlay -->
-    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm"></div>
-
-    <!-- Modal Reservar -->
-    <div id="modal-reserve" class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm rounded-[1.5rem] p-6 z-50 flex-col gap-4 hidden overflow-hidden shadow-2xl">
-        <div class="flex justify-between items-center mb-4 text-[#00a650]">
-            <h3 class="font-bold text-lg text-[#00a650] uppercase w-full text-center">Reservar Meus Números</h3>
-        </div>
-        
-        <div class="mb-5 text-center bg-gray-50 rounded-lg p-3 border border-gray-100">
-            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Resumo da sua sorte</p>
-            <div id="modal-selected-nums" class="flex flex-wrap justify-center gap-1 mb-2"></div>
-            <p class="font-black text-2xl text-[#2c3e50]" id="modal-total-value">R$ 0,00</p>
-        </div>
-
-        <div class="flex flex-col gap-3">
-            <div>
-                <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Nome Completo</label>
-                <input type="text" id="input-name" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#00a650] focus:border-[#00a650] outline-none" placeholder="Digite seu nome" required>
-            </div>
-            <div>
-                <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Seu WhatsApp</label>
-                <input type="tel" id="input-whatsapp" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#00a650] focus:border-[#00a650] outline-none" placeholder="(00) 00000-0000" required>
-            </div>
-        </div>
-
-        <button id="btn-submit-reservation" class="w-full bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-5 hover:bg-[#009b4a] transition-colors relative overflow-hidden group">
-            Prosseguir para Pagamento
-        </button>
-
-        <button id="btn-close-reserve-modal" class="w-full text-gray-400 font-semibold py-2 uppercase text-[10px] mt-2 underline hover:text-gray-600 transition-colors">
-            Desistir e Liberar Números
-        </button>
-    </div>
-
-    <!-- Modal PIX -->
-    <div id="modal-pix" class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm rounded-[1.5rem] p-6 text-center z-50 flex-col gap-4 hidden shadow-2xl">
-        <h3 class="font-bold text-lg text-[#00a650] uppercase mb-2">Pagamento PIX</h3>
-        
-        <div class="bg-red-50 text-red-600 font-bold p-3 rounded-lg border border-red-100 flex items-center justify-center gap-2 mb-4">
-            <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span id="countdown">05:00</span>
-        </div>
-
-        <p class="text-xs font-bold text-gray-500 mb-4 px-2 tracking-wide uppercase">
-            Quase lá! Seu número está reservado. Complete o pagamento para garantir sua participação.
-        </p>
-
-        <div class="flex justify-center mb-4">
-            <img id="pix-qrcode-img" src="" alt="QR Code PIX" class="w-48 h-48 border border-gray-200 rounded p-1 object-cover">
-        </div>
-
-        <div class="relative w-full">
-            <input type="text" id="pix-copiacola-input" readonly class="text-xs w-full bg-gray-100 border border-gray-200 rounded-lg p-3 font-mono text-gray-600 pr-12 focus:outline-none focus:ring-1 focus:ring-gray-300" value="">
-        </div>
-
-        <button id="btn-copy-pix" class="w-full bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-4 inline-flex items-center justify-center gap-2 hover:bg-[#009b4a]">
-            Copiar Código PIX
-        </button>
-
-        <p class="text-xs text-gray-400 mt-4 italic">O pagamento é confirmado automaticamente pelo sistema. Aguarde nesta tela.</p>
-    </div>
-
-    <!-- Modal Success -->
-    <div id="modal-success" class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-xs rounded-2xl p-6 text-center z-50 flex-col gap-4 hidden shadow-2xl">
-        <div class="w-16 h-16 bg-[#00a650] rounded-full mx-auto flex items-center justify-center mb-2 shadow-inner">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-        </div>
-        <h3 class="font-extrabold text-[#2c3e50] text-xl">Números Confirmados</h3>
-        <p class="text-xs text-gray-500 font-medium">Parabéns! Seus números foram pagos com sucesso. Boa sorte no sorteio!</p>
-        <button id="btn-close-success" class="bg-[#8e44ad] text-white font-bold font-sm py-3 px-6 rounded-lg w-full mt-4 hover:bg-[#7b3699] uppercase shadow">OK</button>
-    </div>
-
-    <script src="frontend/js/app.js"></script>
+    <script src="frontend/js/home.js"></script>
 </body>
 </html>
