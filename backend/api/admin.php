@@ -1,11 +1,9 @@
 <?php
+session_start();
 header('Content-Type: application/json');
 require_once '../config.php';
 
-// Simples auth baseada em querystring para o protótipo (na vida real JWT ou session)
-$pass = $_GET['auth'] ?? $_POST['auth'] ?? '';
-// Apenas para protótipo: senha hardcoded (admin123)
-if($pass !== 'admin123') {
+if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     die(json_encode(['error' => 'Não autorizado']));
 }
 
@@ -18,7 +16,6 @@ if($action === 'stats') {
     $stmt = $pdo->query("SELECT SUM(valor_total) FROM reservas WHERE status = 'pago'");
     $faturamento = $stmt->fetchColumn() ?: 0;
     
-    // Obter reservas
     $stmt = $pdo->query("SELECT * FROM reservas ORDER BY data_reserva DESC LIMIT 50");
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

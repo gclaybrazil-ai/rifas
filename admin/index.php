@@ -1,3 +1,10 @@
+<?php
+session_start();
+if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -99,13 +106,11 @@
 
 
     <script>
-        // Simple mock authentication token
-        const AUTH = 'admin123';
         const API = '../backend/api/admin.php';
 
         async function fetchStats() {
             try {
-                const res = await fetch(`${API}?auth=${AUTH}&action=stats`);
+                const res = await fetch(`${API}?action=stats`);
                 const data = await res.json();
                 
                 document.getElementById('stat-livre').textContent = data.stats['disponivel'] || 0;
@@ -155,7 +160,6 @@
         async function markPaid(id) {
             if(!confirm('Marcar esta reserva como PAGA manualmente?')) return;
             const fd = new URLSearchParams();
-            fd.append('auth', AUTH);
             fd.append('action', 'mark_paid');
             fd.append('id', id);
 
@@ -166,7 +170,6 @@
         document.getElementById('btn-reset').addEventListener('click', async () => {
              if(prompt('Tem certeza? Digite "RESETAR" para liberar todos os números e excluir as reservas.') === 'RESETAR') {
                  const fd = new URLSearchParams();
-                 fd.append('auth', AUTH);
                  fd.append('action', 'reset_rifa');
                  await fetch(API, { method: 'POST', body: fd });
                  fetchStats();
@@ -177,7 +180,6 @@
         document.getElementById('btn-draw').addEventListener('click', async () => {
              if(confirm('Sortear um número ganhador entre os PAGOS?')) {
                  const fd = new URLSearchParams();
-                 fd.append('auth', AUTH);
                  fd.append('action', 'draw');
                  
                  const res = await fetch(API, { method: 'POST', body: fd });
