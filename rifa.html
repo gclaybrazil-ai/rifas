@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,14 +9,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="frontend/css/style.css">
 </head>
+
 <body class="bg-gray-100 text-gray-800 font-sans pb-32">
 
     <!-- Header -->
     <header class="bg-white shadow">
         <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-black italic tracking-tighter" style="color: #00a650;">TOP<span style="color: #2c3e50;">SORTE</span></h1>
-            <a href="index.html" class="text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full px-3 py-1.5 transition-colors flex items-center gap-1">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <h1 class="text-2xl font-black italic tracking-tighter" style="color: #00a650;">TOP<span
+                    style="color: #2c3e50;">SORTE</span></h1>
+            <a href="index.html"
+                class="text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full px-3 py-1.5 transition-colors flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
                 Voltar
             </a>
         </div>
@@ -25,7 +32,8 @@
     <main class="max-w-md md:max-w-2xl mx-auto mt-6 px-4 bg-white rounded-xl shadow p-6 border border-gray-100 mb-10">
         <div class="text-center mb-6">
             <h2 class="text-lg md:text-xl font-extrabold text-[#2c3e50] uppercase tracking-wide">Grade de Números</h2>
-            <div id="badge-sorteio" class="inline-block bg-[#00a650] text-white text-[10px] md:text-xs px-3 py-1 mt-2 rounded-full font-bold uppercase tracking-wider shadow-sm">
+            <div id="badge-sorteio"
+                class="inline-block bg-[#00a650] text-white text-[10px] md:text-xs px-3 py-1 mt-2 rounded-full font-bold uppercase tracking-wider shadow-sm">
                 Sorteio oficial...
             </div>
             <p class="text-xs text-gray-400 mt-2 font-medium">Selecione os números em verde</p>
@@ -33,21 +41,26 @@
 
         <!-- Legenda -->
         <div class="flex justify-center gap-3 text-[10px] sm:text-xs font-semibold mb-6 flex-wrap">
-            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#00a650]"></span> DISPONÍVEL</div>
-            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#f1c40f]"></span> EM RESERVA</div>
+            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#00a650]"></span> DISPONÍVEL
+            </div>
+            <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#f1c40f]"></span> EM RESERVA
+            </div>
             <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-[#8e44ad]"></span> PAGO</div>
-            <div class="flex items-center gap-1"><span class="w-3 h-3 border-2 border-[#8e44ad] rounded-full bg-white"></span> SELECIONADO</div>
+            <div class="flex items-center gap-1"><span
+                    class="w-3 h-3 border-2 border-[#8e44ad] rounded-full bg-white"></span> SELECIONADO</div>
         </div>
 
         <!-- Grade de Números -->
         <div id="grid-container" class="grid-numbers">
             <!-- Injetado via JS -->
-            <div class="text-center w-full py-10 font-bold text-gray-400 col-span-5 md:col-span-10">Carregando números...</div>
+            <div class="text-center w-full py-10 font-bold text-gray-400 col-span-5 md:col-span-10">Carregando
+                números...</div>
         </div>
     </main>
 
     <!-- Footer Bar -->
-    <div class="fixed bottom-0 w-full left-0 bg-white border-t border-gray-200 p-3 shadow-lg z-40 transform translate-y-full transition-transform duration-300" id="bottom-bar">
+    <div class="fixed bottom-0 w-full left-0 bg-white border-t border-gray-200 p-3 shadow-lg z-40 transform translate-y-full transition-transform duration-300"
+        id="bottom-bar">
         <div class="max-w-4xl mx-auto flex justify-between items-center h-full gap-4 px-2">
             <div class="flex flex-col flex-1 pl-2">
                 <span class="text-xs font-bold text-gray-500 uppercase flex items-center gap-1">
@@ -55,21 +68,25 @@
                 </span>
                 <span class="text-sm font-black text-[#2c3e50]" id="selected-total">Total: R$ 0,00</span>
             </div>
-            <button id="btn-open-reserve-modal" class="bg-[#8e44ad] text-white font-bold py-3 px-6 rounded-lg shadow uppercase text-sm w-1/2 flex-none hover:bg-[#7b3699] transition-colors">
+            <button id="btn-open-reserve-modal"
+                class="bg-[#8e44ad] text-white font-bold py-3 px-6 rounded-lg shadow uppercase text-sm w-1/2 flex-none hover:bg-[#7b3699] transition-colors">
                 Reservar Agora
             </button>
         </div>
     </div>
 
     <!-- Modais Overlay -->
-    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm"></div>
+    <div id="modal-overlay"
+        class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+    </div>
 
     <!-- Modal Reservar -->
-    <div id="modal-reserve" class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm rounded-[1.5rem] p-6 z-50 flex-col gap-4 hidden overflow-hidden shadow-2xl">
+    <div id="modal-reserve"
+        class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm rounded-[1.5rem] p-6 z-50 flex-col gap-4 hidden overflow-hidden shadow-2xl">
         <div class="flex justify-between items-center mb-4 text-[#00a650]">
             <h3 class="font-bold text-lg text-[#00a650] uppercase w-full text-center">Reservar Meus Números</h3>
         </div>
-        
+
         <div class="mb-5 text-center bg-gray-50 rounded-lg p-3 border border-gray-100">
             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Resumo da sua sorte</p>
             <div id="modal-selected-nums" class="flex flex-wrap justify-center gap-1 mb-2"></div>
@@ -79,29 +96,40 @@
         <div class="flex flex-col gap-3">
             <div>
                 <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Nome Completo</label>
-                <input type="text" id="input-name" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#00a650] focus:border-[#00a650] outline-none" placeholder="Nome e Sobrenome" required>
+                <input type="text" id="input-name"
+                    class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#00a650] focus:border-[#00a650] outline-none"
+                    placeholder="Nome e Sobrenome" required>
             </div>
             <div>
                 <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Seu WhatsApp</label>
-                <input type="tel" id="input-whatsapp" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#00a650] focus:border-[#00a650] outline-none" placeholder="(00) 00000-0000" required>
+                <input type="tel" id="input-whatsapp"
+                    class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#00a650] focus:border-[#00a650] outline-none"
+                    placeholder="(00) 00000-0000" required>
             </div>
         </div>
 
-        <button id="btn-submit-reservation" class="w-full bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-5 hover:bg-[#009b4a] transition-colors relative overflow-hidden group">
+        <button id="btn-submit-reservation"
+            class="w-full bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-5 hover:bg-[#009b4a] transition-colors relative overflow-hidden group">
             Prosseguir para Pagamento
         </button>
 
-        <button id="btn-close-reserve-modal" class="w-full text-gray-400 font-semibold py-2 uppercase text-[10px] mt-2 underline hover:text-gray-600 transition-colors">
+        <button id="btn-close-reserve-modal"
+            class="w-full text-gray-400 font-semibold py-2 uppercase text-[10px] mt-2 underline hover:text-gray-600 transition-colors">
             Desistir e Liberar Números
         </button>
     </div>
 
     <!-- Modal PIX -->
-    <div id="modal-pix" class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm rounded-[1.5rem] p-6 text-center z-50 flex-col gap-4 hidden shadow-2xl">
+    <div id="modal-pix"
+        class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm rounded-[1.5rem] p-6 text-center z-50 flex-col gap-4 hidden shadow-2xl">
         <h3 class="font-bold text-lg text-[#00a650] uppercase mb-2">Pagamento PIX</h3>
-        
-        <div class="bg-red-50 text-red-600 font-bold p-3 rounded-lg border border-red-100 flex items-center justify-center gap-2 mb-4">
-            <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+
+        <div
+            class="bg-red-50 text-red-600 font-bold p-3 rounded-lg border border-red-100 flex items-center justify-center gap-2 mb-4">
+            <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
             <span id="countdown">05:00</span>
         </div>
 
@@ -110,30 +138,41 @@
         </p>
 
         <div class="flex justify-center mb-4">
-            <img id="pix-qrcode-img" src="" alt="QR Code PIX" class="w-48 h-48 border border-gray-200 rounded p-1 object-cover">
+            <img id="pix-qrcode-img" src="" alt="QR Code PIX"
+                class="w-48 h-48 border border-gray-200 rounded p-1 object-cover">
         </div>
 
         <div class="relative w-full">
-            <input type="text" id="pix-copiacola-input" readonly class="text-xs w-full bg-gray-100 border border-gray-200 rounded-lg p-3 font-mono text-gray-600 pr-12 focus:outline-none focus:ring-1 focus:ring-gray-300" value="">
+            <input type="text" id="pix-copiacola-input" readonly
+                class="text-xs w-full bg-gray-100 border border-gray-200 rounded-lg p-3 font-mono text-gray-600 pr-12 focus:outline-none focus:ring-1 focus:ring-gray-300"
+                value="">
         </div>
 
-        <button id="btn-copy-pix" class="w-full bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-4 inline-flex items-center justify-center gap-2 hover:bg-[#009b4a]">
+        <button id="btn-copy-pix"
+            class="w-full bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-4 inline-flex items-center justify-center gap-2 hover:bg-[#009b4a]">
             Copiar Código PIX
         </button>
 
-        <p class="text-xs text-gray-400 mt-4 italic">O pagamento é confirmado automaticamente pelo sistema. Aguarde nesta tela.</p>
+        <p class="text-xs text-gray-400 mt-4 italic">O pagamento é confirmado automaticamente pelo sistema. Aguarde
+            nesta tela.</p>
     </div>
 
     <!-- Modal Success -->
-    <div id="modal-success" class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-xs rounded-2xl p-6 text-center z-50 flex-col gap-4 hidden shadow-2xl">
+    <div id="modal-success"
+        class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-xs rounded-2xl p-6 text-center z-50 flex-col gap-4 hidden shadow-2xl">
         <div class="w-16 h-16 bg-[#00a650] rounded-full mx-auto flex items-center justify-center mb-2 shadow-inner">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
         </div>
         <h3 class="font-extrabold text-[#2c3e50] text-xl">Números Confirmados</h3>
-        <p class="text-xs text-gray-500 font-medium">Parabéns! Seus números foram pagos com sucesso. Boa sorte no sorteio!</p>
-        <button id="btn-close-success" class="bg-[#8e44ad] text-white font-bold font-sm py-3 px-6 rounded-lg w-full mt-4 hover:bg-[#7b3699] uppercase shadow">OK</button>
+        <p class="text-xs text-gray-500 font-medium">Parabéns! Seus números foram pagos com sucesso. Boa sorte no
+            sorteio!</p>
+        <button id="btn-close-success"
+            class="bg-[#8e44ad] text-white font-bold font-sm py-3 px-6 rounded-lg w-full mt-4 hover:bg-[#7b3699] uppercase shadow">OK</button>
     </div>
 
     <script src="frontend/js/app.js?v=2.1"></script>
 </body>
+
 </html>
