@@ -92,8 +92,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             <!-- Content Bottom -->
             <div class="absolute bottom-6 left-0 right-0 px-6 z-10 flex flex-col">
-                <h3 class="text-white text-2xl font-black mb-1 text-shadow leading-[1.1] uppercase tracking-tighter">${rifa.nomeCurto || rifa.nome}</h3>
-                <p class="text-gray-300 text-sm font-semibold mb-4 text-shadow line-clamp-1">${rifa.nome}</p>
+                <ul class="mb-3 text-[#f1c40f] text-sm md:text-base font-black uppercase tracking-wide space-y-1 filter drop-shadow-lg text-shadow">
+                    ${rifa.premio1 ? `<li>🏆 1º ${rifa.premio1}</li>` : ''}
+                    ${rifa.premio2 ? `<li>🥈 2º ${rifa.premio2}</li>` : ''}
+                    ${rifa.premio3 ? `<li>🥉 3º ${rifa.premio3}</li>` : ''}
+                    ${rifa.premio4 ? `<li>🎖️ 4º ${rifa.premio4}</li>` : ''}
+                    ${rifa.premio5 ? `<li>🏅 5º ${rifa.premio5}</li>` : ''}
+                </ul>
+                
+                <h3 class="text-white text-3xl md:text-4xl font-black mb-4 text-shadow leading-[1.1] uppercase tracking-tighter">#${rifa.id}</h3>
                 
                 ${buttonArea}
                 ${progress}

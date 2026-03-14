@@ -1,9 +1,22 @@
 <?php
 header('Content-Type: application/json');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 require_once '../config.php';
 
 try {
-    $stmt = $pdo->query("SELECT id, nome, preco_numero, status, quantidade_numeros FROM rifas ORDER BY id DESC");
+    try {
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS imagem_url VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio1 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio2 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio3 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio4 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio5 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS sorteio_por VARCHAR(50) DEFAULT 'Loteria Federal'");
+    } catch(PDOException $e) {}
+
+    $stmt = $pdo->query("SELECT id, nome, preco_numero, status, quantidade_numeros, imagem_url, premio1, premio2, premio3, premio4, premio5, sorteio_por FROM rifas ORDER BY id DESC");
     $rifas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $ativas = [];
@@ -16,14 +29,13 @@ try {
         
         $rifa['percentual'] = $rifa['quantidade_numeros'] > 0 ? floor(($compraCount / $rifa['quantidade_numeros']) * 100) : 0;
         
-        if($rifa['id'] == 1) {
-            $rifa['imagem_url'] = 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
-            $rifa['tag'] = '🔥 AO VIVO';
-            $rifa['nomeCurto'] = 'Kit Churrascão';
-        } else {
-            $rifa['imagem_url'] = 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
-            $rifa['tag'] = '🌟 RECENTE';
-            $rifa['nomeCurto'] = 'Prêmio Eletrônico';
+        $rifa['nomeCurto'] = 'Prêmio ' . $rifa['id'];
+        $rifa['tag'] = '🔥 AO VIVO';
+        
+        if(empty($rifa['imagem_url'])) {
+           $rifa['imagem_url'] = 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'; 
+        } else if(!str_starts_with($rifa['imagem_url'], 'http') && str_starts_with($rifa['imagem_url'], 'uploads/')) {
+           $rifa['imagem_url'] = '' . $rifa['imagem_url']; // resolve base locally to htdocs
         }
 
         if($rifa['status'] === 'aberta') {
