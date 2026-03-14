@@ -206,6 +206,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         function openModal() {
             document.getElementById('form-pub').reset();
             document.getElementById('ipt-id').value = '0';
+            document.getElementById('ipt-numero').value = 'Número Premiado ';
             document.getElementById('modal-title').innerText = 'Nova Publicação';
             document.getElementById('btn-save').innerText = 'Publicar';
 
