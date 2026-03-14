@@ -63,7 +63,37 @@
         </div>
     </nav>
 
+    <!-- Image Modal -->
+    <div id="image-modal" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-4 cursor-zoom-out transition-opacity duration-300 opacity-0 backdrop-blur-sm" onclick="closeImageModal()">
+        <button class="absolute top-6 right-6 text-white/50 hover:text-white p-2 z-[110] transition-colors" onclick="closeImageModal()">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+        <img id="modal-image" src="" class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 ring-4 ring-white/10" onclick="event.stopPropagation()">
+    </div>
+
     <script>
+        function openImageModal(src) {
+            const modal = document.getElementById('image-modal');
+            const img = document.getElementById('modal-image');
+            img.src = src;
+            modal.classList.remove('hidden');
+            // trigger reflow
+            void modal.offsetWidth;
+            modal.classList.add('opacity-100');
+            img.classList.remove('scale-95');
+            img.classList.add('scale-100');
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('image-modal');
+            const img = document.getElementById('modal-image');
+            modal.classList.remove('opacity-100');
+            img.classList.remove('scale-100');
+            img.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
         document.addEventListener('DOMContentLoaded', async () => {
             const listEl = document.getElementById('gallery-list');
             const loader = document.getElementById('loading');
@@ -91,7 +121,7 @@
                         <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-5 items-center sm:items-start group hover:shadow-md transition-shadow relative overflow-hidden">
                             <div class="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-yellow-300 to-[#f1c40f] rounded-full opacity-20 blur-xl"></div>
                             
-                            <img src="${imgUrl}" alt="Foto Vencedor" class="w-24 h-24 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-[#00a650] shadow-md flex-shrink-0 relative z-20 transform transition-transform duration-300 group-hover:scale-125 cursor-pointer origin-center">
+                            <img src="${imgUrl}" onclick="openImageModal('${imgUrl}')" alt="Foto Vencedor" class="w-24 h-24 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-[#00a650] shadow-md flex-shrink-0 relative z-20 transform transition-transform duration-300 group-hover:scale-110 cursor-zoom-in origin-center hover:ring-4 hover:ring-[#00a650]/50">
                             
                             <div class="flex-1 text-center sm:text-left z-10 w-full">
                                 <span class="bg-yellow-100 text-[#2c3e50] font-black text-[10px] uppercase px-2 py-0.5 rounded-full inline-block mb-1 shadow-sm border border-yellow-200">${p.numero_premiado}</span>

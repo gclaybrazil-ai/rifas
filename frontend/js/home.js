@@ -32,21 +32,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Fetch Ganhadores
-        const resG = await fetch('backend/api/get_publicacoes.php?limit=1');
+        const resG = await fetch('backend/api/get_publicacoes.php?limit=2');
         const dataG = await resG.json();
         if(dataG.data && dataG.data.length > 0) {
-            const p = dataG.data[0];
             const gSection = document.getElementById('ganhadores-section');
             const gContainer = document.getElementById('ganhadores-container');
-            const imgUrl = p.imagem_url ? p.imagem_url : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcbkK3z3Q93lZ3q71_gK_3y313hT38qf7VjA&usqp=CAU';
             
-            gContainer.innerHTML = `
-                <img src="${imgUrl}" alt="Ganhador" class="w-16 h-16 rounded-full object-cover border-2 border-[#00a650] shadow transform transition-transform duration-300 group-hover:scale-125 z-10 origin-center relative">
-                <div class="flex-1">
-                    <h3 class="font-bold text-gray-800">${p.nome_ganhador} <span class="bg-yellow-100 text-[#2c3e50] font-black text-[10px] uppercase px-2 py-0.5 rounded-full ml-1 whitespace-nowrap">${p.numero_premiado}</span></h3>
-                    <p class="text-xs text-gray-500 font-medium line-clamp-2 mt-0.5">${p.premio_descricao}</p>
-                </div>
-            `;
+            let html = '';
+            dataG.data.forEach(p => {
+                const imgUrl = p.imagem_url ? p.imagem_url : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcbkK3z3Q93lZ3q71_gK_3y313hT38qf7VjA&usqp=CAU';
+                html += `
+                    <a href="ganhadores.html" class="flex items-center gap-4 bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group overflow-hidden">
+                        <img src="${imgUrl}" alt="Ganhador" class="w-16 h-16 rounded-full object-cover border-2 border-[#00a650] shadow transform transition-transform duration-300 group-hover:scale-125 z-10 origin-center relative">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-gray-800">${p.nome_ganhador} <span class="bg-yellow-100 text-[#2c3e50] font-black text-[10px] uppercase px-2 py-0.5 rounded-full ml-1 whitespace-nowrap">${p.numero_premiado}</span></h3>
+                            <p class="text-xs text-gray-500 font-medium line-clamp-2 mt-0.5">${p.premio_descricao}</p>
+                        </div>
+                    </a>
+                `;
+            });
+            
+            gContainer.innerHTML = html;
             gSection.classList.remove('hidden');
         }
 
