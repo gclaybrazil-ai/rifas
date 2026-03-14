@@ -344,7 +344,7 @@ function startCountdown(seconds) {
             clearInterval(state.paymentPollingTimer);
             els.countdown.textContent = '00:00';
             hideModals();
-            alert('Tempo expirado. Seus números retornaram para disponíveis.');
+            setTimeout(() => openModal(document.getElementById('modal-expired')), 350);
             fetchRifa(); // update grid immediately
         } else {
             els.countdown.textContent = formatTime(time);
@@ -378,7 +378,7 @@ function startPaymentPolling(reserva_id) {
                 clearInterval(state.paymentPollingTimer);
                 clearInterval(state.countdownTimer);
                 hideModals();
-                alert('Sua reserva expirou.');
+                setTimeout(() => openModal(document.getElementById('modal-expired')), 350);
                 fetchRifa();
             }
         } catch(e) {

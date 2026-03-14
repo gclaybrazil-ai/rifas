@@ -26,8 +26,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 success.classList.remove('hidden');
                 success.classList.add('flex');
             } else if(data.status === 'expirado') {
-                alert("Reserva já Expirada/Cancelada");
-                window.location.href = 'index.html';
+                const modalExp = document.getElementById('modal-expired');
+                modalExp.classList.remove('hidden');
+                setTimeout(() => {
+                    modalExp.classList.remove('opacity-0');
+                    modalExp.querySelector('div').classList.remove('scale-95');
+                    modalExp.querySelector('div').classList.add('scale-100');
+                }, 10);
             } else {
                 // Pendente -> Show Pix Data
                 document.getElementById('lbl-reserva').innerText = '#' + data.id;
@@ -59,8 +64,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if(timeRemaining <= 0) {
                             clearInterval(countTimer);
                             countDisplay.innerText = '00:00';
-                            alert("O tempo para pagamento desta reserva expirou.");
-                            window.location.href = 'index.html';
+                            
+                            const modalExp = document.getElementById('modal-expired');
+                            modalExp.classList.remove('hidden');
+                            
+                            // trigger animation
+                            setTimeout(() => {
+                                modalExp.classList.remove('opacity-0');
+                                modalExp.querySelector('div').classList.remove('scale-95');
+                                modalExp.querySelector('div').classList.add('scale-100');
+                            }, 10);
+                            
                             return;
                         }
                         timeRemaining--;
@@ -83,6 +97,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 document.getElementById('txt-sucesso-numeros').innerText = `O pagamento da reserva #${id} foi efetivado com sucesso. Boa sorte!`;
                                 success.classList.remove('hidden');
                                 success.classList.add('flex');
+                            } else if (r.status === 'expirado') {
+                                view.classList.add('hidden');
+                                view.classList.remove('flex');
+                                const modalExp = document.getElementById('modal-expired');
+                                modalExp.classList.remove('hidden');
+                                setTimeout(() => {
+                                    modalExp.classList.remove('opacity-0');
+                                    modalExp.querySelector('div').classList.remove('scale-95');
+                                    modalExp.querySelector('div').classList.add('scale-100');
+                                }, 10);
                             }
                         });
                 }, 3000);

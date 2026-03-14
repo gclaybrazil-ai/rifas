@@ -93,8 +93,22 @@
 
         </div>
 
+        <!-- Modal Tempo Esgotado -->
+        <div id="modal-expired" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+            <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative text-center transform scale-95 transition-transform duration-300 transition-all">
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+                    <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-black text-[#2c3e50] tracking-tight mb-2">Tempo Esgotado!</h2>
+                <p class="text-sm font-medium text-gray-500 mb-6">O tempo para pagamento desta reserva expirou e seus números foram liberados.</p>
+                <button onclick="window.location.href='index.html'" class="w-full bg-[#2c3e50] hover:bg-gray-800 text-white font-black py-4 rounded-xl shadow transition-all flex justify-center items-center gap-2 uppercase tracking-wide">
+                    Voltar ao Início
+                </button>
+            </div>
+        </div>
+
     </main>
 
-    <script src="frontend/js/checkout.js"></script>
+    <script src="frontend/js/checkout.js?v=1.1"></script>
 </body>
 </html>
