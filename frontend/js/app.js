@@ -8,7 +8,8 @@ let state = {
     pollingTimer: null,
     paymentPollingTimer: null,
     countdownTimer: null,
-    groupVip: ''
+    groupVip: '',
+    repassarTaxa: false
 };
 
 // DOM Elements
@@ -61,6 +62,8 @@ async function fetchRifa() {
         if(data.group_vip) {
             state.groupVip = data.group_vip;
         }
+        
+        state.repassarTaxa = data.repassar_taxa === '1';
         
         updateGrid(data.numeros);
         updateBottomBar();
@@ -166,8 +169,20 @@ function updateBottomBar() {
     const qtde = state.selecionados.size;
     els.selectedCount.textContent = qtde;
     
-    const total = (qtde * state.preco);
-    els.selectedTotal.textContent = `Total: ${total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}`;
+    
+    let total = (qtde * state.preco);
+    let taxaHtml = '';
+    
+    if (state.repassarTaxa) {
+        let originalTotal = total;
+        // Cálculo para cobrir 1.19% da Efí
+        total = originalTotal / (1 - 0.0119);
+        let valorDaTaxa = total - originalTotal;
+        
+        taxaHtml = `<span class="text-[9px] block opacity-80">+ Taxa Transação: ${valorDaTaxa.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</span>`;
+    }
+
+    els.selectedTotal.innerHTML = `<div>Total: ${total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}${taxaHtml}</div>`;
 
     if (qtde > 0) {
         els.bottomBar.classList.remove('translate-y-full');
@@ -210,7 +225,11 @@ els.btnOpenReserve.addEventListener('click', () => {
         els.modalSelectedNums.appendChild(span);
     });
     
-    const total = state.selecionados.size * state.preco;
+    let total = state.selecionados.size * state.preco;
+    if (state.repassarTaxa) {
+        let originalTotal = total;
+        total = originalTotal / (1 - 0.0119);
+    }
     els.modalTotalValue.textContent = total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
     
     openModal(els.modalReserve);

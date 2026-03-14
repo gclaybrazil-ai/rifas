@@ -141,6 +141,16 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <option value="efi">Efí Bank (Gerencianet)</option>
                     </select>
                 </div>
+                
+                <div class="flex flex-col gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div class="flex items-start gap-2">
+                        <input type="checkbox" id="repassar-taxa" class="w-5 h-5 accent-green-600 cursor-pointer mt-0.5">
+                        <div>
+                            <label for="repassar-taxa" class="text-xs font-bold text-gray-700 uppercase cursor-pointer block">Repassar taxa para o colaborador</label>
+                            <p class="text-[9px] text-gray-500 leading-tight mt-1">Se optar por não repassar, uma taxa mínima ainda será cobrada caso o valor da reserva não seja maior do que a taxa cobrada pelo método de pagamento.</p>
+                        </div>
+                    </div>
+                </div>
                 <div id="wrapper-token">
                     <label id="label-token" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key</label>
                     <input type="password" id="gateway-token"
@@ -201,14 +211,12 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none h-20"
                         placeholder="Olá, $uper$orte! Preciso de ajuda."></textarea>
                 </div>
-
                 <button type="submit" id="btn-save-integrations"
                     class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-indigo-700 transition-colors">
                     Salvar Configurações
                 </button>
             </form>
         </div>
-    </div>
     </div>
 
     <!-- Modal Nova Rifa -->
@@ -603,6 +611,8 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if (data.group_vip) document.getElementById('group-vip').value = data.group_vip;
             if (data.whatsapp_suporte) document.getElementById('whatsapp-suporte').value = data.whatsapp_suporte;
             if (data.mensagem_suporte) document.getElementById('mensagem-suporte').value = data.mensagem_suporte;
+            
+            document.getElementById('repassar-taxa').checked = data.repassar_taxa === '1';
 
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
@@ -616,8 +626,8 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if (gateway === 'efi') {
                 labelToken.textContent = "Chave PIX (Efí)";
                 efiFields.classList.remove('hidden');
-                // Mantemos o wrapper-token visível pois a Efí precisa da Chave PIX
-                wrapperToken.classList.remove('hidden'); 
+                // O usuário solicitou remover/esconder a Chave PIX para Efí
+                wrapperToken.classList.add('hidden'); 
             } else {
                 labelToken.textContent = "Token / Access Key (MP)";
                 efiFields.classList.add('hidden');
@@ -656,6 +666,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             fd.append('group_vip', document.getElementById('group-vip').value);
             fd.append('whatsapp_suporte', document.getElementById('whatsapp-suporte').value);
             fd.append('mensagem_suporte', document.getElementById('mensagem-suporte').value);
+            fd.append('repassar_taxa', document.getElementById('repassar-taxa').checked ? '1' : '0');
 
             await fetch(API, { method: 'POST', body: fd });
 

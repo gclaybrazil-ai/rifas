@@ -73,9 +73,20 @@ try {
     if($stmtG) $group_vip = $stmtG->fetchColumn() ?: '';
 } catch(PDOException $e) {}
 
+// Obter Taxas
+$repassar_taxa = '0';
+try {
+    $stmtT = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'repassar_taxa'");
+    if($stmtT) {
+        $repassar_taxa = $stmtT->fetchColumn() ?: '0';
+    }
+} catch(PDOException $e) {}
+
 echo json_encode([
     'rifa' => $rifa,
     'numeros' => $numeros,
-    'group_vip' => $group_vip
+    'group_vip' => $group_vip,
+    'repassar_taxa' => $repassar_taxa,
+    'valor_taxa' => '0.10' // Valor fixo de conveniência padrão
 ]);
 ?>

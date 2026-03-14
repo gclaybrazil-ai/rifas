@@ -49,13 +49,22 @@ try {
     $token = '';
     $tempo_pagamento = 3; // Padrão
     try {
-        $stmtConf = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento')");
+        $stmtConf = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'repassar_taxa')");
         if($stmtConf) {
             $configs = $stmtConf->fetchAll(PDO::FETCH_KEY_PAIR);
             $gateway = $configs['gateway'] ?? '';
             $token = $configs['gateway_token'] ?? '';
+            
             if(isset($configs['tempo_pagamento']) && is_numeric($configs['tempo_pagamento'])) {
                 $tempo_pagamento = (int)$configs['tempo_pagamento'];
+            }
+
+            // Repassar Taxa Logic (Cálculo para cobrir 1.19% da Efí)
+            if (isset($configs['repassar_taxa']) && $configs['repassar_taxa'] === '1') {
+                // Cálculo: Valor Final = Valor Original / (1 - 0.0119)
+                // Isso garante que após o desconto de 1.19% do banco, o recebedor tenha o valor original exato.
+                $total = $total / (1 - 0.0119);
+                $total = round($total, 2);
             }
         }
     } catch(PDOException $e) {}
@@ -145,19 +154,19 @@ try {
         }
 
         // 2. CRIAR COBRANÇA (COB)
-        $txid_efi = str_replace('.', '', uniqid('RESERVA', true)); 
+        // Cadastro da cobrança (POST /v2/cob - Sem txid conforme documentação Efí)
+        $ch = curl_init("https://pix.api.efipay.com.br/v2/cob");
         $body = [
             "calendario" => ["expiracao" => $tempo_pagamento * 60],
             "valor" => ["original" => number_format($total, 2, '.', '')],
-            "chave" => $token, 
-            "solicitacaoPagador" => "Pagamento da Rifa $rifa_id"
+            "chave" => $token,
+            "solicitacaoPagador" => "Pagamento da reserva na plataforma."
         ];
-
-        $ch = curl_init("https://pix.api.efipay.com.br/v2/cob/" . $txid_efi);
+        
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSLCERT, $certificate);
         curl_setopt($ch, CURLOPT_SSLCERTTYPE, "P12");
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "Authorization: Bearer $access_token",
@@ -167,33 +176,36 @@ try {
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
         $cob_res = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        $cob_data = json_decode($cob_res, true);
+        
+        if ($httpCode === 201 || $httpCode === 200) {
+            $cob_data = json_decode($cob_res, true);
+            $txid = $cob_data['txid'] ?? '';
+            
+            // Gerar QR Code
+            $ch = curl_init("https://pix.api.efipay.com.br/v2/loc/" . $cob_data['loc']['id'] . "/qrcode");
+            curl_setopt($ch, CURLOPT_SSLCERT, $certificate);
+            curl_setopt($ch, CURLOPT_SSLCERTTYPE, "P12");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $access_token"]);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
-        if(!isset($cob_data['loc']['id'])) {
-            $err_msg = $cob_data['mensagem'] ?? 'Falha ao criar cobrança (Verifique a Chave PIX).';
-            throw new Exception("Erro Cob Efí: " . $err_msg);
-        }
+            $qr_res = curl_exec($ch);
+            curl_close($ch);
+            $qr_data = json_decode($qr_res, true);
 
-        // 3. GERAR QR CODE
-        $ch = curl_init("https://pix.api.efipay.com.br/v2/loc/" . $cob_data['loc']['id'] . "/qrcode");
-        curl_setopt($ch, CURLOPT_SSLCERT, $certificate);
-        curl_setopt($ch, CURLOPT_SSLCERTTYPE, "P12");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $access_token"]);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-
-        $qr_res = curl_exec($ch);
-        curl_close($ch);
-        $qr_data = json_decode($qr_res, true);
-
-        if(isset($qr_data['imagemQrcode'])) {
-            $pix_qrcode = $qr_data['imagemQrcode'];
-            $pix_copiacola = $qr_data['qrcode'];
-            $txid = $txid_efi;
+            if(isset($qr_data['imagemQrcode'])) {
+                $pix_qrcode = $qr_data['imagemQrcode'];
+                $pix_copiacola = $qr_data['qrcode'];
+            } else {
+                throw new Exception("Erro QR Efí: Falha ao gerar código.");
+            }
         } else {
-            throw new Exception("Erro QR Efí: Falha ao gerar código.");
+            $cob_data = json_decode($cob_res, true);
+            $err_msg = $cob_data['mensagem'] ?? 'Falha ao criar cobrança.';
+            throw new Exception("Erro Cob Efí: " . $err_msg);
         }
     }
 
