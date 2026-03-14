@@ -13,6 +13,7 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
     <title>Login Admin - $UPER$ORTE</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="../frontend/png/cifrao.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>

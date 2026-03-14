@@ -13,6 +13,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     <title>Gerenciar Rifas - $UPER$ORTE</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="../frontend/png/cifrao.png">
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans p-6">
 
