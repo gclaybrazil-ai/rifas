@@ -113,8 +113,12 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     <input type="url" id="group-vip" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="https://chat.whatsapp.com/...">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Link Suporte (WhatsApp)</label>
-                    <input type="url" id="link-suporte" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="https://wa.me/55...">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">WhatsApp Suporte (Somente Números)</label>
+                    <input type="text" id="whatsapp-suporte" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="5511999999999">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Mensagem Padrão (WhatsApp)</label>
+                    <textarea id="mensagem-suporte" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none h-20" placeholder="Olá, $uper$orte! Preciso de ajuda."></textarea>
                 </div>
                 
                 <button type="submit" id="btn-save-integrations" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-indigo-700 transition-colors">
@@ -260,7 +264,8 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              if(data.gateway_token) document.getElementById('gateway-token').value = data.gateway_token;
              if(data.tempo_pagamento) document.getElementById('tempo-pagamento').value = data.tempo_pagamento;
              if(data.group_vip) document.getElementById('group-vip').value = data.group_vip;
-             if(data.link_suporte) document.getElementById('link-suporte').value = data.link_suporte;
+             if(data.whatsapp_suporte) document.getElementById('whatsapp-suporte').value = data.whatsapp_suporte;
+             if(data.mensagem_suporte) document.getElementById('mensagem-suporte').value = data.mensagem_suporte;
 
              modal.classList.remove('hidden');
              setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
@@ -283,7 +288,8 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              fd.append('token', document.getElementById('gateway-token').value);
              fd.append('tempo_pagamento', document.getElementById('tempo-pagamento').value);
              fd.append('group_vip', document.getElementById('group-vip').value);
-             fd.append('link_suporte', document.getElementById('link-suporte').value);
+             fd.append('whatsapp_suporte', document.getElementById('whatsapp-suporte').value);
+             fd.append('mensagem_suporte', document.getElementById('mensagem-suporte').value);
              
              await fetch(API, { method: 'POST', body: fd });
              

@@ -127,7 +127,8 @@ else if($action === 'save_integration') {
     $token = $_POST['token'] ?? '';
     $tempo_pagamento = $_POST['tempo_pagamento'] ?? '3';
     $group_vip = $_POST['group_vip'] ?? '';
-    $link_suporte = $_POST['link_suporte'] ?? '';
+    $whatsapp_suporte = $_POST['whatsapp_suporte'] ?? '';
+    $mensagem_suporte = $_POST['mensagem_suporte'] ?? '';
     
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
     $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('gateway', ?) ON DUPLICATE KEY UPDATE valor = ?");
@@ -142,14 +143,17 @@ else if($action === 'save_integration') {
     $stmt4 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('group_vip', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt4->execute([$group_vip, $group_vip]);
 
-    $stmt5 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('link_suporte', ?) ON DUPLICATE KEY UPDATE valor = ?");
-    $stmt5->execute([$link_suporte, $link_suporte]);
+    $stmt5 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('whatsapp_suporte', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt5->execute([$whatsapp_suporte, $whatsapp_suporte]);
+
+    $stmt6 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('mensagem_suporte', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt6->execute([$mensagem_suporte, $mensagem_suporte]);
 
     echo json_encode(['success' => true]);
 }
 else if($action === 'get_integration') {
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'link_suporte')");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte')");
     $conf = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     echo json_encode($conf ?: []);
 }

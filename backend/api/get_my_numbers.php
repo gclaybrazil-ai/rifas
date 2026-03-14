@@ -61,8 +61,14 @@ try {
     // Obter Link Suporte
     $link_suporte = '';
     try {
-        $stmtS = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'link_suporte'");
-        if($stmtS) $link_suporte = $stmtS->fetchColumn() ?: '';
+        $stmtS = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('whatsapp_suporte', 'mensagem_suporte')");
+        $confS = $stmtS->fetchAll(PDO::FETCH_KEY_PAIR);
+        $wa = $confS['whatsapp_suporte'] ?? '';
+        $msg = $confS['mensagem_suporte'] ?? '';
+        if(!empty($wa)) {
+            $link_suporte = "https://wa.me/" . preg_replace('/\D/', '', $wa);
+            if(!empty($msg)) $link_suporte .= "?text=" . urlencode($msg);
+        }
     } catch(PDOException $e) {}
 
     echo json_encode(['success' => true, 'data' => $reservas, 'link_suporte' => $link_suporte]);
