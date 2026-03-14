@@ -196,18 +196,44 @@ if ($action === 'stats') {
     echo json_encode(['success' => true, 'winners' => $winners, 'prizes' => $prizes]);
 } else if ($action === 'save_integration') {
     $gateway = $_POST['gateway'] ?? '';
-    $token = $_POST['token'] ?? '';
+    $token = trim($_POST['token'] ?? '');
+    $efi_client_id = trim($_POST['efi_client_id'] ?? '');
+    $efi_client_secret = trim($_POST['efi_client_secret'] ?? '');
+
     $tempo_pagamento = $_POST['tempo_pagamento'] ?? '3';
     $group_vip = $_POST['group_vip'] ?? '';
     $whatsapp_suporte = $_POST['whatsapp_suporte'] ?? '';
     $mensagem_suporte = $_POST['mensagem_suporte'] ?? '';
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
+    
+    // Process Certificate Upload
+    if(isset($_FILES['efi_cert_file']) && $_FILES['efi_cert_file']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = __DIR__ . '/../certs/';
+        if(!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        
+        $filename = $_FILES['efi_cert_file']['name'];
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+        if($ext === 'p12') {
+            $newName = 'certificado_producao.p12';
+            move_uploaded_file($_FILES['efi_cert_file']['tmp_name'], $uploadDir . $newName);
+            
+            $stmtCert = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('efi_cert_name', ?) ON DUPLICATE KEY UPDATE valor = ?");
+            $stmtCert->execute([$filename, $filename]);
+        }
+    }
+
     $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('gateway', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt->execute([$gateway, $gateway]);
 
     $stmt2 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('gateway_token', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt2->execute([$token, $token]);
+    
+    $stmtE1 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('efi_client_id', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmtE1->execute([$efi_client_id, $efi_client_id]);
+
+    $stmtE2 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('efi_client_secret', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmtE2->execute([$efi_client_secret, $efi_client_secret]);
 
     $stmt3 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('tempo_pagamento', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt3->execute([$tempo_pagamento, $tempo_pagamento]);
@@ -224,7 +250,7 @@ if ($action === 'stats') {
     echo json_encode(['success' => true]);
 } else if ($action === 'get_integration') {
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte')");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name')");
     $conf = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     echo json_encode($conf ?: []);
 } else if ($action === 'create_rifa') {

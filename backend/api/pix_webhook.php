@@ -11,15 +11,29 @@
 header('Content-Type: application/json');
 require_once '../config.php';
 
-$data = json_decode(file_get_contents('php://input'), true);
+$payload = file_get_contents('php://input');
+file_put_contents('webhook_log.txt', "[" . date('Y-m-d H:i:s') . "] Payload: " . $payload . PHP_EOL, FILE_APPEND);
+$data = json_decode($payload, true);
 $txid = $data['txid'] ?? '';
-$statusPost = $data['status'] ?? ''; // 'approved'
+$statusPost = $data['status'] ?? ''; 
 
-if(empty($txid)) {
+// Suporte para Efí Bank (Envia uma lista em 'pix')
+if (isset($data['pix']) && is_array($data['pix'])) {
+    foreach ($data['pix'] as $item) {
+        if (isset($item['txid'])) {
+            $txid = $item['txid'];
+            $statusPost = 'approved'; // Na Efí, se chegou no webhook de PIX, é porque foi pago
+            break; 
+        }
+    }
+}
+
+if (empty($txid)) {
     die(json_encode(['error' => 'Faltam dados do webhook']));
 }
 
-if($statusPost !== 'approved') {
+// Aceita 'approved' (MP) ou vácuo da Efí que já definimos acima
+if ($statusPost !== 'approved' && !empty($statusPost)) {
     die(json_encode(['msg' => 'Ignorado']));
 }
 
@@ -29,7 +43,7 @@ try {
     $stmt->execute([$txid]);
     $reserva = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if($reserva && $reserva['status'] === 'pendente') {
+    if ($reserva && $reserva['status'] === 'pendente') {
         // Marca como pago
         $pdo->prepare("UPDATE reservas SET status = 'pago' WHERE id = ?")->execute([$reserva['id']]);
         $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$reserva['id']]);
@@ -39,7 +53,7 @@ try {
         $pdo->rollBack();
         echo json_encode(['error' => 'Reserva não encontrada ou já processada']);
     }
-} catch(Exception $e) {
+} catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }

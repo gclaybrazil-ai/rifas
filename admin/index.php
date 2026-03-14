@@ -141,12 +141,33 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <option value="efi">Efí Bank (Gerencianet)</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token /
-                        Access Key</label>
+                <div id="wrapper-token">
+                    <label id="label-token" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key</label>
                     <input type="password" id="gateway-token"
                         class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                         placeholder="APP_USR-...">
+                </div>
+
+                <!-- Efí Fields -->
+                <div id="efi-fields" class="hidden flex flex-col gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Client ID (Efí)</label>
+                        <input type="text" id="efi-client-id"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="Client_Id_...">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Client Secret (Efí)</label>
+                        <input type="password" id="efi-client-secret"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="Client_Secret_...">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Certificado .p12 (Upload)</label>
+                        <input type="file" id="efi-cert-file" accept=".p12"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <p id="cert-status" class="text-[9px] text-gray-400 mt-1 ml-1"></p>
+                    </div>
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Tempo
@@ -569,8 +590,15 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             // Fetch setup
             const res = await fetch(`${API}?action=get_integration`);
             const data = await res.json();
-            if (data.gateway) document.getElementById('gateway-provider').value = data.gateway;
+            if (data.gateway) {
+                document.getElementById('gateway-provider').value = data.gateway;
+                toggleGatewayFields(data.gateway);
+            }
             if (data.gateway_token) document.getElementById('gateway-token').value = data.gateway_token;
+            if (data.efi_client_id) document.getElementById('efi-client-id').value = data.efi_client_id;
+            if (data.efi_client_secret) document.getElementById('efi-client-secret').value = data.efi_client_secret;
+            if (data.efi_cert_name) document.getElementById('cert-status').textContent = "Arquivo atual: " + data.efi_cert_name;
+            
             if (data.tempo_pagamento) document.getElementById('tempo-pagamento').value = data.tempo_pagamento;
             if (data.group_vip) document.getElementById('group-vip').value = data.group_vip;
             if (data.whatsapp_suporte) document.getElementById('whatsapp-suporte').value = data.whatsapp_suporte;
@@ -578,6 +606,27 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
+        });
+
+        function toggleGatewayFields(gateway) {
+            const wrapperToken = document.getElementById('wrapper-token');
+            const labelToken = document.getElementById('label-token');
+            const efiFields = document.getElementById('efi-fields');
+            
+            if (gateway === 'efi') {
+                labelToken.textContent = "Chave PIX (Efí)";
+                efiFields.classList.remove('hidden');
+                // Mantemos o wrapper-token visível pois a Efí precisa da Chave PIX
+                wrapperToken.classList.remove('hidden'); 
+            } else {
+                labelToken.textContent = "Token / Access Key (MP)";
+                efiFields.classList.add('hidden');
+                wrapperToken.classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('gateway-provider').addEventListener('change', (e) => {
+            toggleGatewayFields(e.target.value);
         });
 
         document.getElementById('btn-close-integrations').addEventListener('click', () => {
@@ -591,10 +640,18 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             const btn = document.getElementById('btn-save-integrations');
             btn.innerHTML = 'Salvando...';
 
-            const fd = new URLSearchParams();
+            const fd = new FormData();
             fd.append('action', 'save_integration');
             fd.append('gateway', document.getElementById('gateway-provider').value);
             fd.append('token', document.getElementById('gateway-token').value);
+            fd.append('efi_client_id', document.getElementById('efi-client-id').value);
+            fd.append('efi_client_secret', document.getElementById('efi-client-secret').value);
+            
+            const certFile = document.getElementById('efi-cert-file').files[0];
+            if (certFile) {
+                fd.append('efi_cert_file', certFile);
+            }
+
             fd.append('tempo_pagamento', document.getElementById('tempo-pagamento').value);
             fd.append('group_vip', document.getElementById('group-vip').value);
             fd.append('whatsapp_suporte', document.getElementById('whatsapp-suporte').value);
