@@ -51,6 +51,12 @@ async function fetchRifa() {
         if (data.error) throw new Error(data.error);
         
         state.preco = parseFloat(data.rifa.preco_numero);
+        
+        if(data.rifa.sorteio_por) {
+            const badge = document.getElementById('badge-sorteio');
+            if(badge) badge.textContent = `SORTEIO POR ${data.rifa.sorteio_por.toUpperCase()}`;
+        }
+        
         updateGrid(data.numeros);
         updateBottomBar();
         
@@ -191,6 +197,24 @@ els.btnCloseReserve.addEventListener('click', () => {
     hideModals();
 });
 
+// WHATSAPP MASK
+els.inputWhatsapp.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11); // Max 11 digits
+
+    if (value.length > 2) {
+        value = `(${value.slice(0, 2)}) ` + value.slice(2);
+    }
+    // Applies dash correctly depending on 10 or 11 digits
+    if (value.length > 10) { 
+        value = value.slice(0, 10) + '-' + value.slice(10);
+    } else if (value.length > 9) { 
+        value = value.slice(0, 9) + '-' + value.slice(9);
+    }
+    
+    e.target.value = value;
+});
+
 // RESERVAR E ABRIR PIX
 els.btnSubmitReservation.addEventListener('click', async () => {
     const nome = els.inputName.value.trim();
@@ -199,6 +223,19 @@ els.btnSubmitReservation.addEventListener('click', async () => {
 
     if(!nome || !whatsapp) {
         alert('Preencha seu nome e whatsapp!');
+        return;
+    }
+
+    const partesNome = nome.split(/\s+/);
+    if(partesNome.length < 2 || partesNome[1].length < 2) {
+        alert('Por favor, informe seu NOME e SOBRENOME para continuar.');
+        return;
+    }
+    
+    // Exigir DDD + Número válido (10 ou 11 digitos totais sem mascara)
+    const whatsNum = whatsapp.replace(/\D/g, '');
+    if(whatsNum.length < 10) {
+        alert('Por favor, informe um WhatsApp válido com DDD.');
         return;
     }
 
