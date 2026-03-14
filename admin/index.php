@@ -26,6 +26,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <button id="btn-new-rifa" class="bg-[#00a650] text-white font-bold px-3 py-2 rounded shadow hover:bg-[#009647] text-sm md:text-base text-center">Criar Rifa</button>
             <a href="rifas.php" class="bg-blue-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-600 text-sm md:text-base text-center flex justify-center items-center">Gerenciar Rifas</a>
             <button id="btn-integrations" class="bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-sm md:text-base text-center">Integrações</button>
+            <button id="btn-billing" class="bg-purple-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-purple-700 text-sm md:text-base text-center">FIN</button>
             <a href="ganhadores.php" class="bg-yellow-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-yellow-600 text-sm md:text-base text-center flex justify-center items-center text-[#2c3e50]">Ganhadores</a>
             <a href="../index.html" class="bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded hover:bg-gray-300 text-sm md:text-base text-center flex justify-center items-center">Site</a>
             <a href="../backend/api/logout.php" class="bg-gray-800 text-white font-bold px-3 py-2 rounded hover:bg-black text-sm md:text-base text-center flex justify-center items-center">Sair</a>
@@ -54,8 +55,15 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
     <!-- Tabela Reservas -->
     <div class="max-w-4xl mx-auto bg-white rounded-lg shadow overflow-hidden border border-gray-100">
-        <div class="px-6 py-4 border-b border-gray-100">
+        <div class="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 class="font-bold text-gray-700 uppercase tracking-wide">Últimas Reservas</h2>
+            
+            <div class="flex flex-wrap gap-2">
+                <button onclick="setStatusFilter('')" id="tab-all" class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-gray-200 text-gray-700">Todos</button>
+                <button onclick="setStatusFilter('pago')" id="tab-pago" class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Pagos</button>
+                <button onclick="setStatusFilter('pendente')" id="tab-pendente" class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Pendentes</button>
+                <button onclick="setStatusFilter('expirado')" id="tab-expirado" class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Expirados</button>
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-sm">
@@ -190,19 +198,60 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
                 <button type="submit" id="btn-submit-new" class="w-full bg-[#00a650] text-white font-bold py-3 mt-3 rounded-xl hover:bg-[#009647] uppercase text-sm shadow">Criar e Ativar Rifa</button>
             </form>
+    <!-- Modal Faturamento (FIN) -->
+    <div id="modal-billing" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-7 max-w-md w-full shadow-2xl relative">
+            <button id="btn-close-billing" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-xl font-black text-[#2c3e50] mb-6 uppercase flex items-center gap-2">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Relatório de Faturamento
+            </h2>
+
+            <div class="grid grid-cols-2 gap-2 mb-6">
+                <button onclick="fetchBilling('today')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-xs font-bold text-gray-700 transition-all">Hoje</button>
+                <button onclick="fetchBilling('7')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-xs font-bold text-gray-700 transition-all">Últimos 7 Dias</button>
+                <button onclick="fetchBilling('30')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-xs font-bold text-gray-700 transition-all">Últimos 30 Dias</button>
+                <button onclick="toggleCustomRange()" class="bg-gray-800 text-white p-3 rounded-xl text-xs font-bold transition-all">Personalizado</button>
+            </div>
+
+            <div id="custom-range" class="hidden flex flex-col gap-3 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">Início</label>
+                        <input type="date" id="bill-start" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">Fim</label>
+                        <input type="date" id="bill-end" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs outline-none">
+                    </div>
+                </div>
+                <button onclick="fetchBilling('custom')" class="w-full bg-[#00a650] text-white font-bold py-2 rounded-lg text-xs hover:bg-[#009647]">Gerar Relatório</button>
+            </div>
+
+            <div id="billing-result" class="hidden bg-blue-50 p-5 rounded-[2rem] border border-blue-100 text-center flex flex-col gap-1">
+                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest" id="bill-label">Faturamento Total</p>
+                <h3 class="text-3xl font-black text-blue-700" id="bill-total">R$ 0,00</h3>
+                <p class="text-[10px] font-bold text-blue-400" id="bill-count">0 Reservas Pagas</p>
+            </div>
         </div>
     </div>
+    </div>
+</div>
 
 
     <script>
         const API = '../backend/api/admin.php';
 
         let currentPage = 1;
+        let currentStatus = '';
 
         async function fetchStats(page = 1) {
             currentPage = page;
             try {
-                const res = await fetch(`${API}?action=stats&page=${page}`);
+                const ts = new Date().getTime();
+                const res = await fetch(`${API}?action=stats&page=${page}&status=${currentStatus}&_=${ts}`);
                 const data = await res.json();
                 
                 document.getElementById('stat-livre').textContent = data.stats['disponivel'] || 0;
@@ -300,6 +349,69 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
             await fetch(API, { method: 'POST', body: fd });
             fetchStats(currentPage);
+        }
+
+        function setStatusFilter(status) {
+            currentStatus = status;
+            currentPage = 1;
+            
+            // UI Update
+            document.querySelectorAll('.status-tab').forEach(tab => {
+                tab.classList.remove('bg-gray-200', 'text-gray-700');
+                tab.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-500');
+            });
+            
+            const activeId = status === '' ? 'tab-all' : `tab-${status}`;
+            const activeTab = document.getElementById(activeId);
+            activeTab.classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-500');
+            activeTab.classList.add('bg-gray-200', 'text-gray-700');
+
+            fetchStats();
+        }
+
+        // Billing Logic
+        document.getElementById('btn-billing').addEventListener('click', () => {
+             const m = document.getElementById('modal-billing');
+             m.classList.remove('hidden');
+             setTimeout(() => m.classList.add('opacity-100'), 10);
+        });
+
+        document.getElementById('btn-close-billing').addEventListener('click', () => {
+             const m = document.getElementById('modal-billing');
+             m.classList.remove('opacity-100');
+             setTimeout(() => m.classList.add('hidden'), 300);
+        });
+
+        function toggleCustomRange() {
+            const cr = document.getElementById('custom-range');
+            cr.classList.toggle('hidden');
+        }
+
+        async function fetchBilling(period) {
+            let url = `${API}?action=billing_report&period=${period}`;
+            
+            if(period === 'custom') {
+                const s = document.getElementById('bill-start').value;
+                const e = document.getElementById('bill-end').value;
+                if(!s || !e) return alert('Selecione as datas!');
+                url = `${API}?action=billing_report&start=${s}&end=${e}`;
+            }
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if(data.success) {
+                const resDiv = document.getElementById('billing-result');
+                resDiv.classList.remove('hidden');
+                document.getElementById('bill-total').textContent = data.total.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                document.getElementById('bill-count').textContent = `${data.count} Reservas Pagas`;
+                
+                let label = 'Faturamento';
+                if(period === 'today') label = 'Faturamento de Hoje';
+                if(period === '7') label = 'Faturamento (7 dias)';
+                if(period === '30') label = 'Faturamento (30 dias)';
+                document.getElementById('bill-label').textContent = label;
+            }
         }
 
         document.getElementById('btn-integrations').addEventListener('click', async () => {

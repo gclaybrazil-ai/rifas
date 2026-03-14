@@ -14,20 +14,45 @@ if($action === 'stats') {
     if($page < 1) $page = 1;
     $limit = 20;
     $offset = ($page - 1) * $limit;
+    $statusFilter = $_GET['status'] ?? '';
 
-    $stmt = $pdo->query("SELECT status, COUNT(*) as qtd FROM numeros GROUP BY status");
-    $stats = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    $stmtStats = $pdo->query("SELECT status, COUNT(*) as qtd FROM numeros GROUP BY status");
+    $stats = $stmtStats->fetchAll(PDO::FETCH_KEY_PAIR);
     
-    $stmt = $pdo->query("SELECT SUM(valor_total) FROM reservas WHERE status = 'pago'");
-    $faturamento = $stmt->fetchColumn() ?: 0;
+    $stmtFat = $pdo->query("SELECT SUM(valor_total) FROM reservas WHERE status = 'pago'");
+    $faturamento = $stmtFat->fetchColumn() ?: 0;
+
+    $where = "";
+    $paramsCount = [];
+    $paramsData = [];
+
+    if(!empty($statusFilter)) {
+        $where = " WHERE r.status = ? ";
+        $paramsCount[] = $statusFilter;
+        $paramsData[] = $statusFilter;
+    }
 
     // Total de reservas para paginação
-    $totalCount = $pdo->query("SELECT COUNT(*) FROM reservas")->fetchColumn();
+    $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM reservas r $where");
+    $stmtCount->execute($paramsCount);
+    $totalCount = $stmtCount->fetchColumn();
     $totalPages = ceil($totalCount / $limit);
     
-    $stmt = $pdo->prepare("SELECT r.*, rf.nome as rifa_nome FROM reservas r LEFT JOIN rifas rf ON r.rifa_id = rf.id ORDER BY r.data_reserva DESC LIMIT ? OFFSET ?");
-    $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    $sql = "SELECT r.*, rf.nome as rifa_nome FROM reservas r 
+            LEFT JOIN rifas rf ON r.rifa_id = rf.id 
+            $where 
+            ORDER BY r.data_reserva DESC 
+            LIMIT ? OFFSET ?";
+    
+    $stmt = $pdo->prepare($sql);
+    
+    $idx = 1;
+    foreach($paramsData as $p) {
+        $stmt->bindValue($idx++, $p, PDO::PARAM_STR);
+    }
+    $stmt->bindValue($idx++, $limit, PDO::PARAM_INT);
+    $stmt->bindValue($idx++, $offset, PDO::PARAM_INT);
+    
     $stmt->execute();
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -39,7 +64,35 @@ if($action === 'stats') {
         'current_page' => (int)$page
     ]);
 } 
-else if($action === 'mark_paid') {
+else if($action === 'billing_report') {
+    $start = $_GET['start'] ?? '';
+    $end = $_GET['end'] ?? '';
+    $period = $_GET['period'] ?? ''; // '30', '7', 'today'
+
+    $where = " WHERE status = 'pago' ";
+    $params = [];
+
+    if($period === 'today') {
+        $where .= " AND DATE(data_reserva) = CURDATE() ";
+    } else if($period === '7') {
+        $where .= " AND data_reserva >= DATE_SUB(NOW(), INTERVAL 7 DAY) ";
+    } else if($period === '30') {
+        $where .= " AND data_reserva >= DATE_SUB(NOW(), INTERVAL 30 DAY) ";
+    } else if(!empty($start) && !empty($end)) {
+        $where .= " AND data_reserva BETWEEN ? AND ? ";
+        $params = [$start . ' 00:00:00', $end . ' 23:59:59'];
+    }
+
+    $stmt = $pdo->prepare("SELECT SUM(valor_total) as total, COUNT(*) as qtd FROM reservas $where");
+    $stmt->execute($params);
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        'success' => true,
+        'total' => (float)($data['total'] ?: 0),
+        'count' => (int)$data['qtd']
+    ]);
+}else if($action === 'mark_paid') {
     $id = intval($_POST['id'] ?? 0);
     $pdo->prepare("UPDATE reservas SET status = 'pago' WHERE id = ?")->execute([$id]);
     $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$id]);
