@@ -156,12 +156,35 @@ try {
         }
 
         // 2. CRIAR COBRANÇA (COB)
-        // Cadastro da cobrança (POST /v2/cob - Sem txid conforme documentação Efí)
+        // Se viermos do Mercado Pago, o token pode estar sujo com o Access Token do MP
+        $pix_key = (strpos($token, 'APP_USR') === 0) ? '' : $token;
+        
+        // Busca automática da chave Pix (EVP) se for Efí para não precisar digitar no painel
+        // Outros sites buscam direto, então vamos listar as chaves EVP da conta
+        $ch = curl_init("https://pix.api.efipay.com.br/v2/gn/evp");
+        curl_setopt($ch, CURLOPT_SSLCERT, $certificate);
+        curl_setopt($ch, CURLOPT_SSLCERTTYPE, "P12");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $access_token"]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        $res_keys = curl_exec($ch);
+        curl_close($ch);
+        $keys_data = json_decode($res_keys, true);
+
+        if(isset($keys_data['chaves']) && count($keys_data['chaves']) > 0) {
+            $pix_key = $keys_data['chaves'][0];
+        }
+
+        if(empty($pix_key)) {
+            throw new Exception("Erro Cob Efí: Nenhuma chave PIX (EVP) encontrada na sua conta Efí. Por favor, crie uma chave aleatória no painel da Efí.");
+        }
+
         $ch = curl_init("https://pix.api.efipay.com.br/v2/cob");
         $body = [
             "calendario" => ["expiracao" => $tempo_pagamento * 60],
             "valor" => ["original" => number_format($total, 2, '.', '')],
-            "chave" => $token,
+            "chave" => $pix_key,
             "solicitacaoPagador" => "Pagamento da reserva na plataforma."
         ];
         
