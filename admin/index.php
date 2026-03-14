@@ -73,6 +73,10 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </tbody>
             </table>
         </div>
+        <!-- Pagination -->
+        <div id="pagination-reservas" class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-center items-center gap-2">
+            <!-- Buttons injected here -->
+        </div>
     </div>
 
     <!-- Modal Integracoes -->
@@ -192,9 +196,12 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     <script>
         const API = '../backend/api/admin.php';
 
-        async function fetchStats() {
+        let currentPage = 1;
+
+        async function fetchStats(page = 1) {
+            currentPage = page;
             try {
-                const res = await fetch(`${API}?action=stats`);
+                const res = await fetch(`${API}?action=stats&page=${page}`);
                 const data = await res.json();
                 
                 document.getElementById('stat-livre').textContent = data.stats['disponivel'] || 0;
@@ -239,8 +246,48 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     `;
                     tbody.appendChild(tr);
                 });
+
+                renderPagination(data.total_pages, data.current_page);
+
             } catch(e) {
                 console.error(e);
+            }
+        }
+
+        function renderPagination(totalPages, current) {
+            const container = document.getElementById('pagination-reservas');
+            container.innerHTML = '';
+            
+            if(totalPages <= 1) return;
+
+            // Simple Pagination: Previous, Page Numbers, Next
+            if(current > 1) {
+                const btnPrev = document.createElement('button');
+                btnPrev.className = 'px-3 py-1 bg-white border border-gray-300 rounded text-xs font-bold text-gray-600 hover:bg-gray-100';
+                btnPrev.textContent = 'Anterior';
+                btnPrev.onclick = () => fetchStats(current - 1);
+                container.appendChild(btnPrev);
+            }
+
+            // Show max 5 pages around current
+            let start = Math.max(1, current - 2);
+            let end = Math.min(totalPages, start + 4);
+            if(end === totalPages) start = Math.max(1, end - 4);
+
+            for(let i = start; i <= end; i++) {
+                const btn = document.createElement('button');
+                btn.className = `px-3 py-1 rounded text-xs font-bold ${i === current ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'}`;
+                btn.textContent = i;
+                btn.onclick = () => fetchStats(i);
+                container.appendChild(btn);
+            }
+
+            if(current < totalPages) {
+                const btnNext = document.createElement('button');
+                btnNext.className = 'px-3 py-1 bg-white border border-gray-300 rounded text-xs font-bold text-gray-600 hover:bg-gray-100';
+                btnNext.textContent = 'Próximo';
+                btnNext.onclick = () => fetchStats(current + 1);
+                container.appendChild(btnNext);
             }
         }
 
@@ -251,7 +298,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             fd.append('id', id);
 
             await fetch(API, { method: 'POST', body: fd });
-            fetchStats();
+            fetchStats(currentPage);
         }
 
         document.getElementById('btn-integrations').addEventListener('click', async () => {

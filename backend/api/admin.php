@@ -10,19 +10,33 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 $action = $_GET['action'] ?? $_POST['action'] ?? 'stats';
 
 if($action === 'stats') {
+    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+    if($page < 1) $page = 1;
+    $limit = 20;
+    $offset = ($page - 1) * $limit;
+
     $stmt = $pdo->query("SELECT status, COUNT(*) as qtd FROM numeros GROUP BY status");
     $stats = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     
     $stmt = $pdo->query("SELECT SUM(valor_total) FROM reservas WHERE status = 'pago'");
     $faturamento = $stmt->fetchColumn() ?: 0;
+
+    // Total de reservas para paginação
+    $totalCount = $pdo->query("SELECT COUNT(*) FROM reservas")->fetchColumn();
+    $totalPages = ceil($totalCount / $limit);
     
-    $stmt = $pdo->query("SELECT r.*, rf.nome as rifa_nome FROM reservas r LEFT JOIN rifas rf ON r.rifa_id = rf.id ORDER BY r.data_reserva DESC LIMIT 50");
+    $stmt = $pdo->prepare("SELECT r.*, rf.nome as rifa_nome FROM reservas r LEFT JOIN rifas rf ON r.rifa_id = rf.id ORDER BY r.data_reserva DESC LIMIT ? OFFSET ?");
+    $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    $stmt->execute();
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
         'stats' => $stats,
         'faturamento' => $faturamento,
-        'reservas' => $reservas
+        'reservas' => $reservas,
+        'total_pages' => (int)$totalPages,
+        'current_page' => (int)$page
     ]);
 } 
 else if($action === 'mark_paid') {
