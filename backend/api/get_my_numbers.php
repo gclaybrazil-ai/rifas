@@ -58,7 +58,14 @@ try {
     $stmt->execute([$tempo_pagamento, $likeWhat]);
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode(['success' => true, 'data' => $reservas]);
+    // Obter Link Suporte
+    $link_suporte = '';
+    try {
+        $stmtS = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'link_suporte'");
+        if($stmtS) $link_suporte = $stmtS->fetchColumn() ?: '';
+    } catch(PDOException $e) {}
+
+    echo json_encode(['success' => true, 'data' => $reservas, 'link_suporte' => $link_suporte]);
 } catch(PDOException $e) {
     echo json_encode(['success' => false, 'error' => 'Erro ao buscar dados: ' . $e->getMessage()]);
 }

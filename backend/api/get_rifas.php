@@ -46,10 +46,18 @@ try {
         }
     }
 
+    // Obter Link Suporte
+    $link_suporte = '';
+    try {
+        $stmtS = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'link_suporte'");
+        if($stmtS) $link_suporte = $stmtS->fetchColumn() ?: '';
+    } catch(PDOException $e) {}
+
     echo json_encode([
         'success' => true,
         'ativas' => $ativas,
-        'finalizadas' => $finalizadas
+        'finalizadas' => $finalizadas,
+        'link_suporte' => $link_suporte
     ]);
 
 } catch(Exception $e) {

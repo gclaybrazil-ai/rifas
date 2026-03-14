@@ -29,6 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 finalizadasSection.classList.remove('hidden');
                 data.finalizadas.forEach(rifa => renderCard(rifa, finalizadasListEl, true));
             }
+
+            // Aplicar link de suporte no menu
+            if(data.link_suporte) {
+                const navAjuda = document.getElementById('link-ajuda-nav');
+                if(navAjuda) {
+                    navAjuda.href = data.link_suporte;
+                    navAjuda.target = "_blank";
+                }
+            }
         }
 
         // Fetch Ganhadores
