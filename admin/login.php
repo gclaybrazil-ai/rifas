@@ -10,7 +10,7 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin - Top Sorte</title>
+    <title>Login Admin - $UPER$ORTE</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
         <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-green-400 to-[#00a650]"></div>
 
         <div class="text-center mb-8 mt-2">
-            <h1 class="text-3xl font-black italic tracking-tighter" style="color: #00a650;">TOP<span style="color: #2c3e50;">SORTE</span></h1>
+            <h1 class="text-3xl font-black italic tracking-tighter" style="color: #00a650;">$UPER<span style="color: #2c3e50;">$ORTE</span></h1>
             <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Acesso Restrito</p>
         </div>
 

@@ -71,7 +71,7 @@ try {
             "transaction_amount" => (float)$total,
             "payment_method_id" => "pix",
             "payer" => [
-                "email" => preg_replace('/\D/', '', $whatsapp) . "@topsorte.com.br",
+                "email" => preg_replace('/\D/', '', $whatsapp) . "@supersorte.com.br",
                 "first_name" => substr($nome, 0, 20)
             ]
         ];

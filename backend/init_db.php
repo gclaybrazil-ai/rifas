@@ -54,7 +54,7 @@ $pdo->exec($sql);
 // Seed if empty
 $stmt = $pdo->query("SELECT COUNT(*) FROM rifas");
 if($stmt->fetchColumn() == 0) {
-    $pdo->exec("INSERT INTO rifas (nome, preco_numero) VALUES ('Sorteio Eletrônico Top Sorte', 13.00)");
+    $pdo->exec("INSERT INTO rifas (nome, preco_numero) VALUES ('Sorteio Eletrônico $UPER$ORTE', 13.00)");
     $rifa_id = $pdo->lastInsertId();
     
     // Insert 00 to 99
