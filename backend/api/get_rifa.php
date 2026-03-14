@@ -17,11 +17,21 @@ if(count($ids) > 0) {
     $stmt2->execute($ids);
 }
 
-// Obter a rifa ativa (simplificando pegamos a primeira ID 1)
-$rifa_id = 1;
-$stmt = $pdo->prepare("SELECT id, nome, preco_numero, status, quantidade_numeros FROM rifas WHERE id = ?");
-$stmt->execute([$rifa_id]);
+// Obter a rifa
+$rifa_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if($rifa_id > 0) {
+    $stmt = $pdo->prepare("SELECT id, nome, preco_numero, status, quantidade_numeros FROM rifas WHERE id = ?");
+    $stmt->execute([$rifa_id]);
+} else {
+    // Pega a ultima aberta
+    $stmt = $pdo->query("SELECT id, nome, preco_numero, status, quantidade_numeros FROM rifas WHERE status = 'aberta' ORDER BY id DESC LIMIT 1");
+}
 $rifa = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if($rifa) {
+    $rifa_id = $rifa['id'];
+}
 
 if(!$rifa) {
     die(json_encode(['error' => 'Rifa não encontrada']));

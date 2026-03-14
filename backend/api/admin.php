@@ -48,4 +48,53 @@ else if($action === 'draw') {
         echo json_encode(['error' => 'Nenhum número pago para sortear']);
     }
 }
+else if($action === 'create_rifa') {
+    $nome = $_POST['nome'] ?? 'Rifa Nova';
+    $preco = $_POST['preco'] ?? 10.00;
+
+    $pdo->beginTransaction();
+    try {
+        // Fechar todas as anteriores para não bagunçar estatísticas do protótipo
+        $pdo->exec("UPDATE rifas SET status = 'fechada'");
+
+        $stmt = $pdo->prepare("INSERT INTO rifas (nome, preco_numero, status, quantidade_numeros) VALUES (?, ?, 'aberta', 100)");
+        $stmt->execute([$nome, $preco]);
+        $rifa_id = $pdo->lastInsertId();
+
+        $insert_stmt = $pdo->prepare("INSERT INTO numeros (rifa_id, numero) VALUES (?, ?)");
+        for($i = 0; $i < 100; $i++) {
+            $num = str_pad($i, 2, '0', STR_PAD_LEFT);
+            $insert_stmt->execute([$rifa_id, $num]);
+        }
+        
+        $pdo->commit();
+        echo json_encode(['success' => true]);
+    } catch(Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+}
+else if($action === 'get_rifas_list') {
+    $stmt = $pdo->query("SELECT id, nome, preco_numero, status, quantidade_numeros FROM rifas ORDER BY id DESC");
+    echo json_encode(['rifas' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+}
+else if($action === 'delete_rifa') {
+    $id = intval($_POST['id'] ?? 0);
+    $pdo->prepare("DELETE FROM reservas WHERE rifa_id = ?")->execute([$id]);
+    $pdo->prepare("DELETE FROM numeros WHERE rifa_id = ?")->execute([$id]);
+    $pdo->prepare("DELETE FROM rifas WHERE id = ?")->execute([$id]);
+    echo json_encode(['success' => true]);
+}
+else if($action === 'set_rifa_status') {
+    $id = intval($_POST['id'] ?? 0);
+    $status = $_POST['status'] ?? 'fechada';
+    
+    // Optional: Only 1 active
+    if($status === 'aberta') {
+        $pdo->exec("UPDATE rifas SET status = 'fechada'");
+    }
+    
+    $pdo->prepare("UPDATE rifas SET status = ? WHERE id = ?")->execute([$status, $id]);
+    echo json_encode(['success' => true]);
+}
 ?>

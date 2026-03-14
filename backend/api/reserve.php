@@ -4,7 +4,7 @@ require_once '../config.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-$rifa_id = 1; // Fixo para este protótipo
+$rifa_id = isset($data['rifa_id']) ? intval($data['rifa_id']) : 1;
 $nome = $data['nome'] ?? '';
 $whatsapp = $data['whatsapp'] ?? '';
 $numerosSelecionados = $data['numeros'] ?? [];

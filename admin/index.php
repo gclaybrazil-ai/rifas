@@ -21,10 +21,13 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <h1 class="text-2xl font-black text-[#8e44ad]">Painel Administrativo</h1>
             <p class="text-sm text-gray-500">Gestão da Rifa</p>
         </div>
-        <div class="mt-4 md:mt-0 flex gap-2">
-            <button id="btn-draw" class="bg-[#f1c40f] text-black font-bold px-4 py-2 rounded shadow hover:bg-yellow-500">Sortear Vencedor</button>
-            <button id="btn-reset" class="bg-red-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-red-600">Resetar Rifa</button>
-            <a href="../index.html" class="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded hover:bg-gray-300">Ver Site</a>
+        <div class="mt-4 md:mt-0 flex gap-2 flex-wrap justify-end">
+            <button id="btn-new-rifa" class="bg-[#00a650] text-white font-bold px-4 py-2 rounded shadow hover:bg-[#009647]">Nova Rifa</button>
+            <a href="rifas.php" class="bg-blue-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-blue-600">Gerenciar Rifas</a>
+            <button id="btn-draw" class="bg-[#f1c40f] text-black font-bold px-4 py-2 rounded shadow hover:bg-yellow-500">Sortear</button>
+            <button id="btn-reset" class="bg-red-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-red-600 focus:outline-none" title="Limpar reservas atuais">Resetar</button>
+            <a href="../index.html" class="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded hover:bg-gray-300">Site</a>
+            <a href="../backend/api/logout.php" class="bg-gray-800 text-white font-bold px-4 py-2 rounded hover:bg-black">Sair</a>
         </div>
     </div>
 
@@ -101,6 +104,35 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <a id="winner-whatsapp-link" href="#" target="_blank" class="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3 px-6 rounded-xl hover:bg-[#128C7E] transition-colors relative overflow-hidden group">
                 Chamar no WhatsApp
             </a>
+        </div>
+        </div>
+    </div>
+
+    <!-- Modal Nova Rifa -->
+    <div id="modal-new-rifa" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative">
+            <button id="btn-close-new" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-xl font-black text-[#2c3e50] mb-4 uppercase">Criar Nova Rifa</h2>
+            
+            <form id="form-new-rifa" class="flex flex-col gap-3">
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Nome da Rifa</label>
+                    <input type="text" id="new-nome" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ex: Sorteio do PIX">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Preço do Número (R$)</label>
+                    <input type="number" step="0.01" id="new-preco" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ex: 0.10">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Quantidade de Números</label>
+                    <select id="new-qtd" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#00a650] outline-none">
+                        <option value="100">100 Números (00 a 99)</option>
+                    </select>
+                </div>
+                <button type="submit" id="btn-submit-new" class="w-full bg-[#00a650] text-white font-bold py-3 mt-2 rounded-xl hover:bg-[#009647] uppercase text-sm">Criar e Ativar</button>
+            </form>
         </div>
     </div>
 
@@ -207,6 +239,44 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              const modal = document.getElementById('modal-winner');
              modal.classList.remove('opacity-100');
              setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        });
+
+        // Nova Rifa Logic
+        document.getElementById('btn-new-rifa').addEventListener('click', () => {
+             const modal = document.getElementById('modal-new-rifa');
+             modal.classList.remove('hidden');
+             setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
+        });
+
+        document.getElementById('btn-close-new').addEventListener('click', () => {
+             const modal = document.getElementById('modal-new-rifa');
+             modal.classList.remove('opacity-100');
+             setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        });
+
+        document.getElementById('form-new-rifa').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-new');
+            const nome = document.getElementById('new-nome').value;
+            const preco = document.getElementById('new-preco').value;
+
+            btn.disabled = true;
+            btn.innerHTML = 'Criando...';
+
+            const fd = new URLSearchParams();
+            fd.append('action', 'create_rifa');
+            fd.append('nome', nome);
+            fd.append('preco', preco);
+
+            try {
+                await fetch(API, { method: 'POST', body: fd });
+                alert('Rifa criada com sucesso!');
+                window.location.reload();
+            } catch(err) {
+                alert('Erro ao criar rifa');
+                btn.disabled = false;
+                btn.innerHTML = 'Criar e Ativar';
+            }
         });
 
         fetchStats();

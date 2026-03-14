@@ -43,7 +43,9 @@ const els = {
 
 async function fetchRifa() {
     try {
-        const res = await fetch(`${API_URL}/get_rifa.php`);
+        const urlParams = new URLSearchParams(window.location.search);
+        const rifaId = urlParams.get('id') || '';
+        const res = await fetch(`${API_URL}/get_rifa.php?id=${rifaId}`);
         const data = await res.json();
         
         if (data.error) throw new Error(data.error);
@@ -210,9 +212,13 @@ els.btnSubmitReservation.addEventListener('click', async () => {
     els.btnSubmitReservation.disabled = true;
 
     try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const rifaId = urlParams.get('id') || '';
+
         const res = await fetch(`${API_URL}/reserve.php`, {
             method: 'POST',
             body: JSON.stringify({
+                rifa_id: rifaId,
                 nome,
                 whatsapp,
                 numeros: arr
