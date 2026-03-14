@@ -43,5 +43,15 @@ if ($status === 'pendente') {
     } catch(PDOException $e) {}
 }
 
-echo json_encode(['status' => $status]);
+// Obter Link do Grupo VIP
+$group_vip = '';
+try {
+    $stmtG = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'group_vip'");
+    if($stmtG) $group_vip = $stmtG->fetchColumn() ?: '';
+} catch(PDOException $e) {}
+
+echo json_encode([
+    'status' => $status,
+    'group_vip' => $group_vip
+]);
 ?>

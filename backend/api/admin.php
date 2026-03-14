@@ -115,12 +115,18 @@ else if($action === 'draw_multiple') {
         $stmtWin->execute([$rifa_id, $w['numero'], $w['nome'], $w['whatsapp'], $ordem]);
     }
 
-    echo json_encode(['success' => true, 'winners' => $winners]);
+    // Pegar prêmios para o feedback visual
+    $stmtRifa = $pdo->prepare("SELECT premio1, premio2, premio3, premio4, premio5 FROM rifas WHERE id = ?");
+    $stmtRifa->execute([$rifa_id]);
+    $prizes = $stmtRifa->fetch(PDO::FETCH_ASSOC);
+
+    echo json_encode(['success' => true, 'winners' => $winners, 'prizes' => $prizes]);
 }
 else if($action === 'save_integration') {
     $gateway = $_POST['gateway'] ?? '';
     $token = $_POST['token'] ?? '';
     $tempo_pagamento = $_POST['tempo_pagamento'] ?? '3';
+    $group_vip = $_POST['group_vip'] ?? '';
     
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
     $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('gateway', ?) ON DUPLICATE KEY UPDATE valor = ?");
@@ -132,11 +138,14 @@ else if($action === 'save_integration') {
     $stmt3 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('tempo_pagamento', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt3->execute([$tempo_pagamento, $tempo_pagamento]);
 
+    $stmt4 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('group_vip', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt4->execute([$group_vip, $group_vip]);
+
     echo json_encode(['success' => true]);
 }
 else if($action === 'get_integration') {
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento')");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip')");
     $conf = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     echo json_encode($conf ?: []);
 }
@@ -256,9 +265,13 @@ else if($action === 'get_winners') {
     $rifa_id = intval($_GET['rifa_id'] ?? $_POST['rifa_id'] ?? 0);
     $pdo->exec("CREATE TABLE IF NOT EXISTS ganhadores (id INT AUTO_INCREMENT PRIMARY KEY, rifa_id INT NOT NULL, numero VARCHAR(10) NOT NULL, nome VARCHAR(255) NOT NULL, whatsapp VARCHAR(20) NOT NULL, premio_ordem INT NOT NULL, data_sorteio DATETIME DEFAULT CURRENT_TIMESTAMP)");
     
+    $stmtRifa = $pdo->prepare("SELECT premio1, premio2, premio3, premio4, premio5 FROM rifas WHERE id = ?");
+    $stmtRifa->execute([$rifa_id]);
+    $prizes = $stmtRifa->fetch(PDO::FETCH_ASSOC);
+
     $stmt = $pdo->prepare("SELECT numero, nome, whatsapp, premio_ordem FROM ganhadores WHERE rifa_id = ? ORDER BY premio_ordem ASC");
     $stmt->execute([$rifa_id]);
-    echo json_encode(['winners' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    echo json_encode(['winners' => $stmt->fetchAll(PDO::FETCH_ASSOC), 'prizes' => $prizes]);
 }
 else if($action === 'delete_rifa') {
     $id = intval($_POST['id'] ?? 0);

@@ -66,8 +66,16 @@ $stmt = $pdo->prepare("SELECT n.numero, n.status, n.reserva_id, r.nome AS compra
 $stmt->execute([$rifa_id]);
 $numeros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Obter Link do Grupo VIP
+$group_vip = '';
+try {
+    $stmtG = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'group_vip'");
+    if($stmtG) $group_vip = $stmtG->fetchColumn() ?: '';
+} catch(PDOException $e) {}
+
 echo json_encode([
     'rifa' => $rifa,
-    'numeros' => $numeros
+    'numeros' => $numeros,
+    'group_vip' => $group_vip
 ]);
 ?>

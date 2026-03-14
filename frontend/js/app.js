@@ -7,7 +7,8 @@ let state = {
     reserva: null,
     pollingTimer: null,
     paymentPollingTimer: null,
-    countdownTimer: null
+    countdownTimer: null,
+    groupVip: ''
 };
 
 // DOM Elements
@@ -55,6 +56,10 @@ async function fetchRifa() {
         if(data.rifa.sorteio_por) {
             const badge = document.getElementById('badge-sorteio');
             if(badge) badge.textContent = `SORTEIO POR ${data.rifa.sorteio_por.toUpperCase()}`;
+        }
+
+        if(data.group_vip) {
+            state.groupVip = data.group_vip;
         }
         
         updateGrid(data.numeros);
@@ -373,6 +378,15 @@ function startPaymentPolling(reserva_id) {
                 fetchRifa(); // Get purple buttons
                 
                 hideModals();
+                
+                // VIP Button logic
+                const btnVip = document.getElementById('btn-group-vip');
+                if(btnVip && state.groupVip) {
+                    btnVip.href = state.groupVip;
+                    btnVip.classList.remove('hidden');
+                    btnVip.classList.add('flex');
+                }
+
                 setTimeout(() => openModal(els.modalSuccess), 350);
             } else if (data.status === 'expirado') {
                 clearInterval(state.paymentPollingTimer);

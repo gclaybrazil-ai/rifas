@@ -289,11 +289,11 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                      cont.innerHTML = '';
                      data.winners.forEach((w) => {
                          const wppNumber = w.whatsapp.replace(/\D/g, '');
-                         const index = w.premio_ordem - 1; // map back to 0-based for string if needed
+                         const prizeDesc = data.prizes ? data.prizes['premio' + w.premio_ordem] : '';
                          const box = `
                             <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-left shadow-sm flex items-center justify-between mb-2">
                                 <div>
-                                    <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Prêmio ${w.premio_ordem}</div>
+                                    <div class="text-[10px] text-[#8e44ad] font-black uppercase mb-1">${prizeDesc ? 'Ganhou ' + prizeDesc : 'Prêmio ' + w.premio_ordem}</div>
                                     <div class="font-bold text-gray-800 text-lg flex items-center gap-2">
                                         <span class="bg-yellow-400 w-8 h-8 rounded flex items-center justify-center shadow font-black text-[#2c3e50] text-sm">${w.numero}</span>
                                         ${w.nome}
@@ -421,10 +421,11 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                          cont.innerHTML = '';
                          data.winners.forEach((w, index) => {
                              const wppNumber = w.whatsapp.replace(/\D/g, '');
+                             const prizeDesc = data.prizes ? data.prizes['premio' + (index + 1)] : '';
                              const box = `
                                 <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-left shadow-sm flex items-center justify-between mb-2">
                                     <div>
-                                        <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Prêmio ${index+1}</div>
+                                        <div class="text-[10px] text-[#8e44ad] font-black uppercase mb-1">${prizeDesc ? 'Ganhou ' + prizeDesc : 'Prêmio ' + (index+1)}</div>
                                         <div class="font-bold text-gray-800 text-lg flex items-center gap-2">
                                             <span class="bg-yellow-400 w-8 h-8 rounded flex items-center justify-center shadow font-black text-[#2c3e50] text-sm">${w.numero}</span>
                                             ${w.nome}

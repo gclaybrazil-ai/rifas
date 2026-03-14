@@ -23,6 +23,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             if(data.status === 'pago') {
                 document.getElementById('txt-sucesso-numeros').innerText = `Seus números: ${data.numeros}`;
+                
+                if(data.group_vip) {
+                    const btnVip = document.getElementById('btn-group-vip-checkout');
+                    if(btnVip) {
+                        btnVip.href = data.group_vip;
+                        btnVip.classList.remove('hidden');
+                        btnVip.classList.add('flex');
+                    }
+                }
+
                 success.classList.remove('hidden');
                 success.classList.add('flex');
             } else if(data.status === 'expirado') {
@@ -95,6 +105,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 view.classList.add('hidden');
                                 view.classList.remove('flex');
                                 document.getElementById('txt-sucesso-numeros').innerText = `O pagamento da reserva #${id} foi efetivado com sucesso. Boa sorte!`;
+                                
+                                if(r.group_vip) {
+                                    const btnVip = document.getElementById('btn-group-vip-checkout');
+                                    if(btnVip) {
+                                        btnVip.href = r.group_vip;
+                                        btnVip.classList.remove('hidden');
+                                        btnVip.classList.add('flex');
+                                    }
+                                }
+
                                 success.classList.remove('hidden');
                                 success.classList.add('flex');
                             } else if (r.status === 'expirado') {

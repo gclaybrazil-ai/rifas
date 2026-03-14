@@ -34,6 +34,13 @@ try {
     $res = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if($res) {
+        $group_vip = '';
+        try {
+            $stmtG = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'group_vip'");
+            if($stmtG) $group_vip = $stmtG->fetchColumn() ?: '';
+        } catch(PDOException $e) {}
+        $res['group_vip'] = $group_vip;
+        
         echo json_encode(['success' => true, 'data' => $res]);
     } else {
         echo json_encode(['success' => false, 'error' => 'Reserva não encontrada']);
