@@ -113,28 +113,59 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
     <!-- Modal Nova Rifa -->
     <div id="modal-new-rifa" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative">
+        <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative max-h-[95vh] overflow-y-auto">
             <button id="btn-close-new" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
             <h2 class="text-xl font-black text-[#2c3e50] mb-4 uppercase">Criar Nova Rifa</h2>
             
             <form id="form-new-rifa" class="flex flex-col gap-3">
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Nome da Rifa</label>
-                    <input type="text" id="new-nome" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ex: Sorteio do PIX">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Nome da Rifa</label>
+                        <input type="text" id="new-nome" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ex: Sorteio do PIX">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Preço do Número (R$)</label>
+                        <input type="number" step="0.01" id="new-preco" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ex: 0.10">
+                    </div>
                 </div>
+
                 <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Preço do Número (R$)</label>
-                    <input type="number" step="0.01" id="new-preco" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ex: 0.10">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Imagem Banner (URL ou Arquivo Próprio)</label>
+                    <div class="flex gap-2">
+                        <input type="url" id="new-imagem" class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 text-[10px] md:text-xs focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ou cole o Link https://...">
+                        <input type="file" id="new-imagem-file" accept="image/*" class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-1.5 text-[10px] md:text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-[#00a650] file:text-white file:font-bold hover:file:bg-[#009647]">
+                    </div>
                 </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Quantidade de Números</label>
-                    <select id="new-qtd" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#00a650] outline-none">
-                        <option value="100">100 Números (00 a 99)</option>
-                    </select>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Quantidade de Números</label>
+                        <input type="number" id="new-qtd" min="10" max="10000" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Mín: 10, Máx: 10000">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Sorteado Por</label>
+                        <select id="new-sorteio" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none">
+                            <option value="Loteria Federal">Loteria Federal</option>
+                            <option value="Jogo do Bicho">Jogo do Bicho</option>
+                            <option value="Sorteador.com.br">Sorteador.com.br</option>
+                        </select>
+                    </div>
                 </div>
-                <button type="submit" id="btn-submit-new" class="w-full bg-[#00a650] text-white font-bold py-3 mt-2 rounded-xl hover:bg-[#009647] uppercase text-sm">Criar e Ativar</button>
+
+                <div class="border-t border-gray-100 pt-3 mt-1">
+                    <p class="text-[10px] font-black text-[#8e44ad] uppercase mb-2">Prêmios Específicos (Opcional)</p>
+                    <div class="flex flex-col gap-2">
+                        <input type="text" id="new-premio1" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="1º Prêmio (Ex: iPhone 16)">
+                        <input type="text" id="new-premio2" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="2º Prêmio">
+                        <input type="text" id="new-premio3" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="3º Prêmio">
+                        <input type="text" id="new-premio4" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="4º Prêmio">
+                        <input type="text" id="new-premio5" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="5º Prêmio">
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-submit-new" class="w-full bg-[#00a650] text-white font-bold py-3 mt-3 rounded-xl hover:bg-[#009647] uppercase text-sm shadow">Criar e Ativar Rifa</button>
             </form>
         </div>
     </div>
@@ -266,21 +297,41 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         document.getElementById('form-new-rifa').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-submit-new');
-            const nome = document.getElementById('new-nome').value;
-            const preco = document.getElementById('new-preco').value;
-
+            
             btn.disabled = true;
-            btn.innerHTML = 'Criando...';
+            btn.innerHTML = 'Criando (Aguarde, pode demorar)...';
 
-            const fd = new URLSearchParams();
+            const fd = new FormData();
             fd.append('action', 'create_rifa');
-            fd.append('nome', nome);
-            fd.append('preco', preco);
+            fd.append('nome', document.getElementById('new-nome').value);
+            fd.append('preco', document.getElementById('new-preco').value);
+            fd.append('imagem', document.getElementById('new-imagem').value);
+            
+            const fileInput = document.getElementById('new-imagem-file');
+            if(fileInput.files.length > 0) {
+                 fd.append('imagem_file', fileInput.files[0]);
+            }
+            
+            fd.append('qtd', document.getElementById('new-qtd').value);
+            fd.append('sorteio', document.getElementById('new-sorteio').value);
+            fd.append('p1', document.getElementById('new-premio1').value);
+            fd.append('p2', document.getElementById('new-premio2').value);
+            fd.append('p3', document.getElementById('new-premio3').value);
+            fd.append('p4', document.getElementById('new-premio4').value);
+            fd.append('p5', document.getElementById('new-premio5').value);
 
             try {
-                await fetch(API, { method: 'POST', body: fd });
-                alert('Rifa criada com sucesso!');
-                window.location.reload();
+                const req = await fetch(API, { method: 'POST', body: fd });
+                const res = await req.json();
+                
+                if(res.success) {
+                    alert('Rifa criada com sucesso!');
+                    window.location.reload();
+                } else {
+                    alert(res.error || 'Erro ao criar rifa');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Criar e Ativar Rifa';
+                }
             } catch(err) {
                 alert('Erro ao criar rifa');
                 btn.disabled = false;

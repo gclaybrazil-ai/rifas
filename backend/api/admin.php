@@ -83,24 +83,66 @@ else if($action === 'get_integration') {
 else if($action === 'create_rifa') {
     $nome = $_POST['nome'] ?? 'Rifa Nova';
     $preco = $_POST['preco'] ?? 10.00;
+    
+    $imagem = $_POST['imagem'] ?? '';
+    if(isset($_FILES['imagem_file']) && $_FILES['imagem_file']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../../uploads/';
+        if(!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        
+        $ext = pathinfo($_FILES['imagem_file']['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('banner_') . '.' . $ext;
+        if(move_uploaded_file($_FILES['imagem_file']['tmp_name'], $uploadDir . $filename)) {
+            $imagem = 'uploads/' . $filename;
+        }
+    }
+
+    $qtd = intval($_POST['qtd'] ?? 100);
+    $qtd = max(10, min(10000, $qtd));
+    $sorteio = $_POST['sorteio'] ?? 'Loteria Federal';
+    $p1 = $_POST['p1'] ?? '';
+    $p2 = $_POST['p2'] ?? '';
+    $p3 = $_POST['p3'] ?? '';
+    $p4 = $_POST['p4'] ?? '';
+    $p5 = $_POST['p5'] ?? '';
 
     $stmtCheck = $pdo->query("SELECT COUNT(*) FROM rifas WHERE status = 'aberta'");
     if($stmtCheck->fetchColumn() >= 10) {
         die(json_encode(['error' => 'Limite atingido! Você só pode ter até 10 rifas ativas simultaneamente.']));
     }
 
+    try {
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS imagem_url VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio1 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio2 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio3 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio4 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio5 VARCHAR(255) DEFAULT ''");
+        $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS sorteio_por VARCHAR(50) DEFAULT 'Loteria Federal'");
+    } catch(PDOException $e) {}
+
     $pdo->beginTransaction();
     try {
 
-        $stmt = $pdo->prepare("INSERT INTO rifas (nome, preco_numero, status, quantidade_numeros) VALUES (?, ?, 'aberta', 100)");
-        $stmt->execute([$nome, $preco]);
+        $stmt = $pdo->prepare("INSERT INTO rifas (nome, preco_numero, status, quantidade_numeros, imagem_url, premio1, premio2, premio3, premio4, premio5, sorteio_por) VALUES (?, ?, 'aberta', ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$nome, $preco, $qtd, $imagem, $p1, $p2, $p3, $p4, $p5, $sorteio]);
         $rifa_id = $pdo->lastInsertId();
 
         $insert_stmt = $pdo->prepare("INSERT INTO numeros (rifa_id, numero) VALUES (?, ?)");
-        for($i = 0; $i < 100; $i++) {
-            $num = str_pad($i, 2, '0', STR_PAD_LEFT);
+        
+        $pad_len = strlen((string)($qtd - 1));
+        
+        // Disable unique checks temporarily to speed up mass insertion for 10.000 loop
+        $pdo->exec("SET unique_checks=0;");
+        $pdo->exec("SET foreign_key_checks=0;");
+        
+        // Chunk insertion for speed
+        for($i = 0; $i < $qtd; $i++) {
+            $num = str_pad($i, $pad_len, '0', STR_PAD_LEFT);
             $insert_stmt->execute([$rifa_id, $num]);
         }
+        
+        $pdo->exec("SET unique_checks=1;");
+        $pdo->exec("SET foreign_key_checks=1;");
         
         $pdo->commit();
         echo json_encode(['success' => true]);
