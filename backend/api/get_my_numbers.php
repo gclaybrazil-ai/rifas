@@ -32,8 +32,33 @@ try {
         $stmt2->execute($ids);
     }
 
+    // We'll match ends with since user might type with or without country code
+    $likeWhat = '%' . $whatsapp; 
+
+    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+    if($page < 1) $page = 1;
+    $limit = 20;
+    $offset = ($page - 1) * $limit;
+    $statusFilter = $_GET['status'] ?? ''; // 'pago', 'pendente', 'expirado'
+
     // Buscar reservas associadas a esse whatsapp, agrupando os numeros e informações da rifa
-    $stmt = $pdo->prepare("
+    $where = "WHERE REPLACE(REPLACE(REPLACE(REPLACE(r.whatsapp, '(', ''), ')', ''), '-', ''), ' ', '') LIKE ?";
+    $paramsCount = [$likeWhat];
+    $paramsData = [$tempo_pagamento, $likeWhat];
+
+    if(!empty($statusFilter)) {
+        $where .= " AND r.status = ?";
+        $paramsCount[] = $statusFilter;
+        $paramsData[] = $statusFilter;
+    }
+
+    // Total para paginação
+    $stmtCount = $pdo->prepare("SELECT COUNT(DISTINCT r.id) FROM reservas r $where");
+    $stmtCount->execute($paramsCount);
+    $totalCount = $stmtCount->fetchColumn();
+    $totalPages = ceil($totalCount / $limit);
+
+    $sql = "
         SELECT 
             r.id as reserva_id,
             r.rifa_id,
@@ -47,15 +72,28 @@ try {
         FROM reservas r
         JOIN rifas rf ON r.rifa_id = rf.id
         LEFT JOIN numeros n ON n.reserva_id = r.id
-        WHERE REPLACE(REPLACE(REPLACE(REPLACE(r.whatsapp, '(', ''), ')', ''), '-', ''), ' ', '') LIKE ?
+        $where
         GROUP BY r.id
         ORDER BY r.data_reserva DESC
-    ");
+        LIMIT ? OFFSET ?
+    ";
     
-    // We'll match ends with since user might type with or without country code
-    $likeWhat = '%' . $whatsapp; 
+    $paramsData[] = $limit;
+    $paramsData[] = $offset;
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(1, $paramsData[0], PDO::PARAM_INT);
+    $stmt->bindValue(2, $paramsData[1], PDO::PARAM_STR);
+    if(!empty($statusFilter)) {
+        $stmt->bindValue(3, $paramsData[2], PDO::PARAM_STR);
+        $stmt->bindValue(4, $paramsData[3], PDO::PARAM_INT);
+        $stmt->bindValue(5, $paramsData[4], PDO::PARAM_INT);
+    } else {
+        $stmt->bindValue(3, $paramsData[2], PDO::PARAM_INT);
+        $stmt->bindValue(4, $paramsData[3], PDO::PARAM_INT);
+    }
     
-    $stmt->execute([$tempo_pagamento, $likeWhat]);
+    $stmt->execute();
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Obter Link Suporte
@@ -71,7 +109,13 @@ try {
         }
     } catch(PDOException $e) {}
 
-    echo json_encode(['success' => true, 'data' => $reservas, 'link_suporte' => $link_suporte]);
+    echo json_encode([
+        'success' => true, 
+        'data' => $reservas, 
+        'link_suporte' => $link_suporte,
+        'total_pages' => (int)$totalPages,
+        'current_page' => (int)$page
+    ]);
 } catch(PDOException $e) {
     echo json_encode(['success' => false, 'error' => 'Erro ao buscar dados: ' . $e->getMessage()]);
 }

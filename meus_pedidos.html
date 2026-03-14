@@ -68,8 +68,21 @@
                 </button>
             </div>
             
+            <!-- Filtros de Status -->
+            <div class="flex flex-wrap gap-2 mb-2 overflow-x-auto pb-2 scrollbar-hide">
+                <button onclick="setFilter('')" id="filter-all" class="filter-btn text-[10px] font-black uppercase px-4 py-2 rounded-full transition-all bg-[#00a650] text-white border-2 border-[#00a650] shadow-sm">Todos</button>
+                <button onclick="setFilter('pago')" id="filter-pago" class="filter-btn text-[10px] font-black uppercase px-4 py-2 rounded-full transition-all bg-white text-gray-500 border-2 border-gray-100 hover:border-green-200">Pagos</button>
+                <button onclick="setFilter('pendente')" id="filter-pendente" class="filter-btn text-[10px] font-black uppercase px-4 py-2 rounded-full transition-all bg-white text-gray-500 border-2 border-gray-100 hover:border-yellow-200">Pendentes</button>
+                <button onclick="setFilter('expirado')" id="filter-expirado" class="filter-btn text-[10px] font-black uppercase px-4 py-2 rounded-full transition-all bg-white text-gray-500 border-2 border-gray-100 hover:border-red-200">Cancelados</button>
+            </div>
+
             <div id="lista-reservas" class="flex flex-col gap-5">
                 <!-- Cards will be injected here -->
+            </div>
+
+            <!-- Paginação -->
+            <div id="pagination-pedidos" class="flex justify-center items-center gap-2 mt-4 mb-2">
+                <!-- Buttons injected here -->
             </div>
         </div>
 
@@ -104,6 +117,33 @@
                 e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
             });
 
+            // State
+            let currentPhone = '';
+            let currentPage = 1;
+            let currentStatus = '';
+
+            window.resetSearch = function() {
+                currentPhone = '';
+                currentPage = 1;
+                currentStatus = '';
+                
+                // Reset filter UI
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('bg-[#00a650]', 'text-white', 'border-[#00a650]', 'shadow-sm');
+                    btn.classList.add('bg-white', 'text-gray-500', 'border-gray-100');
+                });
+                document.getElementById('filter-all').classList.add('bg-[#00a650]', 'text-white', 'border-[#00a650]', 'shadow-sm');
+                document.getElementById('filter-all').classList.remove('bg-white', 'text-gray-500', 'border-gray-100');
+
+                document.getElementById('results-container').classList.add('hidden');
+                document.getElementById('results-container').classList.remove('flex');
+                document.getElementById('meus-numeros-loader').classList.add('hidden');
+                document.getElementById('meus-numeros-loader').classList.remove('flex');
+                document.getElementById('search-container').classList.remove('hidden');
+                document.getElementById('ipt-busca-whatsapp').value = '';
+                document.getElementById('ipt-busca-whatsapp').focus();
+            }
+
             formBusca.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const rawWhats = iptWhats.value.trim();
@@ -112,12 +152,47 @@
                    return; 
                 }
                 
+                currentPhone = rawWhats;
+                currentPage = 1;
+                fetchOrders();
+            });
+
+            window.setFilter = function(status) {
+                currentStatus = status;
+                currentPage = 1;
+                
+                // Update active button UI
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('bg-[#00a650]', 'text-white', 'border-[#00a650]', 'shadow-sm');
+                    btn.classList.add('bg-white', 'text-gray-500', 'border-gray-100');
+                });
+                
+                const activeId = status === '' ? 'filter-all' : `filter-${status}`;
+                const activeBtn = document.getElementById(activeId);
+                if(activeBtn) {
+                    activeBtn.classList.remove('bg-white', 'text-gray-500', 'border-gray-100');
+                    activeBtn.classList.add('bg-[#00a650]', 'text-white', 'border-[#00a650]', 'shadow-sm');
+                }
+
+                fetchOrders();
+            }
+
+            window.changePage = function(page) {
+                currentPage = page;
+                fetchOrders();
+            }
+
+            async function fetchOrders() {
                 document.getElementById('search-container').classList.add('hidden');
+                document.getElementById('results-container').classList.add('hidden');
                 document.getElementById('meus-numeros-loader').classList.remove('hidden');
                 document.getElementById('meus-numeros-loader').classList.add('flex');
                 
                 try {
-                    const res = await fetch('backend/api/get_my_numbers.php?whatsapp=' + encodeURIComponent(rawWhats));
+                    let url = `backend/api/get_my_numbers.php?whatsapp=${encodeURIComponent(currentPhone)}&page=${currentPage}`;
+                    if(currentStatus) url += `&status=${currentStatus}`;
+
+                    const res = await fetch(url);
                     const json = await res.json();
                     
                     document.getElementById('meus-numeros-loader').classList.add('hidden');
@@ -126,6 +201,9 @@
                     if(json.success) {
                         applySupportLink(json.link_suporte);
                         renderReservas(json.data);
+                        renderPagination(json.total_pages, json.current_page);
+                        document.getElementById('results-container').classList.remove('hidden');
+                        document.getElementById('results-container').classList.add('flex');
                     } else {
                         alert(json.error || 'Falha ao buscar bilhetes.');
                         resetSearch();
@@ -135,18 +213,34 @@
                     alert('Erro na conexão. Tente novamente.');
                     resetSearch();
                 }
-            });
+            }
+
+            function renderPagination(totalPages, current) {
+                const container = document.getElementById('pagination-pedidos');
+                container.innerHTML = '';
+                
+                if(totalPages <= 1) return;
+
+                if(current > 1) {
+                    container.insertAdjacentHTML('beforeend', `<button onclick="changePage(${current - 1})" class="px-3 py-2 bg-white border-2 border-gray-100 rounded-xl text-[10px] font-black text-gray-500 hover:border-green-200 transition-all uppercase">Ant</button>`);
+                }
+
+                let start = Math.max(1, current - 1);
+                let end = Math.min(totalPages, start + 2);
+                if(end === totalPages) start = Math.max(1, end - 2);
+
+                for(let i = start; i <= end; i++) {
+                    const activeClass = i === current ? 'bg-[#00a650] text-white border-[#00a650] shadow-sm' : 'bg-white text-gray-500 border-gray-100';
+                    container.insertAdjacentHTML('beforeend', `<button onclick="changePage(${i})" class="w-10 h-10 flex items-center justify-center border-2 rounded-xl text-xs font-black transition-all ${activeClass}">${i}</button>`);
+                }
+
+                if(current < totalPages) {
+                    container.insertAdjacentHTML('beforeend', `<button onclick="changePage(${current + 1})" class="px-3 py-2 bg-white border-2 border-gray-100 rounded-xl text-[10px] font-black text-gray-500 hover:border-green-200 transition-all uppercase">Próx</button>`);
+                }
+            }
         });
 
-        function resetSearch() {
-            document.getElementById('results-container').classList.add('hidden');
-            document.getElementById('results-container').classList.remove('flex');
-            document.getElementById('meus-numeros-loader').classList.add('hidden');
-            document.getElementById('meus-numeros-loader').classList.remove('flex');
-            document.getElementById('search-container').classList.remove('hidden');
-            document.getElementById('ipt-busca-whatsapp').value = '';
-            document.getElementById('ipt-busca-whatsapp').focus();
-        }
+
 
         function applySupportLink(link) {
             if(link) {
