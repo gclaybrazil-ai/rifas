@@ -25,6 +25,9 @@ if ($action === 'stats') {
 
     $stmtFat = $pdo->query("SELECT SUM(valor_total) FROM reservas WHERE status = 'pago'");
     $faturamento = $stmtFat->fetchColumn() ?: 0;
+    
+    $stmtTaxa = $pdo->query("SELECT SUM(valor_taxa) FROM reservas WHERE status = 'pago'");
+    $total_repassado = $stmtTaxa->fetchColumn() ?: 0;
 
     $where = "";
     $paramsCount = [];
@@ -63,6 +66,7 @@ if ($action === 'stats') {
     echo json_encode([
         'stats' => $stats,
         'faturamento' => $faturamento,
+        'total_repassado' => $total_repassado,
         'reservas' => $reservas,
         'total_pages' => (int) $totalPages,
         'current_page' => (int) $page,

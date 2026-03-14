@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS reservas (
     status ENUM('pendente', 'pago', 'expirado') DEFAULT 'pendente',
     pix_txid VARCHAR(255),
     pix_qrcode TEXT,
-    pix_copiacola TEXT
+    pix_copiacola TEXT,
+    valor_taxa DECIMAL(10,2) DEFAULT 0.00
 );
 
 CREATE TABLE IF NOT EXISTS numeros (

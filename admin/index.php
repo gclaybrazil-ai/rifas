@@ -46,7 +46,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     </div>
 
     <!-- Stats -->
-    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" id="stats-grid">
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-4 mb-6" id="stats-grid">
         <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-green-500">
             <h3 class="text-gray-500 text-xs font-bold uppercase mb-1">Livres</h3>
             <p class="text-3xl font-black text-[#2c3e50]" id="stat-livre">0</p>
@@ -62,6 +62,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-blue-500">
             <h3 class="text-gray-500 text-xs font-bold uppercase mb-1">Faturamento</h3>
             <p class="text-3xl font-black text-blue-600" id="stat-faturamento">R$ 0,00</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-red-500">
+            <h3 class="text-gray-500 text-xs font-bold uppercase mb-1">Repassado (1.19%)</h3>
+            <p class="text-3xl font-black text-red-600" id="stat-taxas">R$ 0,00</p>
         </div>
     </div>
 
@@ -142,24 +146,27 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </select>
                 </div>
                 
-                <div class="flex flex-col gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <div class="flex items-start gap-2">
-                        <input type="checkbox" id="repassar-taxa" class="w-5 h-5 accent-green-600 cursor-pointer mt-0.5">
-                        <div>
-                            <label for="repassar-taxa" class="text-xs font-bold text-gray-700 uppercase cursor-pointer block">Repassar taxa para o colaborador</label>
-                            <p class="text-[9px] text-gray-500 leading-tight mt-1">Se optar por não repassar, uma taxa mínima ainda será cobrada caso o valor da reserva não seja maior do que a taxa cobrada pelo método de pagamento.</p>
-                        </div>
+                <div id="fee-repassar-container" class="bg-gray-50 p-4 rounded-lg flex items-start gap-3 border border-gray-100">
+                    <div class="flex items-center h-5">
+                        <input id="repassar_taxa" name="repassar_taxa" type="checkbox" value="1"
+                            class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
+                    </div>
+                    <div class="text-sm">
+                        <label for="repassar_taxa" class="font-bold text-gray-700 cursor-pointer">REPASSAR TAXA PARA O COLABORADOR</label>
+                        <p class="text-gray-500 text-[10px] leading-tight mt-1">
+                            Se optar por não repassar, uma taxa mínima ainda será cobrada caso o valor da reserva não seja maior do que a taxa cobrada pelo método de pagamento.
+                        </p>
                     </div>
                 </div>
-                <div id="wrapper-token">
-                    <label id="label-token" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key</label>
+                <div id="fields-mercadopago">
+                    <label id="label-token" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key (MP)</label>
                     <input type="password" id="gateway-token"
                         class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                         placeholder="APP_USR-...">
                 </div>
 
                 <!-- Efí Fields -->
-                <div id="efi-fields" class="hidden flex flex-col gap-4">
+                <div id="fields-efi" class="hidden flex flex-col gap-4">
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Client ID (Efí)</label>
                         <input type="text" id="efi-client-id"
@@ -394,6 +401,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 document.getElementById('stat-reservado').textContent = data.stats['reservado'] || 0;
                 document.getElementById('stat-pago').textContent = data.stats['pago'] || 0;
                 document.getElementById('stat-faturamento').textContent = parseFloat(data.faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('stat-taxas').textContent = parseFloat(data.total_repassado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
                 const tbody = document.getElementById('table-reservas');
                 tbody.innerHTML = '';
@@ -600,8 +608,8 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             const data = await res.json();
             if (data.gateway) {
                 document.getElementById('gateway-provider').value = data.gateway;
-                toggleGatewayFields(data.gateway);
             }
+            toggleGatewayFields(); 
             if (data.gateway_token) document.getElementById('gateway-token').value = data.gateway_token;
             if (data.efi_client_id) document.getElementById('efi-client-id').value = data.efi_client_id;
             if (data.efi_client_secret) document.getElementById('efi-client-secret').value = data.efi_client_secret;
@@ -612,31 +620,31 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if (data.whatsapp_suporte) document.getElementById('whatsapp-suporte').value = data.whatsapp_suporte;
             if (data.mensagem_suporte) document.getElementById('mensagem-suporte').value = data.mensagem_suporte;
             
-            document.getElementById('repassar-taxa').checked = data.repassar_taxa === '1';
+            document.getElementById('repassar_taxa').checked = data.repassar_taxa === '1';
 
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
         });
 
-        function toggleGatewayFields(gateway) {
-            const wrapperToken = document.getElementById('wrapper-token');
-            const labelToken = document.getElementById('label-token');
-            const efiFields = document.getElementById('efi-fields');
-            
-            if (gateway === 'efi') {
-                labelToken.textContent = "Chave PIX (Efí)";
-                efiFields.classList.remove('hidden');
-                // O usuário solicitou remover/esconder a Chave PIX para Efí
-                wrapperToken.classList.add('hidden'); 
-            } else {
-                labelToken.textContent = "Token / Access Key (MP)";
+        function toggleGatewayFields() {
+            const gateway = document.getElementById('gateway-provider').value;
+            const mpFields = document.getElementById('fields-mercadopago');
+            const efiFields = document.getElementById('fields-efi');
+            const feeContainer = document.getElementById('fee-repassar-container');
+
+            if (gateway === 'mercadopago') {
+                mpFields.classList.remove('hidden');
                 efiFields.classList.add('hidden');
-                wrapperToken.classList.remove('hidden');
+                feeContainer.classList.add('hidden'); // Oculta repasse para Mercado Pago
+            } else if (gateway === 'efi') {
+                mpFields.classList.add('hidden');
+                efiFields.classList.remove('hidden');
+                feeContainer.classList.remove('hidden'); // Mostra repasse para Efí
             }
         }
 
-        document.getElementById('gateway-provider').addEventListener('change', (e) => {
-            toggleGatewayFields(e.target.value);
+        document.getElementById('gateway-provider').addEventListener('change', () => {
+            toggleGatewayFields();
         });
 
         document.getElementById('btn-close-integrations').addEventListener('click', () => {
@@ -650,31 +658,43 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             const btn = document.getElementById('btn-save-integrations');
             btn.innerHTML = 'Salvando...';
 
-            const fd = new FormData();
-            fd.append('action', 'save_integration');
-            fd.append('gateway', document.getElementById('gateway-provider').value);
-            fd.append('token', document.getElementById('gateway-token').value);
-            fd.append('efi_client_id', document.getElementById('efi-client-id').value);
-            fd.append('efi_client_secret', document.getElementById('efi-client-secret').value);
-            
-            const certFile = document.getElementById('efi-cert-file').files[0];
-            if (certFile) {
-                fd.append('efi_cert_file', certFile);
-            }
+            try {
+                const fd = new FormData();
+                fd.append('action', 'save_integration');
+                fd.append('gateway', document.getElementById('gateway-provider').value);
+                fd.append('token', document.getElementById('gateway-token').value);
+                fd.append('efi_client_id', document.getElementById('efi-client-id').value);
+                fd.append('efi_client_secret', document.getElementById('efi-client-secret').value);
+                
+                const certFile = document.getElementById('efi-cert-file').files[0];
+                if (certFile) {
+                    fd.append('efi_cert_file', certFile);
+                }
 
-            fd.append('tempo_pagamento', document.getElementById('tempo-pagamento').value);
-            fd.append('group_vip', document.getElementById('group-vip').value);
-            fd.append('whatsapp_suporte', document.getElementById('whatsapp-suporte').value);
-            fd.append('mensagem_suporte', document.getElementById('mensagem-suporte').value);
-            fd.append('repassar_taxa', document.getElementById('repassar-taxa').checked ? '1' : '0');
+                fd.append('tempo_pagamento', document.getElementById('tempo-pagamento').value);
+                fd.append('group_vip', document.getElementById('group-vip').value);
+                fd.append('whatsapp_suporte', document.getElementById('whatsapp-suporte').value);
+                fd.append('mensagem_suporte', document.getElementById('mensagem-suporte').value);
+                fd.append('repassar_taxa', document.getElementById('repassar_taxa').checked ? '1' : '0');
 
-            await fetch(API, { method: 'POST', body: fd });
-
-            btn.innerHTML = 'Salvo com sucesso!';
-            setTimeout(() => {
-                document.getElementById('btn-close-integrations').click();
+                const res = await fetch(API, { method: 'POST', body: fd });
+                const result = await res.json();
+                
+                if (result.success) {
+                    btn.innerHTML = 'Salvo com sucesso!';
+                    setTimeout(() => {
+                        document.getElementById('btn-close-integrations').click();
+                        btn.innerHTML = 'Salvar Configurações';
+                    }, 1000);
+                } else {
+                    alert(result.error || 'Erro ao salvar');
+                    btn.innerHTML = 'Salvar Configurações';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro na requisição. Verifique o console.');
                 btn.innerHTML = 'Salvar Configurações';
-            }, 1000);
+            }
         });
 
         // Nova Rifa Logic

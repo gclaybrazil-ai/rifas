@@ -73,12 +73,20 @@ try {
     if($stmtG) $group_vip = $stmtG->fetchColumn() ?: '';
 } catch(PDOException $e) {}
 
-// Obter Taxas
+// Obter Taxas e Gateway
 $repassar_taxa = '0';
+$gateway = '';
 try {
-    $stmtT = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'repassar_taxa'");
-    if($stmtT) {
-        $repassar_taxa = $stmtT->fetchColumn() ?: '0';
+    $stmtC = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('repassar_taxa', 'gateway')");
+    if($stmtC) {
+        $confs = $stmtC->fetchAll(PDO::FETCH_KEY_PAIR);
+        $gateway = $confs['gateway'] ?? '';
+        $repassar_taxa = $confs['repassar_taxa'] ?? '0';
+        
+        // Se for Mercado Pago, forçamos o repasse para 0 independente da config
+        if($gateway === 'mercadopago') {
+            $repassar_taxa = '0';
+        }
     }
 } catch(PDOException $e) {}
 
@@ -87,6 +95,7 @@ echo json_encode([
     'numeros' => $numeros,
     'group_vip' => $group_vip,
     'repassar_taxa' => $repassar_taxa,
-    'valor_taxa' => '0.10' // Valor fixo de conveniência padrão
+    'gateway' => $gateway,
+    'valor_taxa' => '0.00' 
 ]);
 ?>

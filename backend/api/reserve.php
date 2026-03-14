@@ -42,7 +42,9 @@ try {
     $stmt = $pdo->prepare("SELECT preco_numero FROM rifas WHERE id = ?");
     $stmt->execute([$rifa_id]);
     $preco = $stmt->fetchColumn();
-    $total = count($numerosSelecionados) * $preco;
+    $valor_original = count($numerosSelecionados) * $preco;
+    $total = $valor_original;
+    $valor_taxa_calculada = 0;
 
     // Prepara gateway (Try catch para não quebrar caso a tabela não exista)
     $gateway = '';
@@ -60,11 +62,11 @@ try {
             }
 
             // Repassar Taxa Logic (Cálculo para cobrir 1.19% da Efí)
-            if (isset($configs['repassar_taxa']) && $configs['repassar_taxa'] === '1') {
+            if (isset($configs['repassar_taxa']) && $configs['repassar_taxa'] === '1' && $gateway !== 'mercadopago') {
                 // Cálculo: Valor Final = Valor Original / (1 - 0.0119)
-                // Isso garante que após o desconto de 1.19% do banco, o recebedor tenha o valor original exato.
-                $total = $total / (1 - 0.0119);
-                $total = round($total, 2);
+                $novo_total = $valor_original / (1 - 0.0119);
+                $total = round($novo_total, 2);
+                $valor_taxa_calculada = $total - $valor_original;
             }
         }
     } catch(PDOException $e) {}
@@ -210,8 +212,8 @@ try {
     }
 
     // Inserir reserva
-    $stmt = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, valor_total, data_reserva, status, pix_txid, pix_qrcode, pix_copiacola) VALUES (?, ?, ?, ?, NOW(), 'pendente', ?, ?, ?)");
-    $stmt->execute([$rifa_id, $nome, $whatsapp, $total, $txid, $pix_qrcode, $pix_copiacola]);
+    $stmt = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, valor_total, data_reserva, status, pix_txid, pix_qrcode, pix_copiacola, valor_taxa) VALUES (?, ?, ?, ?, NOW(), 'pendente', ?, ?, ?, ?)");
+    $stmt->execute([$rifa_id, $nome, $whatsapp, $total, $txid, $pix_qrcode, $pix_copiacola, $valor_taxa_calculada]);
     $reserva_id = $pdo->lastInsertId();
 
     // Atualizar números
