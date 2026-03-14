@@ -55,15 +55,16 @@
         </div>
 
         <!-- Ganhadores Section -->
-        <div class="mt-10 mb-4">
-            <h2 class="text-xl font-bold text-[#2c3e50] tracking-tight mb-4">Últimos Ganhadores</h2>
-            <div class="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 flex items-center gap-4">
-                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" alt="Ganhador" class="w-16 h-16 rounded-full object-cover border-2 border-[#00a650] shadow">
-                <div>
-                    <h3 class="font-bold text-gray-800">Maria Silva <span class="bg-yellow-100 text-yellow-800 text-[10px] uppercase px-2 py-0.5 rounded-full ml-1">#12</span></h3>
-                    <p class="text-xs text-gray-500 font-medium line-clamp-1">Ganhou o Smartphone no último sorteio. Você pode ser o próximo!</p>
+        <div id="ganhadores-section" class="mt-10 mb-4 hidden">
+            <a href="ganhadores.html" class="flex justify-between items-end mb-4 group">
+                <h2 class="text-xl font-bold text-[#2c3e50] tracking-tight">Últimos Ganhadores</h2>
+                <span class="text-xs font-bold text-blue-500 group-hover:underline">Ver galeria &rarr;</span>
+            </a>
+            <a href="ganhadores.html" class="block bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+                <div id="ganhadores-container" class="flex items-center gap-4">
+                    <!-- Injetado via JS -->
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- Rifas Finalizadas (New Section) -->

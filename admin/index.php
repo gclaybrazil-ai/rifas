@@ -25,6 +25,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <button id="btn-new-rifa" class="bg-[#00a650] text-white font-bold px-3 py-2 rounded shadow hover:bg-[#009647] text-sm md:text-base text-center">Criar Rifa</button>
             <a href="rifas.php" class="bg-blue-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-600 text-sm md:text-base text-center flex justify-center items-center">Gerenciar Rifas</a>
             <button id="btn-integrations" class="bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-sm md:text-base text-center">Integrações</button>
+            <a href="ganhadores.php" class="bg-yellow-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-yellow-600 text-sm md:text-base text-center flex justify-center items-center text-[#2c3e50]">Ganhadores</a>
             <a href="../index.html" class="bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded hover:bg-gray-300 text-sm md:text-base text-center flex justify-center items-center">Site</a>
             <a href="../backend/api/logout.php" class="bg-gray-800 text-white font-bold px-3 py-2 rounded hover:bg-black text-sm md:text-base text-center flex justify-center items-center">Sair</a>
         </div>

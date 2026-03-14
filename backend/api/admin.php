@@ -275,4 +275,46 @@ else if($action === 'set_rifa_status') {
     $pdo->prepare("UPDATE rifas SET status = ? WHERE id = ?")->execute([$status, $id]);
     echo json_encode(['success' => true]);
 }
+else if($action === 'save_publicacao') {
+    $id = intval($_POST['id'] ?? 0);
+    $nome = $_POST['nome'] ?? '';
+    $numero = $_POST['numero'] ?? '';
+    $desc = $_POST['desc'] ?? '';
+    
+    $imagem = '';
+    if(isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../../uploads/';
+        if(!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        
+        $ext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('winner_') . '.' . $ext;
+        if(move_uploaded_file($_FILES['foto']['tmp_name'], $uploadDir . $filename)) {
+            $imagem = 'uploads/' . $filename;
+        }
+    }
+
+    if($id > 0) {
+        if($imagem !== '') {
+            $stmt = $pdo->prepare("UPDATE publicacoes_ganhadores SET nome_ganhador=?, numero_premiado=?, premio_descricao=?, imagem_url=? WHERE id=?");
+            $stmt->execute([$nome, $numero, $desc, $imagem, $id]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE publicacoes_ganhadores SET nome_ganhador=?, numero_premiado=?, premio_descricao=? WHERE id=?");
+            $stmt->execute([$nome, $numero, $desc, $id]);
+        }
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO publicacoes_ganhadores (nome_ganhador, numero_premiado, premio_descricao, imagem_url) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$nome, $numero, $desc, $imagem]);
+    }
+    
+    echo json_encode(['success' => true]);
+}
+else if($action === 'get_publicacoes_admin') {
+    $stmt = $pdo->query("SELECT * FROM publicacoes_ganhadores ORDER BY data_publicacao DESC");
+    echo json_encode(['data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+}
+else if($action === 'delete_publicacao') {
+    $id = intval($_POST['id'] ?? 0);
+    $pdo->prepare("DELETE FROM publicacoes_ganhadores WHERE id = ?")->execute([$id]);
+    echo json_encode(['success' => true]);
+}
 ?>

@@ -38,6 +38,15 @@ CREATE TABLE IF NOT EXISTS usuarios (
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS publicacoes_ganhadores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome_ganhador VARCHAR(255) NOT NULL,
+    numero_premiado VARCHAR(50) NOT NULL,
+    premio_descricao TEXT NOT NULL,
+    imagem_url VARCHAR(255) DEFAULT '',
+    data_publicacao DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 ";
 
 $pdo->exec($sql);
