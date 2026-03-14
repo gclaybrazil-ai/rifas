@@ -16,7 +16,7 @@ if($action === 'stats') {
     $stmt = $pdo->query("SELECT SUM(valor_total) FROM reservas WHERE status = 'pago'");
     $faturamento = $stmt->fetchColumn() ?: 0;
     
-    $stmt = $pdo->query("SELECT * FROM reservas ORDER BY data_reserva DESC LIMIT 50");
+    $stmt = $pdo->query("SELECT r.*, rf.nome as rifa_nome FROM reservas r LEFT JOIN rifas rf ON r.rifa_id = rf.id ORDER BY r.data_reserva DESC LIMIT 50");
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
@@ -151,8 +151,43 @@ else if($action === 'create_rifa') {
         echo json_encode(['error' => $e->getMessage()]);
     }
 }
+else if($action === 'edit_rifa') {
+    $id = intval($_POST['id'] ?? 0);
+    $nome = $_POST['nome'] ?? 'Rifa Nova';
+    $preco = $_POST['preco'] ?? 10.00;
+    
+    $imagem = $_POST['imagem'] ?? '';
+    if(isset($_FILES['imagem_file']) && $_FILES['imagem_file']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../../uploads/';
+        if(!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        
+        $ext = pathinfo($_FILES['imagem_file']['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('banner_') . '.' . $ext;
+        if(move_uploaded_file($_FILES['imagem_file']['tmp_name'], $uploadDir . $filename)) {
+            $imagem = 'uploads/' . $filename; // override com upload
+        }
+    }
+
+    $sorteio = $_POST['sorteio'] ?? 'Loteria Federal';
+    $p1 = $_POST['p1'] ?? '';
+    $p2 = $_POST['p2'] ?? '';
+    $p3 = $_POST['p3'] ?? '';
+    $p4 = $_POST['p4'] ?? '';
+    $p5 = $_POST['p5'] ?? '';
+
+    if($imagem !== '') {
+        $stmt = $pdo->prepare("UPDATE rifas SET nome=?, preco_numero=?, imagem_url=?, premio1=?, premio2=?, premio3=?, premio4=?, premio5=?, sorteio_por=? WHERE id=?");
+        $stmt->execute([$nome, $preco, $imagem, $p1, $p2, $p3, $p4, $p5, $sorteio, $id]);
+    } else {
+        $stmt = $pdo->prepare("UPDATE rifas SET nome=?, preco_numero=?, premio1=?, premio2=?, premio3=?, premio4=?, premio5=?, sorteio_por=? WHERE id=?");
+        $stmt->execute([$nome, $preco, $p1, $p2, $p3, $p4, $p5, $sorteio, $id]);
+    }
+    
+    echo json_encode(['success' => true]);
+}
 else if($action === 'get_rifas_list') {
     $stmt = $pdo->query("SELECT r.id, r.nome, r.preco_numero, r.status, r.quantidade_numeros, 
+                        r.imagem_url, r.sorteio_por, r.premio1, r.premio2, r.premio3, r.premio4, r.premio5,
                         (SELECT COUNT(*) FROM numeros n WHERE n.rifa_id = r.id AND n.status = 'pago') AS pagos 
                         FROM rifas r ORDER BY r.id DESC");
     echo json_encode(['rifas' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);

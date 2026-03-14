@@ -60,7 +60,8 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <table class="w-full text-left border-collapse text-sm">
                 <thead>
                     <tr class="bg-gray-50 text-gray-500 uppercase font-bold text-xs">
-                        <th class="p-4 border-b">ID / Nome</th>
+                        <th class="p-4 border-b">ID / Nome da RF</th>
+                        <th class="p-4 border-b">Comprador</th>
                         <th class="p-4 border-b">WhatsApp</th>
                         <th class="p-4 border-b">Valor</th>
                         <th class="p-4 border-b">Status</th>
@@ -68,7 +69,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </tr>
                 </thead>
                 <tbody id="table-reservas">
-                    <tr><td colspan="5" class="p-4 text-center text-gray-500">Carregando...</td></tr>
+                    <tr><td colspan="6" class="p-4 text-center text-gray-500">Carregando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -188,7 +189,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 tbody.innerHTML = '';
                 
                 if(data.reservas.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400 font-medium">Nenhuma reserva encontrada.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400 font-medium">Nenhuma reserva encontrada.</td></tr>';
                     return;
                 }
 
@@ -207,7 +208,10 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     tr.innerHTML = `
                         <td class="p-4 align-top">
                             <div class="font-bold text-gray-800">#${r.id}</div>
-                            <div class="text-gray-500 text-xs mt-1 truncate max-w-[150px] shadow-sm bg-white border px-2 py-1 rounded inline-block" title="${r.nome}">${r.nome}</div>
+                            <div class="text-xs mt-1 truncate max-w-[150px] shadow-sm bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded inline-block font-bold" title="${r.rifa_nome || 'N/A'}">#${r.rifa_id}: ${r.rifa_nome || 'N/A'}</div>
+                        </td>
+                        <td class="p-4 align-top text-gray-700 font-semibold text-sm">
+                            <span class="bg-gray-100 border border-gray-200 px-2 py-1 rounded inline-block truncate max-w-[150px]" title="${r.nome}">${r.nome}</span>
                         </td>
                         <td class="p-4 font-mono text-xs text-[#00a650] align-top whitespace-nowrap">${r.whatsapp}</td>
                         <td class="p-4 text-sm font-bold text-gray-700 align-top">${parseFloat(r.valor_total).toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>

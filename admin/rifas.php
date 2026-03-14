@@ -79,6 +79,62 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
+    <!-- Modal Editar Rifa -->
+    <div id="modal-edit" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button id="btn-close-edit" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-xl font-black text-[#2c3e50] mb-4 uppercase flex items-center gap-2">
+                <svg class="w-6 h-6 text-[#2980b9]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                Editar Rifa
+            </h2>
+            
+            <form id="form-edit" class="flex flex-col gap-3">
+                <input type="hidden" id="edit-id" name="id">
+                
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Nome da Rifa</label>
+                    <input type="text" id="edit-nome" name="nome" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none" required>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Preço (R$)</label>
+                        <input type="number" step="0.01" id="edit-preco" name="preco" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 block mb-1">Origem do Sorteio</label>
+                        <select name="sorteio" id="edit-sorteio" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none">
+                            <option value="Loteria Federal">Loteria Federal</option>
+                            <option value="Jogo do Bicho">Jogo do Bicho</option>
+                            <option value="Sorteador.com.br">Sorteador.com.br</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Mudar Imagem de Fundo (Deixe em branco para manter)</label>
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <input type="text" id="edit-imagem" name="imagem" placeholder="URL opcional..." class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs">
+                        <input type="file" id="edit-imagem-file" name="imagem_file" accept="image/*" class="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 p-1">
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 p-3 rounded-lg flex flex-col gap-2 mt-2">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Preencher Prêmios</p>
+                    <input type="text" id="edit-p1" name="p1" placeholder="1º prêmio (Opcional)" class="w-full p-2 text-xs border border-gray-200 rounded">
+                    <input type="text" id="edit-p2" name="p2" placeholder="2º prêmio (Opcional)" class="w-full p-2 text-xs border border-gray-200 rounded">
+                    <input type="text" id="edit-p3" name="p3" placeholder="3º prêmio (Opcional)" class="w-full p-2 text-xs border border-gray-200 rounded">
+                    <input type="text" id="edit-p4" name="p4" placeholder="4º prêmio (Opcional)" class="w-full p-2 text-xs border border-gray-200 rounded">
+                    <input type="text" id="edit-p5" name="p5" placeholder="5º prêmio (Opcional)" class="w-full p-2 text-xs border border-gray-200 rounded">
+                </div>
+                
+                <button type="submit" id="btn-submit-edit" class="w-full bg-[#2980b9] text-white font-black py-3 mt-2 rounded-xl hover:bg-blue-700 transition-colors uppercase text-sm shadow">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Resultados Sorteados -->
     <div id="modal-winners" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-2xl p-6 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] flex flex-col">
@@ -101,6 +157,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
     <script>
         const API = '../backend/api/admin.php';
+        let allRifas = [];
 
         async function fetchRifas() {
             try {
@@ -114,6 +171,8 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400 font-medium">Nenhuma rifa encontrada.</td></tr>';
                     return;
                 }
+                
+                allRifas = data.rifas;
 
                 data.rifas.forEach(r => {
                     const tr = document.createElement('tr');
@@ -124,7 +183,10 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     const pct = r.quantidade_numeros > 0 ? Math.floor((r.pagos / r.quantidade_numeros) * 100) : 0;
                     const pctColor = pct === 100 ? 'bg-[#00a650]' : (pct >= 50 ? 'bg-[#f1c40f]' : 'bg-[#8e44ad]');
 
-                    let actions = `<button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-4 py-1.5 rounded shadow hover:bg-yellow-500 transition-colors uppercase tracking-wider">Sortear</button>`;
+                    let actions = `
+                        <button onclick="openEditModal(${r.id})" class="text-xs bg-[#2c3e50] text-white font-bold px-3 py-1.5 rounded shadow hover:bg-gray-800 transition-colors uppercase tracking-wider mr-1">Editar</button>
+                        <button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-3 py-1.5 rounded shadow hover:bg-yellow-500 transition-colors uppercase tracking-wider">Sortear</button>
+                    `;
 
                     const precoNum = parseFloat(r.preco_numero).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
                     
@@ -169,6 +231,26 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              setTimeout(() => { document.getElementById('modal-draw').classList.add('opacity-100'); }, 10);
         };
 
+        window.openEditModal = function(id) {
+             const rifa = allRifas.find(r => r.id === id);
+             if(!rifa) return;
+             
+             document.getElementById('edit-id').value = rifa.id;
+             document.getElementById('edit-nome').value = rifa.nome;
+             document.getElementById('edit-preco').value = rifa.preco_numero;
+             document.getElementById('edit-sorteio').value = rifa.sorteio_por || 'Loteria Federal';
+             document.getElementById('edit-imagem').value = '';
+             document.getElementById('edit-imagem-file').value = '';
+             document.getElementById('edit-p1').value = rifa.premio1 || '';
+             document.getElementById('edit-p2').value = rifa.premio2 || '';
+             document.getElementById('edit-p3').value = rifa.premio3 || '';
+             document.getElementById('edit-p4').value = rifa.premio4 || '';
+             document.getElementById('edit-p5').value = rifa.premio5 || '';
+             
+             document.getElementById('modal-edit').classList.remove('hidden');
+             setTimeout(() => { document.getElementById('modal-edit').classList.add('opacity-100'); }, 10);
+        };
+
         window.deleteRifa = async function(id) {
             if(!confirm('CUIDADO! Isso irá excluir permanentemente a Rifa, suas Vendas e Numerações. Deseja continuar?')) return;
             if(prompt('Digite EXCLUIR para confirmar') !== 'EXCLUIR') return;
@@ -189,10 +271,45 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              m.classList.remove('opacity-100');
              setTimeout(() => { m.classList.add('hidden'); }, 300);
         });
+        document.getElementById('btn-close-edit').addEventListener('click', () => {
+             const m = document.getElementById('modal-edit');
+             m.classList.remove('opacity-100');
+             setTimeout(() => { m.classList.add('hidden'); }, 300);
+        });
         document.getElementById('btn-close-winners').addEventListener('click', () => {
              const m = document.getElementById('modal-winners');
              m.classList.remove('opacity-100');
              setTimeout(() => { m.classList.add('hidden'); }, 300);
+        });
+
+        // Submit Edit Form
+        document.getElementById('form-edit').addEventListener('submit', async (e) => {
+             e.preventDefault();
+             const btn = document.getElementById('btn-submit-edit');
+             const form = e.target;
+             const fd = new FormData(form);
+             fd.append('action', 'edit_rifa');
+             
+             btn.innerHTML = 'Salvando...';
+             btn.disabled = true;
+
+             try {
+                 const res = await fetch(API, { method: 'POST', body: fd });
+                 const data = await res.json();
+                 
+                 btn.innerHTML = 'Salvar Alterações';
+                 btn.disabled = false;
+
+                 if(data.success) {
+                     document.getElementById('btn-close-edit').click();
+                     fetchRifas();
+                 } else {
+                     alert(data.error || 'Erro ao editar.');
+                 }
+             } catch(e) {
+                 console.error(e);
+                 alert('Erro fatal. Veja o console.');
+             }
         });
 
         // Submit Draw
