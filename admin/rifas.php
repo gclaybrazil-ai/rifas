@@ -67,12 +67,12 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 <div>
                     <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 block mb-1">Modo de Sorteio</label>
                     <select id="draw-type" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#f1c40f] outline-none">
-                        <option value="auto">Sorteio Automático (Sorteador Interno)</option>
                         <option value="manual">Sorteio Manual (Eu defino os ganhadores)</option>
+                        <option value="auto">Sorteio Automático (Sorteador Interno)</option>
                     </select>
                 </div>
                 
-                <div id="box-draw-auto">
+                <div id="box-draw-auto" class="hidden">
                     <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 block mb-1">Quantidade de Ganhadores</label>
                     <select id="draw-qtd" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#f1c40f] outline-none">
                         <option value="1">1 Ganhador</option>
@@ -83,7 +83,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </select>
                 </div>
 
-                <div id="box-draw-manual" class="hidden">
+                <div id="box-draw-manual">
                     <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 block mb-1">Números Sorteados (Manualmente)</label>
                     <input type="text" id="draw-manual" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#f1c40f] outline-none" placeholder="Ex: 005, 012, 098">
                     <p class="text-[10px] text-gray-400 mt-1 ml-1 leading-tight">Separe os ganhadores com vírgula (Ex: "1º, 2º, 3º"). ATENÇÃO: Os números informados devem estar pagos.</p>
@@ -199,8 +199,13 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
                     let actions = `
                         <button onclick="openEditModal(${r.id})" class="text-xs bg-[#2c3e50] text-white font-bold px-3 py-1.5 rounded shadow hover:bg-gray-800 transition-colors uppercase tracking-wider mr-1">Editar</button>
-                        <button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-3 py-1.5 rounded shadow hover:bg-yellow-500 transition-colors uppercase tracking-wider">Sortear</button>
                     `;
+                    
+                    if(r.status === 'fechada') {
+                        actions += `<button onclick="openWinnersModal(${r.id})" class="text-xs bg-[#9b59b6] text-white font-bold px-3 py-1.5 rounded shadow hover:bg-purple-700 transition-colors uppercase tracking-wider">Sorte</button>`;
+                    } else {
+                        actions += `<button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-3 py-1.5 rounded shadow hover:bg-yellow-500 transition-colors uppercase tracking-wider">Sortear</button>`;
+                    }
 
                     const precoNum = parseFloat(r.preco_numero).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
                     
@@ -263,6 +268,48 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              
              document.getElementById('modal-edit').classList.remove('hidden');
              setTimeout(() => { document.getElementById('modal-edit').classList.add('opacity-100'); }, 10);
+        };
+
+        window.openWinnersModal = async function(id) {
+             try {
+                 const m = document.getElementById('modal-winners');
+                 const cont = document.getElementById('winners-container');
+                 cont.innerHTML = '<div class="text-center p-4">Carregando vencedores...</div>';
+                 
+                 m.classList.remove('hidden');
+                 setTimeout(() => { m.classList.add('opacity-100'); }, 10);
+
+                 const res = await fetch(`${API}?action=get_winners&rifa_id=${id}`);
+                 const data = await res.json();
+                 
+                 if(data.winners && data.winners.length > 0) {
+                     cont.innerHTML = '';
+                     data.winners.forEach((w) => {
+                         const wppNumber = w.whatsapp.replace(/\D/g, '');
+                         const index = w.premio_ordem - 1; // map back to 0-based for string if needed
+                         const box = `
+                            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-left shadow-sm flex items-center justify-between mb-2">
+                                <div>
+                                    <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Prêmio ${w.premio_ordem}</div>
+                                    <div class="font-bold text-gray-800 text-lg flex items-center gap-2">
+                                        <span class="bg-yellow-400 w-8 h-8 rounded flex items-center justify-center shadow font-black text-[#2c3e50] text-sm">${w.numero}</span>
+                                        ${w.nome}
+                                    </div>
+                                </div>
+                                <a href="https://wa.me/55${wppNumber}?text=Parabéns, você ganhou na Top Sorte com o número ${w.numero}!" target="_blank" class="w-10 h-10 bg-[#25D366] text-white flex items-center justify-center rounded-full hover:bg-[#128C7E] shadow transition-colors">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.41a10.985 10.985 0 0 1-5.6-1.53l-6.22 1.63 1.66-6.07a10.992 10.992 0 1 1 10.16 5.97zm0-19.14a8.77 8.77 0 1 0 8.77 8.77 8.78 8.78 0 0 0-8.77-8.77zm4.8 12c-.22-.11-1.3-.64-1.5-.71-.2-.07-.35-.11-.5.11s-.57.71-.7.86-.26.16-.48.05a6.044 6.044 0 0 1-1.78-1.09 6.64 6.64 0 0 1-1.23-1.53c-.11-.2-.01-.31.1-.42.1-.1.22-.26.33-.4.11-.14.15-.22.22-.38.07-.15.03-.3-.02-.42-.05-.11-.5-.1.22-.68.21s-.33.27-.33.32a2.02 2.02 0 0 0 .61 1.41 5.925 5.925 0 0 0 1.94 1.34 13.4 13.4 0 0 0 2.44.82 2.924 2.924 0 0 0 1.34 0 2.053 2.053 0 0 0 .54-1.77 1.68 1.68 0 0 0-.25-.43z"></path></svg>
+                                </a>
+                            </div>
+                         `;
+                         cont.insertAdjacentHTML('beforeend', box);
+                     });
+                 } else {
+                     cont.innerHTML = '<div class="text-center p-4 text-red-500 font-bold">Nenhum vencedor gravado encontrado.</div>';
+                 }
+                 
+             } catch(e) {
+                 console.error(e);
+             }
         };
 
         window.deleteRifa = async function(id) {

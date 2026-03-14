@@ -100,6 +100,26 @@ else if($action === 'draw_multiple') {
     // Finaliza a rifa
     $pdo->prepare("UPDATE rifas SET status = 'fechada' WHERE id = ?")->execute([$rifa_id]);
 
+    // Save winners persistently
+    $pdo->exec("CREATE TABLE IF NOT EXISTS ganhadores (
+        id INT AUTO_INCREMENT PRIMARY KEY, 
+        rifa_id INT NOT NULL, 
+        numero VARCHAR(10) NOT NULL, 
+        nome VARCHAR(255) NOT NULL, 
+        whatsapp VARCHAR(20) NOT NULL, 
+        premio_ordem INT NOT NULL, 
+        data_sorteio DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+    
+    // Clear old winners for this rifa just in case it's a re-draw (edge case)
+    $pdo->prepare("DELETE FROM ganhadores WHERE rifa_id = ?")->execute([$rifa_id]);
+    
+    $stmtWin = $pdo->prepare("INSERT INTO ganhadores (rifa_id, numero, nome, whatsapp, premio_ordem) VALUES (?, ?, ?, ?, ?)");
+    foreach($winners as $index => $w) {
+        $ordem = $index + 1;
+        $stmtWin->execute([$rifa_id, $w['numero'], $w['nome'], $w['whatsapp'], $ordem]);
+    }
+
     echo json_encode(['success' => true, 'winners' => $winners]);
 }
 else if($action === 'save_integration') {
@@ -232,6 +252,14 @@ else if($action === 'get_rifas_list') {
                         (SELECT COUNT(*) FROM numeros n WHERE n.rifa_id = r.id AND n.status = 'pago') AS pagos 
                         FROM rifas r ORDER BY r.id DESC");
     echo json_encode(['rifas' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+}
+else if($action === 'get_winners') {
+    $rifa_id = intval($_GET['rifa_id'] ?? $_POST['rifa_id'] ?? 0);
+    $pdo->exec("CREATE TABLE IF NOT EXISTS ganhadores (id INT AUTO_INCREMENT PRIMARY KEY, rifa_id INT NOT NULL, numero VARCHAR(10) NOT NULL, nome VARCHAR(255) NOT NULL, whatsapp VARCHAR(20) NOT NULL, premio_ordem INT NOT NULL, data_sorteio DATETIME DEFAULT CURRENT_TIMESTAMP)");
+    
+    $stmt = $pdo->prepare("SELECT numero, nome, whatsapp, premio_ordem FROM ganhadores WHERE rifa_id = ? ORDER BY premio_ordem ASC");
+    $stmt->execute([$rifa_id]);
+    echo json_encode(['winners' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
 }
 else if($action === 'delete_rifa') {
     $id = intval($_POST['id'] ?? 0);
