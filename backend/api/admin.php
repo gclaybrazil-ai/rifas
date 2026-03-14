@@ -50,11 +50,52 @@ else if($action === 'draw_multiple') {
         die(json_encode(['error' => 'A rifa só pode ser finalizada e sorteada após ter 100% dos números vendidos e pagos.']));
     }
 
-    $stmt = $pdo->prepare("SELECT n.numero, r.nome, r.whatsapp FROM numeros n JOIN reservas r ON n.reserva_id = r.id WHERE n.rifa_id = ? AND n.status = 'pago' ORDER BY RAND() LIMIT ?");
-    $stmt->bindValue(1, $rifa_id, PDO::PARAM_INT);
-    $stmt->bindValue(2, $qtd, PDO::PARAM_INT);
-    $stmt->execute();
-    $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $manual_numbers = trim($_POST['manual'] ?? '');
+
+    if(!empty($manual_numbers)) {
+        // Manual Draw
+        $pad_len = strlen((string)($rifaStatus['quantidade_numeros'] - 1));
+        $nums = explode(',', $manual_numbers);
+        $cleanNums = [];
+        foreach($nums as $n) {
+            $val = trim($n);
+            if($val !== '') {
+                // Força o formato exato que está no banco (preenchido com zeros dependendo da qtd)
+                if(is_numeric($val)) {
+                    $val = str_pad((int)$val, $pad_len, '0', STR_PAD_LEFT);
+                }
+                $cleanNums[] = $val;
+            }
+        }
+
+        if(count($cleanNums) === 0) {
+            die(json_encode(['error' => 'Nenhum número válido informado.']));
+        }
+        
+        $placeholders = str_repeat('?,', count($cleanNums) - 1) . '?';
+        // MySQL FIELD() allows sorting exactly in the array order
+        $sql = "SELECT n.numero, r.nome, r.whatsapp FROM numeros n JOIN reservas r ON n.reserva_id = r.id 
+                WHERE n.rifa_id = ? AND n.status = 'pago' AND n.numero IN ($placeholders) 
+                ORDER BY FIELD(n.numero, $placeholders)";
+        
+        $stmt = $pdo->prepare($sql);
+        $params = array_merge([$rifa_id], $cleanNums, $cleanNums);
+        $stmt->execute($params);
+        $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Check if all requested numbers were found and paid
+        if(count($winners) !== count($cleanNums)) {
+            die(json_encode(['error' => 'Um ou mais números informados não existem ou não estão pagos (ou foram informados incorretamente). Verifique os pagamentos.']));
+        }
+
+    } else {
+        // Auto Draw
+        $stmt = $pdo->prepare("SELECT n.numero, r.nome, r.whatsapp FROM numeros n JOIN reservas r ON n.reserva_id = r.id WHERE n.rifa_id = ? AND n.status = 'pago' ORDER BY RAND() LIMIT ?");
+        $stmt->bindValue(1, $rifa_id, PDO::PARAM_INT);
+        $stmt->bindValue(2, $qtd, PDO::PARAM_INT);
+        $stmt->execute();
+        $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     // Finaliza a rifa
     $pdo->prepare("UPDATE rifas SET status = 'fechada' WHERE id = ?")->execute([$rifa_id]);

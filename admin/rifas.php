@@ -65,7 +65,15 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             
             <form id="form-draw" class="flex flex-col gap-3">
                 <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase ml-1 block mb-1">Quantidade de Ganhadores (Prêmios)</label>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 block mb-1">Modo de Sorteio</label>
+                    <select id="draw-type" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#f1c40f] outline-none">
+                        <option value="auto">Sorteio Automático (Sorteador Interno)</option>
+                        <option value="manual">Sorteio Manual (Eu defino os ganhadores)</option>
+                    </select>
+                </div>
+                
+                <div id="box-draw-auto">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 block mb-1">Quantidade de Ganhadores</label>
                     <select id="draw-qtd" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#f1c40f] outline-none">
                         <option value="1">1 Ganhador</option>
                         <option value="2">2 Ganhadores</option>
@@ -73,6 +81,12 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <option value="4">4 Ganhadores</option>
                         <option value="5">5 Ganhadores</option>
                     </select>
+                </div>
+
+                <div id="box-draw-manual" class="hidden">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 block mb-1">Números Sorteados (Manualmente)</label>
+                    <input type="text" id="draw-manual" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#f1c40f] outline-none" placeholder="Ex: 005, 012, 098">
+                    <p class="text-[10px] text-gray-400 mt-1 ml-1 leading-tight">Separe os ganhadores com vírgula (Ex: "1º, 2º, 3º"). ATENÇÃO: Os números informados devem estar pagos.</p>
                 </div>
                 <button type="submit" id="btn-submit-draw" class="w-full bg-[#f1c40f] text-black font-black py-4 mt-2 rounded-xl hover:bg-yellow-500 transition-colors uppercase text-sm shadow">Sortear Ganhadores</button>
             </form>
@@ -312,11 +326,23 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              }
         });
 
+        document.getElementById('draw-type').addEventListener('change', (e) => {
+             if(e.target.value === 'manual') {
+                 document.getElementById('box-draw-auto').classList.add('hidden');
+                 document.getElementById('box-draw-manual').classList.remove('hidden');
+             } else {
+                 document.getElementById('box-draw-auto').classList.remove('hidden');
+                 document.getElementById('box-draw-manual').classList.add('hidden');
+             }
+        });
+
         // Submit Draw
         document.getElementById('form-draw').addEventListener('submit', async (e) => {
              e.preventDefault();
              const btn = document.getElementById('btn-submit-draw');
+             const type = document.getElementById('draw-type').value;
              const qtd = document.getElementById('draw-qtd').value;
+             const manual = document.getElementById('draw-manual').value;
              
              btn.innerHTML = 'Sorteando...';
              btn.disabled = true;
@@ -324,7 +350,12 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              const fd = new URLSearchParams();
              fd.append('action', 'draw_multiple');
              fd.append('rifa_id', currentDrawRifaId);
-             fd.append('qtd', qtd);
+             
+             if(type === 'manual') {
+                 fd.append('manual', manual);
+             } else {
+                 fd.append('qtd', qtd);
+             }
 
              try {
                  const res = await fetch(API, { method: 'POST', body: fd });
