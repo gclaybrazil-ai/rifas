@@ -23,6 +23,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
         <div class="mt-4 md:mt-0 flex gap-2 flex-wrap justify-end">
             <button id="btn-new-rifa" class="bg-[#00a650] text-white font-bold px-4 py-2 rounded shadow hover:bg-[#009647]">Nova Rifa</button>
+            <a href="rifas.php" class="bg-blue-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-blue-600">Gerenciar Rifas</a>
             <button id="btn-integrations" class="bg-indigo-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-indigo-600">Integrações</button>
             <button id="btn-reset" class="bg-red-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-red-600 focus:outline-none" title="Limpar reservas atuais">Resetar</button>
             <a href="../index.html" class="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded hover:bg-gray-300">Site</a>

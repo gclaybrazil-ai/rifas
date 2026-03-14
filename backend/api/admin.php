@@ -42,6 +42,14 @@ else if($action === 'draw_multiple') {
     if($qtd < 1) $qtd = 1;
     if($qtd > 5) $qtd = 5;
 
+    $stmtCheck = $pdo->prepare("SELECT quantidade_numeros, (SELECT COUNT(*) FROM numeros n WHERE n.rifa_id = r.id AND n.status = 'pago') AS pagos FROM rifas r WHERE r.id = ?");
+    $stmtCheck->execute([$rifa_id]);
+    $rifaStatus = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+    
+    if($rifaStatus['pagos'] < $rifaStatus['quantidade_numeros']) {
+        die(json_encode(['error' => 'A rifa só pode ser finalizada e sorteada após ter 100% dos números vendidos e pagos.']));
+    }
+
     $stmt = $pdo->prepare("SELECT n.numero, r.nome, r.whatsapp FROM numeros n JOIN reservas r ON n.reserva_id = r.id WHERE n.rifa_id = ? AND n.status = 'pago' ORDER BY RAND() LIMIT ?");
     $stmt->bindValue(1, $rifa_id, PDO::PARAM_INT);
     $stmt->bindValue(2, $qtd, PDO::PARAM_INT);
@@ -76,10 +84,13 @@ else if($action === 'create_rifa') {
     $nome = $_POST['nome'] ?? 'Rifa Nova';
     $preco = $_POST['preco'] ?? 10.00;
 
+    $stmtCheck = $pdo->query("SELECT COUNT(*) FROM rifas WHERE status = 'aberta'");
+    if($stmtCheck->fetchColumn() >= 10) {
+        die(json_encode(['error' => 'Limite atingido! Você só pode ter até 10 rifas ativas simultaneamente.']));
+    }
+
     $pdo->beginTransaction();
     try {
-        // Fechar todas as anteriores para não bagunçar estatísticas do protótipo
-        $pdo->exec("UPDATE rifas SET status = 'fechada'");
 
         $stmt = $pdo->prepare("INSERT INTO rifas (nome, preco_numero, status, quantidade_numeros) VALUES (?, ?, 'aberta', 100)");
         $stmt->execute([$nome, $preco]);
@@ -99,7 +110,9 @@ else if($action === 'create_rifa') {
     }
 }
 else if($action === 'get_rifas_list') {
-    $stmt = $pdo->query("SELECT id, nome, preco_numero, status, quantidade_numeros FROM rifas ORDER BY id DESC");
+    $stmt = $pdo->query("SELECT r.id, r.nome, r.preco_numero, r.status, r.quantidade_numeros, 
+                        (SELECT COUNT(*) FROM numeros n WHERE n.rifa_id = r.id AND n.status = 'pago') AS pagos 
+                        FROM rifas r ORDER BY r.id DESC");
     echo json_encode(['rifas' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
 }
 else if($action === 'delete_rifa') {

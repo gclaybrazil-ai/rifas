@@ -120,13 +120,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     
                     let bgStatus = r.status === 'aberta' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600';
 
-                    let actions = ``;
-                    
-                    if(r.status === 'aberta') {
-                        actions += `<button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-3 py-1 rounded shadow hover:bg-yellow-500 mr-2">Sortear</button>`;
-                    }
-
-                    actions += `<button onclick="deleteRifa(${r.id})" class="text-xs bg-red-500 text-white px-3 py-1 rounded shadow hover:bg-red-600">Excluir</button>`;
+                    let actions = `<button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-4 py-1.5 rounded shadow hover:bg-yellow-500 transition-colors uppercase tracking-wider">Sortear</button>`;
 
                     const precoNum = parseFloat(r.preco_numero).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
                     
