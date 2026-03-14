@@ -36,17 +36,41 @@ else if($action === 'reset_rifa') {
     $pdo->exec("TRUNCATE TABLE reservas");
     echo json_encode(['success' => true]);
 }
-else if($action === 'draw') {
-    $stmt = $pdo->query("SELECT numero FROM numeros WHERE status = 'pago' ORDER BY RAND() LIMIT 1");
-    $winner = $stmt->fetchColumn();
-    if($winner) {
-        $stmt2 = $pdo->prepare("SELECT r.nome, r.whatsapp FROM reservas r JOIN numeros n ON n.reserva_id = r.id WHERE n.numero = ? LIMIT 1");
-        $stmt2->execute([$winner]);
-        $user = $stmt2->fetch(PDO::FETCH_ASSOC);
-        echo json_encode(['winner' => $winner, 'user' => $user]);
-    } else {
-        echo json_encode(['error' => 'Nenhum número pago para sortear']);
-    }
+else if($action === 'draw_multiple') {
+    $rifa_id = intval($_POST['rifa_id'] ?? 0);
+    $qtd = intval($_POST['qtd'] ?? 1);
+    if($qtd < 1) $qtd = 1;
+    if($qtd > 5) $qtd = 5;
+
+    $stmt = $pdo->prepare("SELECT n.numero, r.nome, r.whatsapp FROM numeros n JOIN reservas r ON n.reserva_id = r.id WHERE n.rifa_id = ? AND n.status = 'pago' ORDER BY RAND() LIMIT ?");
+    $stmt->bindValue(1, $rifa_id, PDO::PARAM_INT);
+    $stmt->bindValue(2, $qtd, PDO::PARAM_INT);
+    $stmt->execute();
+    $winners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Finaliza a rifa
+    $pdo->prepare("UPDATE rifas SET status = 'fechada' WHERE id = ?")->execute([$rifa_id]);
+
+    echo json_encode(['success' => true, 'winners' => $winners]);
+}
+else if($action === 'save_integration') {
+    $gateway = $_POST['gateway'] ?? '';
+    $token = $_POST['token'] ?? '';
+    
+    $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
+    $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('gateway', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt->execute([$gateway, $gateway]);
+    
+    $stmt2 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('gateway_token', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt2->execute([$token, $token]);
+
+    echo json_encode(['success' => true]);
+}
+else if($action === 'get_integration') {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token')");
+    $conf = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    echo json_encode($conf ?: []);
 }
 else if($action === 'create_rifa') {
     $nome = $_POST['nome'] ?? 'Rifa Nova';

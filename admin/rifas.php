@@ -50,6 +50,54 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
+    <!-- Modal Sortear Setup -->
+    <div id="modal-draw" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative">
+            <button id="btn-close-draw" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-xl font-black text-[#2c3e50] mb-2 uppercase flex items-center gap-2">
+                <svg class="w-6 h-6 text-[#f1c40f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Configurar Sorteio
+            </h2>
+            <p class="text-xs text-gray-500 mb-4">Atenção: Rodar este sorteio fechará a rifa definitivamente.</p>
+            
+            <form id="form-draw" class="flex flex-col gap-3">
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase ml-1 block mb-1">Quantidade de Ganhadores (Prêmios)</label>
+                    <select id="draw-qtd" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#f1c40f] outline-none">
+                        <option value="1">1 Ganhador</option>
+                        <option value="2">2 Ganhadores</option>
+                        <option value="3">3 Ganhadores</option>
+                        <option value="4">4 Ganhadores</option>
+                        <option value="5">5 Ganhadores</option>
+                    </select>
+                </div>
+                <button type="submit" id="btn-submit-draw" class="w-full bg-[#f1c40f] text-black font-black py-4 mt-2 rounded-xl hover:bg-yellow-500 transition-colors uppercase text-sm shadow">Sortear Ganhadores</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Resultados Sorteados -->
+    <div id="modal-winners" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full text-center shadow-2xl relative max-h-[90vh] flex flex-col">
+            <button id="btn-close-winners" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="inline-block p-4 rounded-full bg-yellow-100 mb-2 mx-auto mt-2">
+                <svg class="w-12 h-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+            </div>
+            <h2 class="text-3xl font-black text-[#8e44ad] mb-1 uppercase tracking-wide">Vencedores!</h2>
+            <p class="text-gray-500 mb-6 font-medium text-xs">Os sortudos do prêmio são:</p>
+            
+            <div id="winners-container" class="flex-1 overflow-y-auto pr-2">
+                <!-- Injetados aqui -->
+            </div>
+            
+            <p class="text-[10px] text-gray-400 mt-4 uppercase font-bold tracking-wider">A rifa foi fechada com sucesso.</p>
+        </div>
+    </div>
+
     <script>
         const API = '../backend/api/admin.php';
 
@@ -75,9 +123,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     let actions = ``;
                     
                     if(r.status === 'aberta') {
-                        actions += `<button onclick="setStatus(${r.id}, 'fechada')" class="text-xs bg-gray-500 text-white px-3 py-1 rounded shadow hover:bg-gray-600 mr-2">Finalizar (Fechar)</button>`;
-                    } else {
-                        actions += `<button onclick="setStatus(${r.id}, 'aberta')" class="text-xs bg-green-500 text-white px-3 py-1 rounded shadow hover:bg-green-600 mr-2">Reabrir</button>`;
+                        actions += `<button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-3 py-1 rounded shadow hover:bg-yellow-500 mr-2">Sortear</button>`;
                     }
 
                     actions += `<button onclick="deleteRifa(${r.id})" class="text-xs bg-red-500 text-white px-3 py-1 rounded shadow hover:bg-red-600">Excluir</button>`;
@@ -108,15 +154,13 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             }
         }
 
-        window.setStatus = async function(id, status) {
-            if(!confirm(`Deseja alterar a rifa para: ${status.toUpperCase()}?`)) return;
-            const fd = new URLSearchParams();
-            fd.append('action', 'set_rifa_status');
-            fd.append('id', id);
-            fd.append('status', status);
+        /* Variables for the draw */
+        let currentDrawRifaId = 0;
 
-            await fetch(API, { method: 'POST', body: fd });
-            fetchRifas();
+        window.openDrawModal = function(id) {
+             currentDrawRifaId = id;
+             document.getElementById('modal-draw').classList.remove('hidden');
+             setTimeout(() => { document.getElementById('modal-draw').classList.add('opacity-100'); }, 10);
         };
 
         window.deleteRifa = async function(id) {
@@ -132,6 +176,77 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         };
 
         fetchRifas();
+
+        // Close functions
+        document.getElementById('btn-close-draw').addEventListener('click', () => {
+             const m = document.getElementById('modal-draw');
+             m.classList.remove('opacity-100');
+             setTimeout(() => { m.classList.add('hidden'); }, 300);
+        });
+        document.getElementById('btn-close-winners').addEventListener('click', () => {
+             const m = document.getElementById('modal-winners');
+             m.classList.remove('opacity-100');
+             setTimeout(() => { m.classList.add('hidden'); }, 300);
+        });
+
+        // Submit Draw
+        document.getElementById('form-draw').addEventListener('submit', async (e) => {
+             e.preventDefault();
+             const btn = document.getElementById('btn-submit-draw');
+             const qtd = document.getElementById('draw-qtd').value;
+             
+             btn.innerHTML = 'Sorteando...';
+             btn.disabled = true;
+
+             const fd = new URLSearchParams();
+             fd.append('action', 'draw_multiple');
+             fd.append('rifa_id', currentDrawRifaId);
+             fd.append('qtd', qtd);
+
+             try {
+                 const res = await fetch(API, { method: 'POST', body: fd });
+                 const data = await res.json();
+                 
+                 btn.innerHTML = 'Sortear Ganhadores';
+                 btn.disabled = false;
+                 document.getElementById('btn-close-draw').click();
+
+                 if(data.success) {
+                     if(data.winners && data.winners.length > 0) {
+                         const cont = document.getElementById('winners-container');
+                         cont.innerHTML = '';
+                         data.winners.forEach((w, index) => {
+                             const wppNumber = w.whatsapp.replace(/\D/g, '');
+                             const box = `
+                                <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-left shadow-sm flex items-center justify-between mb-2">
+                                    <div>
+                                        <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Prêmio ${index+1}</div>
+                                        <div class="font-bold text-gray-800 text-lg flex items-center gap-2">
+                                            <span class="bg-yellow-400 w-8 h-8 rounded flex items-center justify-center shadow font-black text-[#2c3e50] text-sm">${w.numero}</span>
+                                            ${w.nome}
+                                        </div>
+                                    </div>
+                                    <a href="https://wa.me/55${wppNumber}?text=Parabéns, você ganhou na Top Sorte com o número ${w.numero}!" target="_blank" class="w-10 h-10 bg-[#25D366] text-white flex items-center justify-center rounded-full hover:bg-[#128C7E] shadow transition-colors">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.41a10.985 10.985 0 0 1-5.6-1.53l-6.22 1.63 1.66-6.07a10.992 10.992 0 1 1 10.16 5.97zm0-19.14a8.77 8.77 0 1 0 8.77 8.77 8.78 8.78 0 0 0-8.77-8.77zm4.8 12c-.22-.11-1.3-.64-1.5-.71-.2-.07-.35-.11-.5.11s-.57.71-.7.86-.26.16-.48.05a6.044 6.044 0 0 1-1.78-1.09 6.64 6.64 0 0 1-1.23-1.53c-.11-.2-.01-.31.1-.42.1-.1.22-.26.33-.4.11-.14.15-.22.22-.38.07-.15.03-.3-.02-.42-.05-.11-.5-.1.22-.68.21s-.33.27-.33.32a2.02 2.02 0 0 0 .61 1.41 5.925 5.925 0 0 0 1.94 1.34 13.4 13.4 0 0 0 2.44.82 2.924 2.924 0 0 0 1.34 0 2.053 2.053 0 0 0 .54-1.77 1.68 1.68 0 0 0-.25-.43z"></path></svg>
+                                    </a>
+                                </div>
+                             `;
+                             cont.insertAdjacentHTML('beforeend', box);
+                         });
+                         document.getElementById('modal-winners').classList.remove('hidden');
+                         setTimeout(() => { document.getElementById('modal-winners').classList.add('opacity-100'); }, 10);
+                         fetchRifas(); // Update table visually to reflect 'fechada'
+                     } else {
+                         alert('Nenhum número pago nesta rifa para ser sorteado!');
+                     }
+                 } else {
+                     alert(data.error || 'Erro ao sortear.');
+                 }
+             } catch(e) {
+                 console.error(e);
+                 alert('Erro fatal. Veja o console.');
+             }
+        });
     </script>
 </body>
 </html>

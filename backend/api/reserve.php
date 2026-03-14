@@ -44,12 +44,57 @@ try {
     $preco = $stmt->fetchColumn();
     $total = count($numerosSelecionados) * $preco;
 
-    // Gerar txid PIX e payload Copia e Cola (Simulação. Na vida real: MercadoPago API)
+    // Prepara gateway (Try catch para não quebrar caso a tabela não exista)
+    $gateway = '';
+    $token = '';
+    try {
+        $stmtConf = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token')");
+        if($stmtConf) {
+            $configs = $stmtConf->fetchAll(PDO::FETCH_KEY_PAIR);
+            $gateway = $configs['gateway'] ?? '';
+            $token = $configs['gateway_token'] ?? '';
+        }
+    } catch(PDOException $e) {}
+
+    // Valores padrão de simulação
     $txid = uniqid('PIX_');
-    // QR Code dummy (imagem 1x1 transparente para teste visual)
     $pix_qrcode = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkCgMAAQQAATCwnmAAAAAASUVORK5CYII="; 
-    // Copia e Cola Dummy
     $pix_copiacola = "00020101021226840014br.gov.bcb.pix2562pix.bcb.gov.br/api/v2/$txid";
+
+    // INTEGRAÇÃO REAL MARCADO PAGO
+    if($gateway === 'mercadopago' && !empty($token)) {
+        $mp_data = [
+            "transaction_amount" => (float)$total,
+            "payment_method_id" => "pix",
+            "payer" => [
+                "email" => preg_replace('/\D/', '', $whatsapp) . "@topsorte.com.br",
+                "first_name" => substr($nome, 0, 20)
+            ]
+        ];
+
+        $ch = curl_init('https://api.mercadopago.com/v1/payments');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($mp_data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            "Authorization: Bearer $token",
+            'X-Idempotency-Key: ' . uniqid("", true)
+        ]);
+        
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        $mp_result = json_decode($response, true);
+        
+        if(isset($mp_result['point_of_interaction']['transaction_data']['qr_code'])) {
+            $pix_copiacola = $mp_result['point_of_interaction']['transaction_data']['qr_code'];
+            $pix_qrcode = "data:image/jpeg;base64," . $mp_result['point_of_interaction']['transaction_data']['qr_code_base64'];
+            $txid = $mp_result['id']; // Salva o ID real do pagamento do Mercado Pago
+        } else {
+            throw new Exception("Erro API Mercado Pago: " . ($mp_result['message'] ?? 'Verifique se seu Access Token Production é válido.'));
+        }
+    }
 
     // Inserir reserva
     $stmt = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, valor_total, data_reserva, status, pix_txid, pix_qrcode, pix_copiacola) VALUES (?, ?, ?, ?, NOW(), 'pendente', ?, ?, ?)");

@@ -23,8 +23,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
         <div class="mt-4 md:mt-0 flex gap-2 flex-wrap justify-end">
             <button id="btn-new-rifa" class="bg-[#00a650] text-white font-bold px-4 py-2 rounded shadow hover:bg-[#009647]">Nova Rifa</button>
-            <a href="rifas.php" class="bg-blue-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-blue-600">Gerenciar Rifas</a>
-            <button id="btn-draw" class="bg-[#f1c40f] text-black font-bold px-4 py-2 rounded shadow hover:bg-yellow-500">Sortear</button>
+            <button id="btn-integrations" class="bg-indigo-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-indigo-600">Integrações</button>
             <button id="btn-reset" class="bg-red-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-red-600 focus:outline-none" title="Limpar reservas atuais">Resetar</button>
             <a href="../index.html" class="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded hover:bg-gray-300">Site</a>
             <a href="../backend/api/logout.php" class="bg-gray-800 text-white font-bold px-4 py-2 rounded hover:bg-black">Sair</a>
@@ -74,36 +73,39 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
-    <!-- Modal Winner -->
-    <div id="modal-winner" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
-            <button id="btn-close-winner" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+    <!-- Modal Integracoes -->
+    <div id="modal-integrations" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-left shadow-2xl relative">
+            <button id="btn-close-integrations" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            <div class="inline-block p-4 rounded-full bg-yellow-100 mb-4">
-                <svg class="w-12 h-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 bg-indigo-100 rounded-lg text-indigo-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800">Integrações</h2>
+                    <p class="text-xs text-gray-500">Gateway de Pagamento PIX</p>
+                </div>
             </div>
-            <h2 class="text-3xl font-black text-[#8e44ad] mb-2 uppercase tracking-wide">Temos um Vencedor!</h2>
-            <p class="text-gray-500 mb-6 font-medium text-sm">O prêmio da sua rifa será entregue para:</p>
             
-            <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 text-left mb-6 shadow-sm">
-                <div class="flex items-center gap-3 mb-3 pb-3 border-b border-gray-200">
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider w-16">Número:</span>
-                    <span id="winner-number" class="text-2xl font-black text-[#2c3e50] bg-yellow-400 w-12 h-12 rounded flex items-center justify-center shadow"></span>
+            <form id="form-integrations" class="flex flex-col gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Escolha o Gateway</label>
+                    <select id="gateway-provider" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="mercadopago">Mercado Pago</option>
+                        <option value="efi">Efí Bank (Gerencianet)</option>
+                    </select>
                 </div>
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider w-16">Nome:</span>
-                    <span id="winner-name" class="font-bold text-gray-800 break-words flex-1">...</span>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key</label>
+                    <input type="password" id="gateway-token" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="APP_USR-...">
                 </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider w-16">Whats:</span>
-                    <span id="winner-whatsapp" class="font-mono text-sm text-[#00a650] break-words flex-1">...</span>
-                </div>
-            </div>
-
-            <a id="winner-whatsapp-link" href="#" target="_blank" class="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3 px-6 rounded-xl hover:bg-[#128C7E] transition-colors relative overflow-hidden group">
-                Chamar no WhatsApp
-            </a>
+                
+                <button type="submit" id="btn-save-integrations" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-indigo-700 transition-colors">
+                    Salvar Configurações
+                </button>
+            </form>
         </div>
         </div>
     </div>
@@ -209,36 +211,42 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              }
         });
 
-        document.getElementById('btn-draw').addEventListener('click', async () => {
-             if(confirm('Sortear um número ganhador entre os PAGOS?')) {
-                 const fd = new URLSearchParams();
-                 fd.append('action', 'draw');
-                 
-                 const res = await fetch(API, { method: 'POST', body: fd });
-                 const data = await res.json();
-                 
-                 if(data.error) {
-                     alert(data.error);
-                 } else {
-                     document.getElementById('winner-number').textContent = data.winner;
-                     document.getElementById('winner-name').textContent = data.user.nome;
-                     document.getElementById('winner-whatsapp').textContent = data.user.whatsapp;
-                     
-                     // Limpar whatsapp para link da api (remove não numéricos)
-                     const wppNumber = data.user.whatsapp.replace(/\D/g, '');
-                     document.getElementById('winner-whatsapp-link').href = `https://wa.me/55${wppNumber}?text=Parabéns, você ganhou a rifa na Top Sorte com o número ${data.winner}!`;
-                     
-                     const modal = document.getElementById('modal-winner');
-                     modal.classList.remove('hidden');
-                     setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
-                 }
-             }
+        document.getElementById('btn-integrations').addEventListener('click', async () => {
+             const modal = document.getElementById('modal-integrations');
+             
+             // Fetch setup
+             const res = await fetch(`${API}?action=get_integration`);
+             const data = await res.json();
+             if(data.gateway) document.getElementById('gateway-provider').value = data.gateway;
+             if(data.gateway_token) document.getElementById('gateway-token').value = data.gateway_token;
+
+             modal.classList.remove('hidden');
+             setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
         });
 
-        document.getElementById('btn-close-winner').addEventListener('click', () => {
-             const modal = document.getElementById('modal-winner');
+        document.getElementById('btn-close-integrations').addEventListener('click', () => {
+             const modal = document.getElementById('modal-integrations');
              modal.classList.remove('opacity-100');
              setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        });
+
+        document.getElementById('form-integrations').addEventListener('submit', async (e) => {
+             e.preventDefault();
+             const btn = document.getElementById('btn-save-integrations');
+             btn.innerHTML = 'Salvando...';
+             
+             const fd = new URLSearchParams();
+             fd.append('action', 'save_integration');
+             fd.append('gateway', document.getElementById('gateway-provider').value);
+             fd.append('token', document.getElementById('gateway-token').value);
+             
+             await fetch(API, { method: 'POST', body: fd });
+             
+             btn.innerHTML = 'Salvo com sucesso!';
+             setTimeout(() => {
+                 document.getElementById('btn-close-integrations').click();
+                 btn.innerHTML = 'Salvar Configurações';
+             }, 1000);
         });
 
         // Nova Rifa Logic
