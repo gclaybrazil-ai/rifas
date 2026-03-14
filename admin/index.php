@@ -1,12 +1,13 @@
 <?php
 session_start();
-if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
+if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     header('Location: login.php');
     exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,21 +16,32 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="../frontend/png/cifrao.png">
 </head>
+
 <body class="bg-gray-50 text-gray-800 font-sans p-6">
 
-    <div class="max-w-4xl mx-auto mb-6 bg-white p-6 rounded-lg shadow border border-gray-100 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
+    <div
+        class="max-w-4xl mx-auto mb-6 bg-white p-6 rounded-lg shadow border border-gray-100 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
         <div>
             <h1 class="text-2xl font-black text-[#8e44ad]">Painel Administrativo</h1>
             <p class="text-sm text-gray-500">Gestão de Rifas</p>
         </div>
         <div class="w-full md:w-auto grid grid-cols-2 sm:flex sm:flex-wrap gap-2 justify-center md:justify-end">
-            <button id="btn-new-rifa" class="bg-[#00a650] text-white font-bold px-3 py-2 rounded shadow hover:bg-[#009647] text-sm md:text-base text-center">Criar Rifa</button>
-            <a href="rifas.php" class="bg-blue-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-600 text-sm md:text-base text-center flex justify-center items-center">Gerenciar Rifas</a>
-            <button id="btn-integrations" class="bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-sm md:text-base text-center">Integrações</button>
-            <button id="btn-billing" class="bg-purple-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-purple-700 text-sm md:text-base text-center">FIN</button>
-            <a href="ganhadores.php" class="bg-yellow-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-yellow-600 text-sm md:text-base text-center flex justify-center items-center text-[#2c3e50]">Ganhadores</a>
-            <a href="../index.html" class="bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded hover:bg-gray-300 text-sm md:text-base text-center flex justify-center items-center">Site</a>
-            <a href="../backend/api/logout.php" class="bg-gray-800 text-white font-bold px-3 py-2 rounded hover:bg-black text-sm md:text-base text-center flex justify-center items-center">Sair</a>
+            <button id="btn-new-rifa"
+                class="bg-[#00a650] text-white font-bold px-3 py-2 rounded shadow hover:bg-[#009647] text-sm md:text-base text-center">Criar
+                Rifa</button>
+            <a href="rifas.php"
+                class="bg-blue-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-600 text-sm md:text-base text-center flex justify-center items-center">Gerenciar
+                Rifas</a>
+            <button id="btn-integrations"
+                class="bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-sm md:text-base text-center">Integrações</button>
+            <button id="btn-billing"
+                class="bg-purple-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-purple-700 text-sm md:text-base text-center">FIN</button>
+            <a href="ganhadores.php"
+                class="bg-yellow-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-yellow-600 text-sm md:text-base text-center flex justify-center items-center text-[#2c3e50]">Ganhadores</a>
+            <a href="../index.html"
+                class="bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded hover:bg-gray-300 text-sm md:text-base text-center flex justify-center items-center">Site</a>
+            <a href="../backend/api/logout.php"
+                class="bg-gray-800 text-white font-bold px-3 py-2 rounded hover:bg-black text-sm md:text-base text-center flex justify-center items-center">Sair</a>
         </div>
     </div>
 
@@ -57,12 +69,16 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     <div class="max-w-4xl mx-auto bg-white rounded-lg shadow overflow-hidden border border-gray-100">
         <div class="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 class="font-bold text-gray-700 uppercase tracking-wide">Últimas Reservas</h2>
-            
+
             <div class="flex flex-wrap gap-2">
-                <button onclick="setStatusFilter('')" id="tab-all" class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-gray-200 text-gray-700">Todos</button>
-                <button onclick="setStatusFilter('pago')" id="tab-pago" class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Pagos</button>
-                <button onclick="setStatusFilter('pendente')" id="tab-pendente" class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Pendentes</button>
-                <button onclick="setStatusFilter('expirado')" id="tab-expirado" class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Expirados</button>
+                <button onclick="setStatusFilter('')" id="tab-all"
+                    class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-gray-200 text-gray-700">Todos</button>
+                <button onclick="setStatusFilter('pago')" id="tab-pago"
+                    class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Pagos</button>
+                <button onclick="setStatusFilter('pendente')" id="tab-pendente"
+                    class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Pendentes</button>
+                <button onclick="setStatusFilter('expirado')" id="tab-expirado"
+                    class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Expirados</button>
             </div>
         </div>
         <div class="overflow-x-auto">
@@ -78,106 +94,153 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </tr>
                 </thead>
                 <tbody id="table-reservas">
-                    <tr><td colspan="6" class="p-4 text-center text-gray-500">Carregando...</td></tr>
+                    <tr>
+                        <td colspan="6" class="p-4 text-center text-gray-500">Carregando...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
         <!-- Pagination -->
-        <div id="pagination-reservas" class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-center items-center gap-2">
+        <div id="pagination-reservas"
+            class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-center items-center gap-2">
             <!-- Buttons injected here -->
         </div>
     </div>
 
     <!-- Modal Integracoes -->
-    <div id="modal-integrations" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+    <div id="modal-integrations"
+        class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-left shadow-2xl relative">
-            <button id="btn-close-integrations" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
-                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            <button id="btn-close-integrations"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
             </button>
             <div class="flex items-center gap-3 mb-6">
                 <div class="p-3 bg-indigo-100 rounded-lg text-indigo-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
                 </div>
                 <div>
                     <h2 class="text-xl font-black text-gray-800">Integrações</h2>
                     <p class="text-xs text-gray-500">Gateway de Pagamento PIX</p>
                 </div>
             </div>
-            
+
             <form id="form-integrations" class="flex flex-col gap-4">
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Escolha o Gateway</label>
-                    <select id="gateway-provider" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Escolha
+                        o Gateway</label>
+                    <select id="gateway-provider"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                         <option value="mercadopago">Mercado Pago</option>
                         <option value="efi">Efí Bank (Gerencianet)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key</label>
-                    <input type="password" id="gateway-token" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="APP_USR-...">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token /
+                        Access Key</label>
+                    <input type="password" id="gateway-token"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="APP_USR-...">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Tempo Padrão P/ Pagamento (Minutos)</label>
-                    <input type="number" id="tempo-pagamento" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="3" min="1" max="5" value="3">
-                    <p class="text-[10px] text-gray-400 mt-1 ml-1">Para garantir máxima urgência de conversão, use no máximo 5 min.</p>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Tempo
+                        Padrão P/ Pagamento (Minutos)</label>
+                    <input type="number" id="tempo-pagamento"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="3" min="1" max="5" value="3">
+                    <p class="text-[10px] text-gray-400 mt-1 ml-1">Para garantir máxima urgência de conversão, use no
+                        máximo 5 min.</p>
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Link Grupo VIP (WhatsApp)</label>
-                    <input type="url" id="group-vip" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="https://chat.whatsapp.com/...">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Link
+                        Grupo VIP (WhatsApp)</label>
+                    <input type="url" id="group-vip"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="https://chat.whatsapp.com/...">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">WhatsApp Suporte (Somente Números)</label>
-                    <input type="text" id="whatsapp-suporte" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="5511999999999">
+                    <label
+                        class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">WhatsApp
+                        Suporte (Somente Números)</label>
+                    <input type="text" id="whatsapp-suporte"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="5511999999999">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Mensagem Padrão (WhatsApp)</label>
-                    <textarea id="mensagem-suporte" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none h-20" placeholder="Olá, $uper$orte! Preciso de ajuda."></textarea>
+                    <label
+                        class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Mensagem
+                        Padrão (WhatsApp)</label>
+                    <textarea id="mensagem-suporte"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none h-20"
+                        placeholder="Olá, $uper$orte! Preciso de ajuda."></textarea>
                 </div>
-                
-                <button type="submit" id="btn-save-integrations" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-indigo-700 transition-colors">
+
+                <button type="submit" id="btn-save-integrations"
+                    class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-indigo-700 transition-colors">
                     Salvar Configurações
                 </button>
             </form>
         </div>
-        </div>
+    </div>
     </div>
 
     <!-- Modal Nova Rifa -->
-    <div id="modal-new-rifa" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+    <div id="modal-new-rifa"
+        class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative max-h-[95vh] overflow-y-auto">
-            <button id="btn-close-new" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
-                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            <button id="btn-close-new"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
             </button>
             <h2 class="text-xl font-black text-[#2c3e50] mb-4 uppercase">Criar Nova Rifa</h2>
-            
+
             <form id="form-new-rifa" class="flex flex-col gap-3">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Nome da Rifa</label>
-                        <input type="text" id="new-nome" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ex: Sorteio do PIX">
+                        <input type="text" id="new-nome" required
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none"
+                            placeholder="Ex: Sorteio do PIX">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Preço do Número (R$)</label>
-                        <input type="number" step="0.01" id="new-preco" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ex: 0.10">
+                        <input type="number" step="0.01" id="new-preco" required
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none"
+                            placeholder="Ex: 0.10">
                     </div>
                 </div>
 
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Imagem Banner (URL ou Arquivo Próprio)</label>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Imagem Banner (URL ou Arquivo
+                        Próprio)</label>
                     <div class="flex gap-2">
-                        <input type="url" id="new-imagem" class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 text-[10px] md:text-xs focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Ou cole o Link https://...">
-                        <input type="file" id="new-imagem-file" accept="image/*" class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-1.5 text-[10px] md:text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-[#00a650] file:text-white file:font-bold hover:file:bg-[#009647]">
+                        <input type="url" id="new-imagem"
+                            class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 text-[10px] md:text-xs focus:ring-2 focus:ring-[#00a650] outline-none"
+                            placeholder="Ou cole o Link https://...">
+                        <input type="file" id="new-imagem-file" accept="image/*"
+                            class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-1.5 text-[10px] md:text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-[#00a650] file:text-white file:font-bold hover:file:bg-[#009647]">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Quantidade de Números</label>
-                        <input type="number" id="new-qtd" min="10" max="10000" required class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none" placeholder="Mín: 10, Máx: 10000">
+                        <input type="number" id="new-qtd" min="10" max="10000" required
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none"
+                            placeholder="Mín: 10, Máx: 10000">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Sorteado Por</label>
-                        <select id="new-sorteio" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none">
+                        <select id="new-sorteio"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#00a650] outline-none">
                             <option value="Loteria Federal">Loteria Federal</option>
                             <option value="Jogo do Bicho">Jogo do Bicho</option>
                             <option value="Sorteador.com.br">Sorteador.com.br</option>
@@ -188,57 +251,91 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 <div class="border-t border-gray-100 pt-3 mt-1">
                     <p class="text-[10px] font-black text-[#8e44ad] uppercase mb-2">Prêmios Específicos (Opcional)</p>
                     <div class="flex flex-col gap-2">
-                        <input type="text" id="new-premio1" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="1º Prêmio (Ex: iPhone 16)">
-                        <input type="text" id="new-premio2" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="2º Prêmio">
-                        <input type="text" id="new-premio3" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="3º Prêmio">
-                        <input type="text" id="new-premio4" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="4º Prêmio">
-                        <input type="text" id="new-premio5" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none" placeholder="5º Prêmio">
+                        <input type="text" id="new-premio1"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none"
+                            placeholder="1º Prêmio (Ex: iPhone 16)">
+                        <input type="text" id="new-premio2"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none"
+                            placeholder="2º Prêmio">
+                        <input type="text" id="new-premio3"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none"
+                            placeholder="3º Prêmio">
+                        <input type="text" id="new-premio4"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none"
+                            placeholder="4º Prêmio">
+                        <input type="text" id="new-premio5"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-[#8e44ad] outline-none"
+                            placeholder="5º Prêmio">
                     </div>
                 </div>
 
-                <button type="submit" id="btn-submit-new" class="w-full bg-[#00a650] text-white font-bold py-3 mt-3 rounded-xl hover:bg-[#009647] uppercase text-sm shadow">Criar e Ativar Rifa</button>
+                <button type="submit" id="btn-submit-new"
+                    class="w-full bg-[#00a650] text-white font-bold py-3 mt-3 rounded-xl hover:bg-[#009647] uppercase text-sm shadow">Criar
+                    e Ativar Rifa</button>
             </form>
+        </div>
+    </div>
+
     <!-- Modal Faturamento (FIN) -->
-    <div id="modal-billing" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+    <div id="modal-billing"
+        class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-2xl p-7 max-w-md w-full shadow-2xl relative">
             <button id="btn-close-billing" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
-                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12" />
+                </svg>
             </button>
             <h2 class="text-xl font-black text-[#2c3e50] mb-6 uppercase flex items-center gap-2">
-                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                    </path>
+                </svg>
                 Relatório de Faturamento
             </h2>
 
             <div class="grid grid-cols-2 gap-2 mb-6">
-                <button onclick="fetchBilling('today')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-xs font-bold text-gray-700 transition-all">Hoje</button>
-                <button onclick="fetchBilling('7')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-xs font-bold text-gray-700 transition-all">Últimos 7 Dias</button>
-                <button onclick="fetchBilling('30')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-xs font-bold text-gray-700 transition-all">Últimos 30 Dias</button>
-                <button onclick="toggleCustomRange()" class="bg-gray-800 text-white p-3 rounded-xl text-xs font-bold transition-all">Personalizado</button>
+                <button onclick="fetchBilling('today')"
+                    class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-xs font-bold text-gray-700 transition-all">Hoje</button>
+                <button onclick="fetchBilling('7')"
+                    class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-xs font-bold text-gray-700 transition-all">Últimos
+                    7 Dias</button>
+                <button onclick="fetchBilling('30')"
+                    class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-xs font-bold text-gray-700 transition-all">Últimos
+                    30 Dias</button>
+                <button onclick="toggleCustomRange()"
+                    class="bg-gray-800 text-white p-3 rounded-xl text-xs font-bold transition-all">Personalizado</button>
             </div>
 
-            <div id="custom-range" class="hidden flex flex-col gap-3 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <div id="custom-range"
+                class="hidden flex flex-col gap-3 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase">Início</label>
-                        <input type="date" id="bill-start" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs outline-none">
+                        <input type="date" id="bill-start"
+                            class="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs outline-none">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase">Fim</label>
-                        <input type="date" id="bill-end" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs outline-none">
+                        <input type="date" id="bill-end"
+                            class="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs outline-none">
                     </div>
                 </div>
-                <button onclick="fetchBilling('custom')" class="w-full bg-[#00a650] text-white font-bold py-2 rounded-lg text-xs hover:bg-[#009647]">Gerar Relatório</button>
+                <button onclick="fetchBilling('custom')"
+                    class="w-full bg-[#00a650] text-white font-bold py-2 rounded-lg text-xs hover:bg-[#009647]">Gerar
+                    Relatório</button>
             </div>
 
-            <div id="billing-result" class="hidden bg-blue-50 p-5 rounded-[2rem] border border-blue-100 text-center flex flex-col gap-1">
-                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest" id="bill-label">Faturamento Total</p>
+            <div id="billing-result"
+                class="hidden bg-blue-50 p-5 rounded-[2rem] border border-blue-100 text-center flex flex-col gap-1">
+                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest" id="bill-label">
+                    Faturamento Total</p>
                 <h3 class="text-3xl font-black text-blue-700" id="bill-total">R$ 0,00</h3>
                 <p class="text-[10px] font-bold text-blue-400" id="bill-count">0 Reservas Pagas</p>
             </div>
         </div>
     </div>
-    </div>
-</div>
 
 
     <script>
@@ -246,6 +343,10 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
         let currentPage = 1;
         let currentStatus = '';
+        let serverTimeOffset = 0;
+        let tempoPagamento = 3;
+        let countdowns = [];
+        let timerInterval = null;
 
         async function fetchStats(page = 1) {
             currentPage = page;
@@ -253,16 +354,22 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 const ts = new Date().getTime();
                 const res = await fetch(`${API}?action=stats&page=${page}&status=${currentStatus}&_=${ts}`);
                 const data = await res.json();
-                
+
+                // Server Time Sync
+                const serverTime = new Date(data.server_time).getTime();
+                serverTimeOffset = serverTime - new Date().getTime();
+                tempoPagamento = data.tempo_pagamento;
+                countdowns = [];
+
                 document.getElementById('stat-livre').textContent = data.stats['disponivel'] || 0;
                 document.getElementById('stat-reservado').textContent = data.stats['reservado'] || 0;
                 document.getElementById('stat-pago').textContent = data.stats['pago'] || 0;
-                document.getElementById('stat-faturamento').textContent = parseFloat(data.faturamento).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                document.getElementById('stat-faturamento').textContent = parseFloat(data.faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
                 const tbody = document.getElementById('table-reservas');
                 tbody.innerHTML = '';
-                
-                if(data.reservas.length === 0) {
+
+                if (data.reservas.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400 font-medium">Nenhuma reserva encontrada.</td></tr>';
                     return;
                 }
@@ -270,12 +377,25 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 data.reservas.forEach(r => {
                     const tr = document.createElement('tr');
                     tr.className = 'border-b hover:bg-gray-50';
-                    
-                    let bgStatus = 'bg-gray-100 text-gray-600';
-                    if(r.status === 'pago') bgStatus = 'bg-purple-100 text-purple-700';
-                    else if(r.status === 'pendente') bgStatus = 'bg-yellow-100 text-yellow-700';
 
-                    let btn = r.status === 'pendente' 
+                    let bgStatus = 'bg-gray-100 text-gray-600';
+                    let timerHtml = '';
+
+                    if (r.status === 'pago') bgStatus = 'bg-purple-100 text-purple-700';
+                    else if (r.status === 'pendente') {
+                        bgStatus = 'bg-yellow-100 text-yellow-700';
+                        // Calc expiry
+                        const dataReserva = new Date(r.data_reserva).getTime();
+                        const expiry = dataReserva + (tempoPagamento * 60 * 1000);
+                        const idTimer = `timer-${r.id}`;
+                        timerHtml = `<div id="${idTimer}" class="text-[9px] font-black text-red-500 mt-1 flex items-center gap-1">
+                            <svg class="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span class="timer-display">--:--</span>
+                        </div>`;
+                        countdowns.push({ id: idTimer, expiry: expiry });
+                    }
+
+                    let btn = r.status === 'pendente'
                         ? `<button onclick="markPaid(${r.id})" class="text-xs bg-green-500 text-white px-3 py-1 rounded shadow hover:bg-green-600 focus:outline-none transition-colors">Marcar Pago</button>`
                         : `<span class="text-xs text-gray-400">—</span>`;
 
@@ -288,9 +408,10 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                             <span class="bg-gray-100 border border-gray-200 px-2 py-1 rounded inline-block truncate max-w-[150px]" title="${r.nome}">${r.nome}</span>
                         </td>
                         <td class="p-4 font-mono text-xs text-[#00a650] align-top whitespace-nowrap">${r.whatsapp}</td>
-                        <td class="p-4 text-sm font-bold text-gray-700 align-top">${parseFloat(r.valor_total).toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+                        <td class="p-4 text-sm font-bold text-gray-700 align-top">${parseFloat(r.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         <td class="p-4 align-top">
                             <span class="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider ${bgStatus}">${r.status}</span>
+                            ${timerHtml}
                         </td>
                         <td class="p-4 text-right align-top">${btn}</td>
                     `;
@@ -298,20 +419,48 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 });
 
                 renderPagination(data.total_pages, data.current_page);
+                startGlobalTimer();
 
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             }
+        }
+
+        function startGlobalTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            updateCountdowns();
+            timerInterval = setInterval(updateCountdowns, 1000);
+        }
+
+        function updateCountdowns() {
+            const now = new Date().getTime() + serverTimeOffset;
+
+            countdowns.forEach(c => {
+                const el = document.getElementById(c.id);
+                if (!el) return;
+
+                const diff = c.expiry - now;
+                const display = el.querySelector('.timer-display');
+
+                if (diff <= 0) {
+                    display.textContent = 'EXPIRANDO...';
+                    el.classList.add('animate-bounce');
+                } else {
+                    const min = Math.floor(diff / 60000);
+                    const sec = Math.floor((diff % 60000) / 1000);
+                    display.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+                }
+            });
         }
 
         function renderPagination(totalPages, current) {
             const container = document.getElementById('pagination-reservas');
             container.innerHTML = '';
-            
-            if(totalPages <= 1) return;
+
+            if (totalPages <= 1) return;
 
             // Simple Pagination: Previous, Page Numbers, Next
-            if(current > 1) {
+            if (current > 1) {
                 const btnPrev = document.createElement('button');
                 btnPrev.className = 'px-3 py-1 bg-white border border-gray-300 rounded text-xs font-bold text-gray-600 hover:bg-gray-100';
                 btnPrev.textContent = 'Anterior';
@@ -322,9 +471,9 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             // Show max 5 pages around current
             let start = Math.max(1, current - 2);
             let end = Math.min(totalPages, start + 4);
-            if(end === totalPages) start = Math.max(1, end - 4);
+            if (end === totalPages) start = Math.max(1, end - 4);
 
-            for(let i = start; i <= end; i++) {
+            for (let i = start; i <= end; i++) {
                 const btn = document.createElement('button');
                 btn.className = `px-3 py-1 rounded text-xs font-bold ${i === current ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'}`;
                 btn.textContent = i;
@@ -332,7 +481,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 container.appendChild(btn);
             }
 
-            if(current < totalPages) {
+            if (current < totalPages) {
                 const btnNext = document.createElement('button');
                 btnNext.className = 'px-3 py-1 bg-white border border-gray-300 rounded text-xs font-bold text-gray-600 hover:bg-gray-100';
                 btnNext.textContent = 'Próximo';
@@ -342,7 +491,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         }
 
         async function markPaid(id) {
-            if(!confirm('Marcar esta reserva como PAGA manualmente?')) return;
+            if (!confirm('Marcar esta reserva como PAGA manualmente?')) return;
             const fd = new URLSearchParams();
             fd.append('action', 'mark_paid');
             fd.append('id', id);
@@ -354,13 +503,13 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         function setStatusFilter(status) {
             currentStatus = status;
             currentPage = 1;
-            
+
             // UI Update
             document.querySelectorAll('.status-tab').forEach(tab => {
                 tab.classList.remove('bg-gray-200', 'text-gray-700');
                 tab.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-500');
             });
-            
+
             const activeId = status === '' ? 'tab-all' : `tab-${status}`;
             const activeTab = document.getElementById(activeId);
             activeTab.classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-500');
@@ -371,15 +520,15 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
         // Billing Logic
         document.getElementById('btn-billing').addEventListener('click', () => {
-             const m = document.getElementById('modal-billing');
-             m.classList.remove('hidden');
-             setTimeout(() => m.classList.add('opacity-100'), 10);
+            const m = document.getElementById('modal-billing');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
         });
 
         document.getElementById('btn-close-billing').addEventListener('click', () => {
-             const m = document.getElementById('modal-billing');
-             m.classList.remove('opacity-100');
-             setTimeout(() => m.classList.add('hidden'), 300);
+            const m = document.getElementById('modal-billing');
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
         });
 
         function toggleCustomRange() {
@@ -389,94 +538,94 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
         async function fetchBilling(period) {
             let url = `${API}?action=billing_report&period=${period}`;
-            
-            if(period === 'custom') {
+
+            if (period === 'custom') {
                 const s = document.getElementById('bill-start').value;
                 const e = document.getElementById('bill-end').value;
-                if(!s || !e) return alert('Selecione as datas!');
+                if (!s || !e) return alert('Selecione as datas!');
                 url = `${API}?action=billing_report&start=${s}&end=${e}`;
             }
 
             const res = await fetch(url);
             const data = await res.json();
 
-            if(data.success) {
+            if (data.success) {
                 const resDiv = document.getElementById('billing-result');
                 resDiv.classList.remove('hidden');
-                document.getElementById('bill-total').textContent = data.total.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                document.getElementById('bill-total').textContent = data.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 document.getElementById('bill-count').textContent = `${data.count} Reservas Pagas`;
-                
+
                 let label = 'Faturamento';
-                if(period === 'today') label = 'Faturamento de Hoje';
-                if(period === '7') label = 'Faturamento (7 dias)';
-                if(period === '30') label = 'Faturamento (30 dias)';
+                if (period === 'today') label = 'Faturamento de Hoje';
+                if (period === '7') label = 'Faturamento (7 dias)';
+                if (period === '30') label = 'Faturamento (30 dias)';
                 document.getElementById('bill-label').textContent = label;
             }
         }
 
         document.getElementById('btn-integrations').addEventListener('click', async () => {
-             const modal = document.getElementById('modal-integrations');
-             
-             // Fetch setup
-             const res = await fetch(`${API}?action=get_integration`);
-             const data = await res.json();
-             if(data.gateway) document.getElementById('gateway-provider').value = data.gateway;
-             if(data.gateway_token) document.getElementById('gateway-token').value = data.gateway_token;
-             if(data.tempo_pagamento) document.getElementById('tempo-pagamento').value = data.tempo_pagamento;
-             if(data.group_vip) document.getElementById('group-vip').value = data.group_vip;
-             if(data.whatsapp_suporte) document.getElementById('whatsapp-suporte').value = data.whatsapp_suporte;
-             if(data.mensagem_suporte) document.getElementById('mensagem-suporte').value = data.mensagem_suporte;
+            const modal = document.getElementById('modal-integrations');
 
-             modal.classList.remove('hidden');
-             setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
+            // Fetch setup
+            const res = await fetch(`${API}?action=get_integration`);
+            const data = await res.json();
+            if (data.gateway) document.getElementById('gateway-provider').value = data.gateway;
+            if (data.gateway_token) document.getElementById('gateway-token').value = data.gateway_token;
+            if (data.tempo_pagamento) document.getElementById('tempo-pagamento').value = data.tempo_pagamento;
+            if (data.group_vip) document.getElementById('group-vip').value = data.group_vip;
+            if (data.whatsapp_suporte) document.getElementById('whatsapp-suporte').value = data.whatsapp_suporte;
+            if (data.mensagem_suporte) document.getElementById('mensagem-suporte').value = data.mensagem_suporte;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
         });
 
         document.getElementById('btn-close-integrations').addEventListener('click', () => {
-             const modal = document.getElementById('modal-integrations');
-             modal.classList.remove('opacity-100');
-             setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            const modal = document.getElementById('modal-integrations');
+            modal.classList.remove('opacity-100');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
         });
 
         document.getElementById('form-integrations').addEventListener('submit', async (e) => {
-             e.preventDefault();
-             const btn = document.getElementById('btn-save-integrations');
-             btn.innerHTML = 'Salvando...';
-             
-             const fd = new URLSearchParams();
-             fd.append('action', 'save_integration');
-             fd.append('gateway', document.getElementById('gateway-provider').value);
-             fd.append('token', document.getElementById('gateway-token').value);
-             fd.append('tempo_pagamento', document.getElementById('tempo-pagamento').value);
-             fd.append('group_vip', document.getElementById('group-vip').value);
-             fd.append('whatsapp_suporte', document.getElementById('whatsapp-suporte').value);
-             fd.append('mensagem_suporte', document.getElementById('mensagem-suporte').value);
-             
-             await fetch(API, { method: 'POST', body: fd });
-             
-             btn.innerHTML = 'Salvo com sucesso!';
-             setTimeout(() => {
-                 document.getElementById('btn-close-integrations').click();
-                 btn.innerHTML = 'Salvar Configurações';
-             }, 1000);
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-integrations');
+            btn.innerHTML = 'Salvando...';
+
+            const fd = new URLSearchParams();
+            fd.append('action', 'save_integration');
+            fd.append('gateway', document.getElementById('gateway-provider').value);
+            fd.append('token', document.getElementById('gateway-token').value);
+            fd.append('tempo_pagamento', document.getElementById('tempo-pagamento').value);
+            fd.append('group_vip', document.getElementById('group-vip').value);
+            fd.append('whatsapp_suporte', document.getElementById('whatsapp-suporte').value);
+            fd.append('mensagem_suporte', document.getElementById('mensagem-suporte').value);
+
+            await fetch(API, { method: 'POST', body: fd });
+
+            btn.innerHTML = 'Salvo com sucesso!';
+            setTimeout(() => {
+                document.getElementById('btn-close-integrations').click();
+                btn.innerHTML = 'Salvar Configurações';
+            }, 1000);
         });
 
         // Nova Rifa Logic
         document.getElementById('btn-new-rifa').addEventListener('click', () => {
-             const modal = document.getElementById('modal-new-rifa');
-             modal.classList.remove('hidden');
-             setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
+            const modal = document.getElementById('modal-new-rifa');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
         });
 
         document.getElementById('btn-close-new').addEventListener('click', () => {
-             const modal = document.getElementById('modal-new-rifa');
-             modal.classList.remove('opacity-100');
-             setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            const modal = document.getElementById('modal-new-rifa');
+            modal.classList.remove('opacity-100');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
         });
 
         document.getElementById('form-new-rifa').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-submit-new');
-            
+
             btn.disabled = true;
             btn.innerHTML = 'Criando (Aguarde, pode demorar)...';
 
@@ -485,12 +634,12 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             fd.append('nome', document.getElementById('new-nome').value);
             fd.append('preco', document.getElementById('new-preco').value);
             fd.append('imagem', document.getElementById('new-imagem').value);
-            
+
             const fileInput = document.getElementById('new-imagem-file');
-            if(fileInput.files.length > 0) {
-                 fd.append('imagem_file', fileInput.files[0]);
+            if (fileInput.files.length > 0) {
+                fd.append('imagem_file', fileInput.files[0]);
             }
-            
+
             fd.append('qtd', document.getElementById('new-qtd').value);
             fd.append('sorteio', document.getElementById('new-sorteio').value);
             fd.append('p1', document.getElementById('new-premio1').value);
@@ -502,8 +651,8 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             try {
                 const req = await fetch(API, { method: 'POST', body: fd });
                 const res = await req.json();
-                
-                if(res.success) {
+
+                if (res.success) {
                     alert('Rifa criada com sucesso!');
                     window.location.reload();
                 } else {
@@ -511,7 +660,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     btn.disabled = false;
                     btn.innerHTML = 'Criar e Ativar Rifa';
                 }
-            } catch(err) {
+            } catch (err) {
                 alert('Erro ao criar rifa');
                 btn.disabled = false;
                 btn.innerHTML = 'Criar e Ativar';
@@ -522,4 +671,5 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         setInterval(fetchStats, 10000);
     </script>
 </body>
+
 </html>
