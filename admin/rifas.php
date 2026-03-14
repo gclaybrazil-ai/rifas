@@ -197,15 +197,18 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     const pct = r.quantidade_numeros > 0 ? Math.floor((r.pagos / r.quantidade_numeros) * 100) : 0;
                     const pctColor = pct === 100 ? 'bg-[#00a650]' : (pct >= 50 ? 'bg-[#f1c40f]' : 'bg-[#8e44ad]');
 
-                    let actions = `
-                        <button onclick="openEditModal(${r.id})" class="text-xs bg-[#2c3e50] text-white font-bold px-3 py-1.5 rounded shadow hover:bg-gray-800 transition-colors uppercase tracking-wider mr-1">Editar</button>
-                    `;
-                    
+                    let btnEditar = '';
+                    let btnAcao = '';
+
                     if(r.status === 'fechada') {
-                        actions += `<button onclick="openWinnersModal(${r.id})" class="text-xs bg-[#9b59b6] text-white font-bold px-3 py-1.5 rounded shadow hover:bg-purple-700 transition-colors uppercase tracking-wider">Sorte</button>`;
+                        btnEditar = `<button disabled class="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1.5 rounded uppercase tracking-wider mr-1 cursor-not-allowed w-20">Editar</button>`;
+                        btnAcao = `<button onclick="openWinnersModal(${r.id})" class="text-xs bg-[#9b59b6] text-white font-bold px-2 py-1.5 rounded shadow hover:bg-purple-700 transition-colors uppercase tracking-wider w-24">Sorteados</button>`;
                     } else {
-                        actions += `<button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-3 py-1.5 rounded shadow hover:bg-yellow-500 transition-colors uppercase tracking-wider">Sortear</button>`;
+                        btnEditar = `<button onclick="openEditModal(${r.id})" class="text-xs bg-[#2c3e50] text-white font-bold px-2 py-1.5 rounded shadow hover:bg-gray-800 transition-colors uppercase tracking-wider mr-1 w-20">Editar</button>`;
+                        btnAcao = `<button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-2 py-1.5 rounded shadow hover:bg-yellow-500 transition-colors uppercase tracking-wider w-24">Sortear</button>`;
                     }
+                    
+                    let actions = `<div class="flex justify-end items-center">` + btnEditar + btnAcao + `</div>`;
 
                     const precoNum = parseFloat(r.preco_numero).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
                     

@@ -53,7 +53,7 @@ if(!$rifa) {
 }
 
 // Obter os números da rifa
-$stmt = $pdo->prepare("SELECT numero, status, reserva_id FROM numeros WHERE rifa_id = ? ORDER BY numero ASC");
+$stmt = $pdo->prepare("SELECT n.numero, n.status, n.reserva_id, r.nome AS comprador FROM numeros n LEFT JOIN reservas r ON n.reserva_id = r.id WHERE n.rifa_id = ? ORDER BY n.numero ASC");
 $stmt->execute([$rifa_id]);
 $numeros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

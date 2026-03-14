@@ -77,9 +77,8 @@ function updateGrid(numerosDoServidor) {
         let btn;
         if (forceCreate) {
             btn = document.createElement('div');
-            btn.className = 'num-btn shadow-sm font-black transition-all';
+            btn.className = 'num-btn shadow-sm font-black transition-all min-w-0 relative group hover:z-[60]';
             btn.dataset.num = num.numero;
-            btn.textContent = num.numero;
             
             // Interaction
             btn.addEventListener('click', () => toggleSelection(num.numero, num.status));
@@ -92,7 +91,26 @@ function updateGrid(numerosDoServidor) {
         if(!btn) return;
 
         // Limpa classes anteriores
-        btn.classList.remove('disponivel', 'reservado', 'pago', 'selecionado');
+        btn.classList.remove('disponivel', 'reservado', 'pago', 'selecionado', 'flex-col');
+
+        let contentHtml = `<span class="leading-none">${num.numero}</span>`;
+        if (num.status === 'pago' && num.comprador) {
+            const primeiroNomeCompleto = num.comprador.split(' ')[0].toUpperCase();
+            const primeiroNomeCurto = primeiroNomeCompleto.substring(0, 8);
+            contentHtml += `<span class="text-[8px] sm:text-[9px] font-bold mt-1 opacity-90 overflow-hidden text-ellipsis whitespace-nowrap w-full px-0.5 text-center leading-none tracking-tighter uppercase block">${primeiroNomeCurto}</span>`;
+            
+            // Efeito Lupa (Tooltip)
+            contentHtml += `
+            <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-[#2c3e50] text-white px-4 py-2 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none scale-50 group-hover:scale-110 transition-all duration-300 flex flex-col items-center">
+                <span class="text-[9px] text-gray-300 font-bold uppercase mb-0.5 tracking-wider leading-none">Número ${num.numero}</span>
+                <span class="font-black text-[13px] whitespace-nowrap leading-none">${primeiroNomeCompleto}</span>
+                <div class="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-[#2c3e50] rotate-45 rounded-sm"></div>
+            </div>`;
+            
+            btn.classList.add('flex-col');
+        }
+        
+        btn.innerHTML = contentHtml;
 
         // Se o número foi selecionado pelo USUARIO ATUAL localmente, e continua disponível no server
         if (state.selecionados.has(num.numero) && num.status === 'disponivel') {
