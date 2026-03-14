@@ -31,11 +31,6 @@ else if($action === 'mark_paid') {
     $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$id]);
     echo json_encode(['success' => true]);
 }
-else if($action === 'reset_rifa') {
-    $pdo->exec("UPDATE numeros SET status = 'disponivel', reserva_id = NULL");
-    $pdo->exec("TRUNCATE TABLE reservas");
-    echo json_encode(['success' => true]);
-}
 else if($action === 'draw_multiple') {
     $rifa_id = intval($_POST['rifa_id'] ?? 0);
     $qtd = intval($_POST['qtd'] ?? 1);

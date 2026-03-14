@@ -16,18 +16,17 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans p-6">
 
-    <div class="max-w-4xl mx-auto mb-6 bg-white p-6 rounded-lg shadow border border-gray-100 flex flex-col md:flex-row justify-between items-center">
+    <div class="max-w-4xl mx-auto mb-6 bg-white p-6 rounded-lg shadow border border-gray-100 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
         <div>
             <h1 class="text-2xl font-black text-[#8e44ad]">Painel Administrativo</h1>
-            <p class="text-sm text-gray-500">Gestão da Rifa</p>
+            <p class="text-sm text-gray-500">Gestão de Rifas</p>
         </div>
-        <div class="mt-4 md:mt-0 flex gap-2 flex-wrap justify-end">
-            <button id="btn-new-rifa" class="bg-[#00a650] text-white font-bold px-4 py-2 rounded shadow hover:bg-[#009647]">Nova Rifa</button>
-            <a href="rifas.php" class="bg-blue-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-blue-600">Gerenciar Rifas</a>
-            <button id="btn-integrations" class="bg-indigo-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-indigo-600">Integrações</button>
-            <button id="btn-reset" class="bg-red-500 text-white font-bold px-4 py-2 rounded shadow hover:bg-red-600 focus:outline-none" title="Limpar reservas atuais">Resetar</button>
-            <a href="../index.html" class="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded hover:bg-gray-300">Site</a>
-            <a href="../backend/api/logout.php" class="bg-gray-800 text-white font-bold px-4 py-2 rounded hover:bg-black">Sair</a>
+        <div class="w-full md:w-auto grid grid-cols-2 sm:flex sm:flex-wrap gap-2 justify-center md:justify-end">
+            <button id="btn-new-rifa" class="bg-[#00a650] text-white font-bold px-3 py-2 rounded shadow hover:bg-[#009647] text-sm md:text-base text-center">Criar Rifa</button>
+            <a href="rifas.php" class="bg-blue-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-600 text-sm md:text-base text-center flex justify-center items-center">Gerenciar Rifas</a>
+            <button id="btn-integrations" class="bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-sm md:text-base text-center">Integrações</button>
+            <a href="../index.html" class="bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded hover:bg-gray-300 text-sm md:text-base text-center flex justify-center items-center">Site</a>
+            <a href="../backend/api/logout.php" class="bg-gray-800 text-white font-bold px-3 py-2 rounded hover:bg-black text-sm md:text-base text-center flex justify-center items-center">Sair</a>
         </div>
     </div>
 
@@ -236,16 +235,6 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             await fetch(API, { method: 'POST', body: fd });
             fetchStats();
         }
-
-        document.getElementById('btn-reset').addEventListener('click', async () => {
-             if(prompt('Tem certeza? Digite "RESETAR" para liberar todos os números e excluir as reservas.') === 'RESETAR') {
-                 const fd = new URLSearchParams();
-                 fd.append('action', 'reset_rifa');
-                 await fetch(API, { method: 'POST', body: fd });
-                 fetchStats();
-                 alert('Rifa resetada.');
-             }
-        });
 
         document.getElementById('btn-integrations').addEventListener('click', async () => {
              const modal = document.getElementById('modal-integrations');
