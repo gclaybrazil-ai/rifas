@@ -50,6 +50,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 view.classList.remove('hidden');
                 view.classList.add('flex');
 
+                // Countdown Timer Logic
+                let timeRemaining = parseInt(data.remaining_seconds);
+                const countDisplay = document.getElementById('checkout-countdown');
+                
+                if (timeRemaining > 0) {
+                    const countTimer = setInterval(() => {
+                        if(timeRemaining <= 0) {
+                            clearInterval(countTimer);
+                            countDisplay.innerText = '00:00';
+                            alert("O tempo para pagamento desta reserva expirou.");
+                            window.location.href = 'index.html';
+                            return;
+                        }
+                        timeRemaining--;
+                        let m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+                        let s = (timeRemaining % 60).toString().padStart(2, '0');
+                        countDisplay.innerText = `${m}:${s}`;
+                    }, 1000);
+                } else {
+                    countDisplay.innerText = '00:00';
+                }
+
                 // Polling Check Payment
                 setInterval(() => {
                     fetch('backend/api/check_payment.php?id=' + id)

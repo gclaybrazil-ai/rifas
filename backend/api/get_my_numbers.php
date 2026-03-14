@@ -11,6 +11,27 @@ if(empty($whatsapp)) {
 }
 
 try {
+    $tempo_pagamento = 3; // Padrão
+    try {
+        $stmtConf = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'tempo_pagamento'");
+        if($stmtConf) {
+            $val = $stmtConf->fetchColumn();
+            if($val && is_numeric($val)) $tempo_pagamento = (int)$val;
+        }
+    } catch(PDOException $e) {}
+
+    // Auto expiração
+    $stmtExpiradas = $pdo->query("SELECT id FROM reservas WHERE status='pendente' AND data_reserva < DATE_SUB(NOW(), INTERVAL $tempo_pagamento MINUTE)");
+    $ids = $stmtExpiradas->fetchAll(PDO::FETCH_COLUMN);
+
+    if(count($ids) > 0) {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt1 = $pdo->prepare("UPDATE reservas SET status='expirado' WHERE id IN ($placeholders)");
+        $stmt1->execute($ids);
+        $stmt2 = $pdo->prepare("UPDATE numeros SET status='disponivel', reserva_id=NULL WHERE reserva_id IN ($placeholders)");
+        $stmt2->execute($ids);
+    }
+
     // Buscar reservas associadas a esse whatsapp, agrupando os numeros e informações da rifa
     $stmt = $pdo->prepare("
         SELECT 
@@ -19,6 +40,7 @@ try {
             r.status,
             r.valor_total,
             r.data_reserva,
+            TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD(r.data_reserva, INTERVAL ? MINUTE)) as remaining_seconds,
             rf.nome as rifa_nome,
             rf.imagem_url,
             GROUP_CONCAT(n.numero ORDER BY n.numero ASC SEPARATOR ', ') as numeros
@@ -33,7 +55,7 @@ try {
     // We'll match ends with since user might type with or without country code
     $likeWhat = '%' . $whatsapp; 
     
-    $stmt->execute([$likeWhat]);
+    $stmt->execute([$tempo_pagamento, $likeWhat]);
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode(['success' => true, 'data' => $reservas]);

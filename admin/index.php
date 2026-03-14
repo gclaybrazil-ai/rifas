@@ -103,6 +103,11 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key</label>
                     <input type="password" id="gateway-token" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="APP_USR-...">
                 </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Tempo Padrão P/ Pagamento (Minutos)</label>
+                    <input type="number" id="tempo-pagamento" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="3" min="1" max="5" value="3">
+                    <p class="text-[10px] text-gray-400 mt-1 ml-1">Para garantir máxima urgência de conversão, use no máximo 5 min.</p>
+                </div>
                 
                 <button type="submit" id="btn-save-integrations" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-indigo-700 transition-colors">
                     Salvar Configurações
@@ -245,6 +250,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              const data = await res.json();
              if(data.gateway) document.getElementById('gateway-provider').value = data.gateway;
              if(data.gateway_token) document.getElementById('gateway-token').value = data.gateway_token;
+             if(data.tempo_pagamento) document.getElementById('tempo-pagamento').value = data.tempo_pagamento;
 
              modal.classList.remove('hidden');
              setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
@@ -265,6 +271,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
              fd.append('action', 'save_integration');
              fd.append('gateway', document.getElementById('gateway-provider').value);
              fd.append('token', document.getElementById('gateway-token').value);
+             fd.append('tempo_pagamento', document.getElementById('tempo-pagamento').value);
              
              await fetch(API, { method: 'POST', body: fd });
              

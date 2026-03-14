@@ -5,9 +5,18 @@ header('Pragma: no-cache');
 header('Expires: 0');
 require_once '../config.php';
 
-// Limpar reservas expiradas automaticamente (mais de 5 minutos)
-// Primeiro precisamos obter os IDs das reservas expiradas
-$stmtExpiradas = $pdo->query("SELECT id FROM reservas WHERE status='pendente' AND data_reserva < DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
+// Limpar reservas expiradas automaticamente (Baseado na configuração do admin)
+$tempo_pagamento = 3; // Padrão
+try {
+    $stmtConf = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'tempo_pagamento'");
+    if($stmtConf) {
+        $val = $stmtConf->fetchColumn();
+        if($val && is_numeric($val)) $tempo_pagamento = (int)$val;
+    }
+} catch(PDOException $e) {}
+
+// Obter os IDs das reservas expiradas com base no tempo configurado
+$stmtExpiradas = $pdo->query("SELECT id FROM reservas WHERE status='pendente' AND data_reserva < DATE_SUB(NOW(), INTERVAL $tempo_pagamento MINUTE)");
 $ids = $stmtExpiradas->fetchAll(PDO::FETCH_COLUMN);
 
 if(count($ids) > 0) {

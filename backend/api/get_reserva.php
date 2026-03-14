@@ -10,17 +10,27 @@ if($id <= 0) {
 }
 
 try {
+    $tempo_pagamento = 3;
+    try {
+        $stmtConf = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'tempo_pagamento'");
+        if($stmtConf) {
+            $val = $stmtConf->fetchColumn();
+            if($val && is_numeric($val)) $tempo_pagamento = (int)$val;
+        }
+    } catch(PDOException $e) {}
+
     $stmt = $pdo->prepare("
         SELECT 
             r.id, r.rifa_id, r.status, r.valor_total, r.data_reserva, 
             r.pix_txid, r.pix_qrcode, r.pix_copiacola,
             rf.nome, rf.imagem_url,
+            TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD(r.data_reserva, INTERVAL ? MINUTE)) as remaining_seconds,
             (SELECT GROUP_CONCAT(n.numero ORDER BY n.numero ASC SEPARATOR ', ') FROM numeros n WHERE n.reserva_id = r.id) as numeros
         FROM reservas r
         JOIN rifas rf ON r.rifa_id = rf.id
         WHERE r.id = ?
     ");
-    $stmt->execute([$id]);
+    $stmt->execute([$tempo_pagamento, $id]);
     $res = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if($res) {

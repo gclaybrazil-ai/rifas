@@ -173,7 +173,7 @@
                     const nrosText = item.numeros ? item.numeros : 'Nenhum';
 
                     if(isPendente) {
-                        statusBadge = '<span class="bg-yellow-100 text-yellow-700 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-yellow-200">Aguardando Pagamento ⏳</span>';
+                        statusBadge = `<span class="bg-yellow-100 text-yellow-700 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-yellow-200" id="badge-pendente-${item.reserva_id}" data-remaining="${item.remaining_seconds}">Aguardando Pagamento ⏳</span>`;
                         actionHtml = `
                             <button onclick="window.location.href='checkout.html?id=${item.reserva_id}'" class="w-full bg-[#00a650] hover:bg-[#009647] hover:shadow-lg hover:-translate-y-0.5 text-white font-black py-4 rounded-xl shadow transition-all flex justify-center items-center gap-2 text-sm uppercase cursor-pointer">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -223,6 +223,35 @@
             
             document.getElementById('results-container').classList.remove('hidden');
             document.getElementById('results-container').classList.add('flex');
+
+            // Countdown logic
+            if(window.myNumsInterval) clearInterval(window.myNumsInterval);
+            window.myNumsInterval = setInterval(() => {
+                let hasPending = false;
+                data.forEach(item => {
+                    if (item.status === 'pendente') {
+                        let span = document.getElementById('badge-pendente-' + item.reserva_id);
+                        if (span) {
+                            let remain = parseInt(span.getAttribute('data-remaining'));
+                            if (remain > 0) {
+                                hasPending = true;
+                                remain--;
+                                span.setAttribute('data-remaining', remain);
+                                let m = Math.floor(remain / 60).toString().padStart(2, '0');
+                                let s = (remain % 60).toString().padStart(2, '0');
+                                span.innerText = `Aguardando Pagamento ⏳ (${m}:${s})`;
+                            } else {
+                                span.innerText = 'Expirando...';
+                                span.classList.replace('text-yellow-700', 'text-red-600');
+                                span.classList.replace('bg-yellow-100', 'bg-red-100');
+                                span.classList.replace('border-yellow-200', 'border-red-200');
+                                setTimeout(() => document.getElementById('form-busca').dispatchEvent(new Event('submit')), 1500);
+                            }
+                        }
+                    }
+                });
+                if(!hasPending) clearInterval(window.myNumsInterval);
+            }, 1000);
         }
     </script>
 </body>

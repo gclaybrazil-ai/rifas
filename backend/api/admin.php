@@ -120,6 +120,7 @@ else if($action === 'draw_multiple') {
 else if($action === 'save_integration') {
     $gateway = $_POST['gateway'] ?? '';
     $token = $_POST['token'] ?? '';
+    $tempo_pagamento = $_POST['tempo_pagamento'] ?? '3';
     
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
     $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('gateway', ?) ON DUPLICATE KEY UPDATE valor = ?");
@@ -128,11 +129,14 @@ else if($action === 'save_integration') {
     $stmt2 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('gateway_token', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt2->execute([$token, $token]);
 
+    $stmt3 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('tempo_pagamento', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt3->execute([$tempo_pagamento, $tempo_pagamento]);
+
     echo json_encode(['success' => true]);
 }
 else if($action === 'get_integration') {
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token')");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento')");
     $conf = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     echo json_encode($conf ?: []);
 }

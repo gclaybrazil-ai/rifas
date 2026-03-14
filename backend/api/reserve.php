@@ -47,12 +47,16 @@ try {
     // Prepara gateway (Try catch para não quebrar caso a tabela não exista)
     $gateway = '';
     $token = '';
+    $tempo_pagamento = 3; // Padrão
     try {
-        $stmtConf = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token')");
+        $stmtConf = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento')");
         if($stmtConf) {
             $configs = $stmtConf->fetchAll(PDO::FETCH_KEY_PAIR);
             $gateway = $configs['gateway'] ?? '';
             $token = $configs['gateway_token'] ?? '';
+            if(isset($configs['tempo_pagamento']) && is_numeric($configs['tempo_pagamento'])) {
+                $tempo_pagamento = (int)$configs['tempo_pagamento'];
+            }
         }
     } catch(PDOException $e) {}
 
@@ -116,7 +120,7 @@ try {
         'pix_copiacola' => $pix_copiacola, 
         'total' => $total, 
         'txid' => $txid,
-        'expire_in' => 5 * 60 // 5 minutos
+        'expire_in' => $tempo_pagamento * 60 // Segundos
     ]);
 
 } catch (Exception $e) {
