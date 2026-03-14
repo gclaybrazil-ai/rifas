@@ -39,6 +39,7 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <th class="p-4 border-b">Nome da Rifa</th>
                         <th class="p-4 border-b">Preço</th>
                         <th class="p-4 border-b">Acesso</th>
+                        <th class="p-4 border-b">Vendas</th>
                         <th class="p-4 border-b">Status</th>
                         <th class="p-4 border-b text-right">Ação</th>
                     </tr>
@@ -120,6 +121,9 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     
                     let bgStatus = r.status === 'aberta' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600';
 
+                    const pct = r.quantidade_numeros > 0 ? Math.floor((r.pagos / r.quantidade_numeros) * 100) : 0;
+                    const pctColor = pct === 100 ? 'bg-[#00a650]' : (pct >= 50 ? 'bg-[#f1c40f]' : 'bg-[#8e44ad]');
+
                     let actions = `<button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-4 py-1.5 rounded shadow hover:bg-yellow-500 transition-colors uppercase tracking-wider">Sortear</button>`;
 
                     const precoNum = parseFloat(r.preco_numero).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
@@ -132,7 +136,15 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         </td>
                         <td class="p-4 align-middle font-black text-gray-700">${precoNum}</td>
                         <td class="p-4 align-middle">
-                            <a href="../rifa.html?id=${r.id}" target="_blank" class="text-blue-500 hover:underline text-xs">Visitar ↗</a>
+                            <a href="../rifa.html?id=${r.id}" target="_blank" class="text-blue-500 hover:underline text-xs flex items-center gap-1">Visitar <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+                        </td>
+                        <td class="p-4 align-middle">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] font-bold" title="${r.pagos} números vendidos">${pct}%</span>
+                                <div class="w-16 sm:w-20 h-2 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                                    <div class="${pctColor} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
                         </td>
                         <td class="p-4 align-middle">
                             <span class="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider ${bgStatus}">${r.status}</span>
