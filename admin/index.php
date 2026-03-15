@@ -47,23 +47,23 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <h1 class="text-2xl font-black text-[#8e44ad]">Painel Administrativo</h1>
             <p class="text-sm text-gray-500">Gestão de Rifas</p>
         </div>
-        <div class="w-full md:w-auto grid grid-cols-2 sm:flex sm:flex-wrap gap-2 justify-center md:justify-end">
+        <div class="w-full md:w-auto grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 justify-center md:justify-end">
             <button id="btn-new-rifa"
-                class="bg-[#00a650] text-white font-bold px-3 py-2 rounded shadow hover:bg-[#009647] text-sm md:text-base text-center">Criar
+                class="bg-[#00a650] text-white font-bold px-2 py-1.5 rounded shadow hover:bg-[#009647] text-[11px] md:text-xs text-center">Criar
                 Rifa</button>
             <a href="rifas.php"
-                class="bg-blue-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-600 text-sm md:text-base text-center flex justify-center items-center">Gerenciar
+                class="bg-blue-500 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-blue-600 text-[11px] md:text-xs text-center flex justify-center items-center">Gerenciar
                 Rifas</a>
             <button id="btn-integrations"
-                class="bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-sm md:text-base text-center">Integrações</button>
+                class="bg-indigo-500 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-indigo-600 text-[11px] md:text-xs text-center">Integrações</button>
             <button id="btn-billing"
-                class="bg-purple-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-purple-700 text-sm md:text-base text-center">FIN</button>
+                class="bg-purple-600 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-purple-700 text-[11px] md:text-xs text-center">FIN</button>
             <a href="ganhadores.php"
-                class="bg-yellow-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-yellow-600 text-sm md:text-base text-center flex justify-center items-center text-[#2c3e50]">Ganhadores</a>
+                class="bg-yellow-500 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-yellow-600 text-[11px] md:text-xs text-center flex justify-center items-center text-[#2c3e50]">Ganhadores</a>
             <a href="../index.html"
-                class="bg-gray-200 text-gray-700 font-bold px-3 py-2 rounded hover:bg-gray-300 text-sm md:text-base text-center flex justify-center items-center">Site</a>
+                class="bg-gray-200 text-gray-700 font-bold px-2 py-1.5 rounded hover:bg-gray-300 text-[11px] md:text-xs text-center flex justify-center items-center">Site</a>
             <a href="../backend/api/logout.php"
-                class="bg-gray-800 text-white font-bold px-3 py-2 rounded hover:bg-black text-sm md:text-base text-center flex justify-center items-center">Sair</a>
+                class="bg-gray-800 text-white font-bold px-2 py-1.5 rounded hover:bg-black text-[11px] md:text-xs text-center flex justify-center items-center">Sair</a>
         </div>
     </div>
 
@@ -511,13 +511,14 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 const diff = c.expiry - now;
                 const display = el.querySelector('.timer-display');
 
-                if (diff <= 0) {
+                if (diff <= 30000) { // Menos de 30 segundos ou já expirado
                     display.textContent = 'EXPIRANDO...';
                     el.classList.add('animate-bounce');
                 } else {
                     const min = Math.floor(diff / 60000);
                     const sec = Math.floor((diff % 60000) / 1000);
                     display.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+                    el.classList.remove('animate-bounce');
                 }
             });
         }

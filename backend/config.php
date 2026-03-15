@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Sao_Paulo');
 $db_host = 'localhost';
 $db_name = 'top_sorte';
 $db_user = 'root'; // default XAMPP
