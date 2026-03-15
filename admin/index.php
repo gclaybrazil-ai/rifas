@@ -15,6 +15,28 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="../frontend/png/cifrao.png">
+    <style>
+        /* Custom Scrollbar for Desktop */
+        @media (min-width: 768px) {
+            .scrollbar-thin::-webkit-scrollbar {
+                width: 6px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-track {
+                background: transparent;
+                margin: 10px 0; /* Keeps track away from the very top/bottom rounded edges */
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+                background: #d1d5db; /* gray-300 */
+                border-radius: 10px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+                background: #9ca3af; /* gray-400 */
+            }
+            #modal-integrations > div {
+                scrollbar-gutter: stable; /* Preveit layout shift but keep it clean */
+            }
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50 text-gray-800 font-sans p-6">
@@ -113,8 +135,8 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
     <!-- Modal Integracoes -->
     <div id="modal-integrations"
-        class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-left shadow-2xl relative">
+        class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-start justify-center p-4 md:items-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full text-left shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-thin !overflow-x-hidden">
             <button id="btn-close-integrations"
                 class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -229,7 +251,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         placeholder="Olá, $uper$orte! Preciso de ajuda."></textarea>
                 </div>
                 <button type="submit" id="btn-save-integrations"
-                    class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-indigo-700 transition-colors">
+                    class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-4 mb-4 hover:bg-indigo-700 transition-colors">
                     Salvar Configurações
                 </button>
             </form>
