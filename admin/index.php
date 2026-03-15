@@ -159,10 +159,15 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </div>
                 </div>
                 <div id="fields-mercadopago">
-                    <label id="label-token" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key (MP)</label>
-                    <input type="password" id="gateway-token"
-                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                        placeholder="APP_USR-...">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key (MP)</label>
+                    <div class="relative">
+                        <input type="password" id="gateway-token"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="APP_USR-...">
+                        <button type="button" onclick="toggleVisibility('gateway-token')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors">
+                            <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Efí Fields -->
@@ -175,9 +180,14 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Client Secret (Efí)</label>
-                        <input type="password" id="efi-client-secret"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                            placeholder="Client_Secret_...">
+                        <div class="relative">
+                            <input type="password" id="efi-client-secret"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="Client_Secret_...">
+                            <button type="button" onclick="toggleVisibility('efi-client-secret')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors">
+                                <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Certificado .p12 (Upload)</label>
@@ -642,6 +652,20 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 feeContainer.classList.remove('hidden'); // Mostra repasse para Efí
             }
         }
+
+        window.toggleVisibility = function(id) {
+            const input = document.getElementById(id);
+            const btn = input.nextElementSibling;
+            const icon = btn.querySelector('.eye-icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />';
+            }
+        };
 
         document.getElementById('gateway-provider').addEventListener('change', () => {
             toggleGatewayFields();
