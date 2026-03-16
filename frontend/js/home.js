@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await fetch('backend/api/get_rifas.php');
         const data = await res.json();
         
+        if (data.maintenance) {
+            window.location.href = 'manutencao.php';
+            return;
+        }
+
         if(data.success) {
             listEl.innerHTML = ''; // Limpa loader
             

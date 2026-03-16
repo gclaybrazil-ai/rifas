@@ -63,6 +63,10 @@ if ($action === 'stats') {
     $stmt->execute();
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Get maintenance status
+    $stmtM = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'modo_manutencao'");
+    $maintenance = $stmtM ? $stmtM->fetchColumn() : '0';
+
     echo json_encode([
         'stats' => $stats,
         'faturamento' => $faturamento,
@@ -71,6 +75,7 @@ if ($action === 'stats') {
         'total_pages' => (int) $totalPages,
         'current_page' => (int) $page,
         'tempo_pagamento' => $tempo_pagamento,
+        'maintenance' => $maintenance,
         'server_time' => date('Y-m-d H:i:s')
     ]);
 } else if ($action === 'billing_report') {
@@ -445,5 +450,26 @@ if ($action === 'stats') {
     $id = intval($_POST['id'] ?? 0);
     $pdo->prepare("DELETE FROM publicacoes_ganhadores WHERE id = ?")->execute([$id]);
     echo json_encode(['success' => true]);
+} else if ($action === 'set_maintenance') {
+    $status = $_POST['status'] ?? '0';
+    $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('modo_manutencao', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt->execute([$status, $status]);
+    echo json_encode(['success' => true]);
+} else if ($action === 'update_access') {
+    $user = $_POST['user'] ?? '';
+    $pass = $_POST['pass'] ?? '';
+    
+    if(empty($user) || empty($pass)) {
+        die(json_encode(['error' => 'Usuário e senha são obrigatórios']));
+    }
+    
+    try {
+        $hash = password_hash($pass, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("UPDATE usuarios SET username = ?, password = ? WHERE id = 1");
+        $stmt->execute([$user, $hash]);
+        echo json_encode(['success' => true]);
+    } catch(Exception $e) {
+        echo json_encode(['error' => 'Erro ao atualizar: ' . $e->getMessage()]);
+    }
 }
 ?>

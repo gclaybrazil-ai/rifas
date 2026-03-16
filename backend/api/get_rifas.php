@@ -6,6 +6,14 @@ header('Expires: 0');
 require_once '../config.php';
 
 try {
+    // Check maintenance mode
+    $stmtM = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'modo_manutencao'");
+    $isMaintenance = ($stmtM && $stmtM->fetchColumn() === '1');
+
+    if ($isMaintenance) {
+        die(json_encode(['success' => true, 'maintenance' => true]));
+    }
+
     try {
         $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS imagem_url VARCHAR(255) DEFAULT ''");
         $pdo->exec("ALTER TABLE rifas ADD COLUMN IF NOT EXISTS premio1 VARCHAR(255) DEFAULT ''");

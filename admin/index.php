@@ -54,12 +54,33 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <a href="rifas.php"
                 class="bg-blue-500 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-blue-600 text-[11px] md:text-xs text-center flex justify-center items-center">Gerenciar
                 Rifas</a>
-            <button id="btn-integrations"
-                class="bg-indigo-500 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-indigo-600 text-[11px] md:text-xs text-center">Integrações</button>
             <button id="btn-billing"
                 class="bg-purple-600 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-purple-700 text-[11px] md:text-xs text-center">FIN</button>
             <a href="ganhadores.php"
                 class="bg-yellow-500 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-yellow-600 text-[11px] md:text-xs text-center flex justify-center items-center text-[#2c3e50]">Ganhadores</a>
+            <div class="relative group">
+                <button type="button" class="bg-indigo-600 text-white font-bold px-3 py-1.5 rounded shadow hover:bg-indigo-700 text-[11px] md:text-xs text-center flex items-center gap-1 h-full">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Configurações
+                </button>
+                <div class="hidden group-hover:block absolute right-0 mt-0 w-48 bg-white border border-gray-100 rounded-xl shadow-2xl z-[60] p-3 space-y-2">
+                    <button id="btn-integrations" type="button" class="w-full bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Integrações PIX
+                    </button>
+                    <button id="btn-security" type="button" class="w-full bg-red-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-red-600 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        Novo Acesso
+                    </button>
+                    <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase">Manutenção</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="maintenance-toggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
             <a href="../index.html"
                 class="bg-gray-200 text-gray-700 font-bold px-2 py-1.5 rounded hover:bg-gray-300 text-[11px] md:text-xs text-center flex justify-center items-center">Site</a>
             <a href="../backend/api/logout.php"
@@ -405,6 +426,36 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
+    <!-- Modal Seguranca/Acesso -->
+    <div id="modal-security"
+        class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-left shadow-2xl relative">
+            <button id="btn-close-security" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 bg-red-100 rounded-lg text-red-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800">Acesso Admin</h2>
+                    <p class="text-xs text-gray-500">Alterar Usuário e Senha</p>
+                </div>
+            </div>
+            <form id="form-security" class="flex flex-col gap-4">
+                <div>
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Novo Usuário</label>
+                   <input type="text" id="new-admin-user" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="admin" required>
+                </div>
+                <div>
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Nova Senha</label>
+                   <input type="password" id="new-admin-pass" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="******" required>
+                </div>
+                <button type="submit" id="btn-save-security" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-red-700 transition-colors">Atualizar Acesso</button>
+            </form>
+        </div>
+    </div>
+
 
     <script>
         const API = '../backend/api/admin.php';
@@ -434,6 +485,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 document.getElementById('stat-pago').textContent = data.stats['pago'] || 0;
                 document.getElementById('stat-faturamento').textContent = parseFloat(data.faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('stat-taxas').textContent = parseFloat(data.total_repassado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                if (document.getElementById('maintenance-toggle')) {
+                    document.getElementById('maintenance-toggle').checked = (data.maintenance === '1');
+                }
 
                 const tbody = document.getElementById('table-reservas');
                 tbody.innerHTML = '';
@@ -599,6 +654,52 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             const m = document.getElementById('modal-billing');
             m.classList.remove('opacity-100');
             setTimeout(() => m.classList.add('hidden'), 300);
+        });
+
+        // Security Modal
+        document.getElementById('btn-security').addEventListener('click', () => {
+            const m = document.getElementById('modal-security');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+        });
+
+        document.getElementById('btn-close-security').addEventListener('click', () => {
+            const m = document.getElementById('modal-security');
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        });
+
+        document.getElementById('form-security').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('new-admin-user').value;
+            const pass = document.getElementById('new-admin-pass').value;
+            const btn = document.getElementById('btn-save-security');
+            btn.innerHTML = 'Salvando...';
+
+            const fd = new URLSearchParams();
+            fd.append('action', 'update_access');
+            fd.append('user', user);
+            fd.append('pass', pass);
+
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+            
+            if(data.success) {
+                alert('Acesso atualizado! Você será deslogado.');
+                window.location.href = '../backend/api/logout.php';
+            } else {
+                alert(data.error);
+                btn.innerHTML = 'Atualizar Acesso';
+            }
+        });
+
+        // Maintenance Toggle
+        document.getElementById('maintenance-toggle').addEventListener('change', async (e) => {
+            const val = e.target.checked ? '1' : '0';
+            const fd = new URLSearchParams();
+            fd.append('action', 'set_maintenance');
+            fd.append('status', val);
+            await fetch(API, { method: 'POST', body: fd });
         });
 
         function toggleCustomRange() {
