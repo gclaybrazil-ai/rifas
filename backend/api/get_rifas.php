@@ -70,7 +70,7 @@ try {
     echo json_encode([
         'success' => true,
         'ativas' => $ativas,
-        'finalizadas' => $finalizadas,
+        'finalizadas' => array_slice($finalizadas, 0, 5),
         'link_suporte' => $link_suporte
     ]);
 
