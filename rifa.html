@@ -37,6 +37,11 @@
                 class="inline-block bg-[#00a650] text-white text-[10px] md:text-xs px-3 py-1 mt-2 rounded-full font-bold uppercase tracking-wider shadow-sm">
                 Sorteio oficial...
             </div>
+            <div id="edition-badge" class="hidden mt-2">
+                <span class="bg-purple-50 text-purple-600 text-[10px] md:text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                    EDIÇÃO #<span id="rifa-id-num">----</span>
+                </span>
+            </div>
             <p class="text-xs text-gray-400 mt-2 font-medium">Selecione os números em verde</p>
         </div>
 
@@ -205,26 +210,29 @@
     <!-- Modal Alerta Personalizado -->
     <div id="modal-alert"
         class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-xs rounded-3xl p-8 text-center z-[100] flex-col gap-4 hidden shadow-2xl">
-        <div id="alert-icon-error" class="w-16 h-16 bg-red-50 text-red-500 rounded-full mx-auto flex items-center justify-center mb-2 shadow-inner border border-red-100">
+        <div id="alert-icon-error"
+            class="w-16 h-16 bg-red-50 text-red-500 rounded-full mx-auto flex items-center justify-center mb-2 shadow-inner border border-red-100">
             <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </div>
-        <div id="alert-icon-info" class="hidden w-16 h-16 bg-blue-50 text-blue-500 rounded-full mx-auto flex items-center justify-center mb-2 shadow-inner border border-blue-100">
+        <div id="alert-icon-info"
+            class="hidden w-16 h-16 bg-blue-50 text-blue-500 rounded-full mx-auto flex items-center justify-center mb-2 shadow-inner border border-blue-100">
             <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
         </div>
         <h3 id="alert-title" class="font-extrabold text-[#2c3e50] text-xl">Atenção</h3>
         <p id="alert-message" class="text-sm text-gray-500 font-medium mt-2 leading-relaxed">Mensagem de alerta.</p>
-        
+
         <button id="btn-close-alert"
             class="w-full bg-[#2c3e50] hover:bg-gray-800 text-white font-black py-4 rounded-2xl shadow uppercase text-sm transition-colors mt-6">
             Entendido
         </button>
     </div>
 
-    <script src="frontend/js/app.js?v=2.4"></script>
+    <script src="frontend/js/app.js?v=2.5"></script>
 </body>
 
 </html>

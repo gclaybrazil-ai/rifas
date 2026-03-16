@@ -18,6 +18,8 @@ const els = {
     selectedCount: document.getElementById('selected-count'),
     selectedTotal: document.getElementById('selected-total'),
     bottomBar: document.getElementById('bottom-bar'),
+    editionBadge: document.getElementById('edition-badge'),
+    rifaIdNum: document.getElementById('rifa-id-num'),
 
     overlay: document.getElementById('modal-overlay'),
 
@@ -59,6 +61,11 @@ async function fetchRifa() {
         const data = await res.json();
 
         if (data.error) throw new Error(data.error);
+
+        if (data.rifa.id) {
+            if (els.editionBadge) els.editionBadge.classList.remove('hidden');
+            if (els.rifaIdNum) els.rifaIdNum.textContent = data.rifa.id;
+        }
 
         state.preco = parseFloat(data.rifa.preco_numero);
 
