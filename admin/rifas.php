@@ -29,8 +29,14 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
     <!-- Tabela Rifas -->
     <div class="max-w-4xl mx-auto bg-white rounded-lg shadow overflow-hidden border border-gray-100">
-        <div class="px-6 py-4 border-b border-gray-100">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
             <h2 class="font-bold text-gray-700 uppercase tracking-wide">Todas as Rifas</h2>
+            <div class="flex gap-2">
+                <button onclick="setStatusFilter(this, '')" class="filter-btn active-filter bg-gray-200 text-gray-700 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all">TODAS</button>
+                <button onclick="setStatusFilter(this, 'aberta')" class="filter-btn bg-white border border-gray-200 text-gray-400 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-wider hover:bg-gray-50 transition-all">ABERTAS</button>
+                <button onclick="setStatusFilter(this, 'fechada')" class="filter-btn bg-white border border-gray-200 text-gray-400 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-wider hover:bg-gray-50 transition-all">FECHADAS</button>
+                <input type="hidden" id="filter-status" value="">
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-sm">
@@ -49,6 +55,10 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     <tr><td colspan="6" class="p-4 text-center text-gray-500">Carregando...</td></tr>
                 </tbody>
             </table>
+        </div>
+        <!-- Paginação -->
+        <div id="pagination" class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-center gap-2">
+            <!-- Botões injetados via JS -->
         </div>
     </div>
 
@@ -173,10 +183,13 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     <script>
         const API = '../backend/api/admin.php';
         let allRifas = [];
+        let currentPage = 1;
 
-        async function fetchRifas() {
+        async function fetchRifas(page = 1) {
+            currentPage = page;
+            const status = document.getElementById('filter-status').value;
             try {
-                const res = await fetch(`${API}?action=get_rifas_list`);
+                const res = await fetch(`${API}?action=get_rifas_list&page=${page}&status=${status}`);
                 const data = await res.json();
                 
                 const tbody = document.getElementById('table-rifas');
@@ -206,7 +219,12 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         btnAcao = `<button onclick="openWinnersModal(${r.id})" class="text-xs bg-[#9b59b6] text-white font-bold px-2 py-1.5 rounded shadow hover:bg-purple-700 transition-colors uppercase tracking-wider w-24">Sorteados</button>`;
                     } else {
                         btnEditar = `<button onclick="openEditModal(${r.id})" class="text-xs bg-[#2c3e50] text-white font-bold px-2 py-1.5 rounded shadow hover:bg-gray-800 transition-colors uppercase tracking-wider mr-1 w-20">Editar</button>`;
-                        btnAcao = `<button onclick="openDrawModal(${r.id})" class="text-xs bg-[#f1c40f] text-black font-bold px-2 py-1.5 rounded shadow hover:bg-yellow-500 transition-colors uppercase tracking-wider w-24">Sortear</button>`;
+                        
+                        const isFull = pct >= 100;
+                        const btnClass = isFull ? "bg-[#f1c40f] hover:bg-yellow-500 text-black shadow" : "bg-gray-200 text-gray-400 cursor-not-allowed";
+                        const btnClick = isFull ? `onclick="openDrawModal(${r.id})"` : "";
+                        
+                        btnAcao = `<button ${btnClick} class="text-xs font-bold px-2 py-1.5 rounded uppercase tracking-wider w-24 transition-all ${btnClass}">Sortear</button>`;
                     }
                     
                     let actions = `<div class="flex justify-end items-center">` + btnEditar + btnAcao + `</div>`;
@@ -240,8 +258,40 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     `;
                     tbody.appendChild(tr);
                 });
+
+                renderPagination(data.total_pages, data.current_page);
             } catch(e) {
                 console.error(e);
+            }
+        }
+
+        function setStatusFilter(btn, status) {
+            document.getElementById('filter-status').value = status;
+            
+            // UI Update
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('active-filter', 'bg-gray-200', 'text-gray-700');
+                b.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-400');
+            });
+            
+            btn.classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-400');
+            btn.classList.add('active-filter', 'bg-gray-200', 'text-gray-700');
+            
+            fetchRifas(1);
+        }
+
+        function renderPagination(totalPages, current) {
+            const cont = document.getElementById('pagination');
+            cont.innerHTML = '';
+            
+            if(totalPages <= 1) return;
+
+            for(let i=1; i<=totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = `w-8 h-8 rounded font-bold text-xs transition-colors ${i === current ? 'bg-[#8e44ad] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`;
+                btn.onclick = () => fetchRifas(i);
+                cont.appendChild(btn);
             }
         }
 

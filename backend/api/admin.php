@@ -384,11 +384,43 @@ if ($action === 'stats') {
 
     echo json_encode(['success' => true]);
 } else if ($action === 'get_rifas_list') {
-    $stmt = $pdo->query("SELECT r.id, r.nome, r.preco_numero, r.status, r.quantidade_numeros, 
-                        r.imagem_url, r.sorteio_por, r.premio1, r.premio2, r.premio3, r.premio4, r.premio5,
-                        (SELECT COUNT(*) FROM numeros n WHERE n.rifa_id = r.id AND n.status = 'pago') AS pagos 
-                        FROM rifas r ORDER BY r.id DESC");
-    echo json_encode(['rifas' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+    if ($page < 1) $page = 1;
+    $limit = 20;
+    $offset = ($page - 1) * $limit;
+    $statusFilter = $_GET['status'] ?? '';
+
+    $where = "";
+    $params = [];
+    if (!empty($statusFilter)) {
+        $where = " WHERE status = ? ";
+        $params[] = $statusFilter;
+    }
+
+    $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM rifas $where");
+    $stmtCount->execute($params);
+    $totalCount = $stmtCount->fetchColumn();
+    $totalPages = ceil($totalCount / $limit);
+
+    $sql = "SELECT r.id, r.nome, r.preco_numero, r.status, r.quantidade_numeros, 
+            r.imagem_url, r.sorteio_por, r.premio1, r.premio2, r.premio3, r.premio4, r.premio5,
+            (SELECT COUNT(*) FROM numeros n WHERE n.rifa_id = r.id AND n.status = 'pago') AS pagos 
+            FROM rifas r $where ORDER BY r.id DESC LIMIT ? OFFSET ?";
+    
+    $stmt = $pdo->prepare($sql);
+    $i = 1;
+    foreach($params as $p) {
+        $stmt->bindValue($i++, $p);
+    }
+    $stmt->bindValue($i++, $limit, PDO::PARAM_INT);
+    $stmt->bindValue($i++, $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    
+    echo json_encode([
+        'rifas' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+        'total_pages' => (int)$totalPages,
+        'current_page' => (int)$page
+    ]);
 } else if ($action === 'get_winners') {
     $rifa_id = intval($_GET['rifa_id'] ?? $_POST['rifa_id'] ?? 0);
     $pdo->exec("CREATE TABLE IF NOT EXISTS ganhadores (id INT AUTO_INCREMENT PRIMARY KEY, rifa_id INT NOT NULL, numero VARCHAR(10) NOT NULL, nome VARCHAR(255) NOT NULL, whatsapp VARCHAR(20) NOT NULL, premio_ordem INT NOT NULL, data_sorteio DATETIME DEFAULT CURRENT_TIMESTAMP)");
