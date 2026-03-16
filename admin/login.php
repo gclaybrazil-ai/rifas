@@ -44,8 +44,31 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
             <button type="submit" id="btn-submit" class="w-full bg-[#2c3e50] text-white font-black py-4 rounded-xl shadow uppercase tracking-wide text-sm hover:bg-gray-800 transition-colors">
                 Entrar no Painel
             </button>
-            <a href="../index.html" class="text-center text-[11px] text-gray-400 underline mt-2 hover:text-gray-600">Voltar para a Loja</a>
+            <div class="flex flex-col gap-2 mt-2">
+                <button type="button" onclick="openRecovery()" class="text-center text-[11px] text-gray-400 hover:text-[#00a650] transition-colors">Esqueceu a senha?</button>
+                <a href="../index.html" class="text-center text-[11px] text-gray-400 underline hover:text-gray-600">Voltar para a Loja</a>
+            </div>
         </form>
+    </div>
+
+    <!-- Recovery Modal -->
+    <div id="modal-recovery" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-left shadow-2xl relative">
+            <button onclick="closeRecovery()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-xl font-black text-gray-800 mb-2">Recuperar Acesso</h2>
+            <p class="text-xs text-gray-500 mb-6">Informe seu email cadastrado para receber uma nova senha.</p>
+            <div id="recovery-msg" class="hidden mb-4 p-3 rounded-xl text-[11px] font-bold text-center"></div>
+            <form id="form-recovery" class="flex flex-col gap-4">
+                <div>
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Email Cadastrado</label>
+                   <input type="email" id="recovery-email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="exemplo@email.com" required>
+                </div>
+                <button type="submit" id="btn-recovery" class="w-full bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm hover:bg-[#009647] transition-colors">Enviar Nova Senha</button>
+                <p class="text-[9px] text-gray-400 text-center italic">Verifique sua caixa de spam caso não encontre o email.</p>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -79,6 +102,59 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
                 errEl.textContent = 'Erro de comunicação com o servidor.';
                 errEl.classList.remove('hidden');
                 btn.innerHTML = 'Entrar no Painel';
+                btn.disabled = false;
+            }
+        });
+
+        const modalRec = document.getElementById('modal-recovery');
+        const msgRec = document.getElementById('recovery-msg');
+
+        function openRecovery() {
+            modalRec.classList.remove('hidden');
+            setTimeout(() => modalRec.classList.add('opacity-100'), 10);
+        }
+
+        function closeRecovery() {
+            modalRec.classList.remove('opacity-100');
+            setTimeout(() => modalRec.classList.add('hidden'), 300);
+        }
+
+        document.getElementById('form-recovery').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('recovery-email').value;
+            const btn = document.getElementById('btn-recovery');
+            
+            btn.innerHTML = 'Processando...';
+            btn.disabled = true;
+            msgRec.classList.add('hidden');
+
+            try {
+                const res = await fetch('../backend/api/recovery.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email: email})
+                });
+                
+                const data = await res.json().catch(() => null);
+                
+                if(data && data.success) {
+                    msgRec.textContent = data.message;
+                    msgRec.className = 'mb-4 p-3 rounded-xl text-[11px] font-bold text-center bg-green-50 text-green-700 border border-green-100';
+                    msgRec.classList.remove('hidden');
+                    document.getElementById('recovery-email').value = '';
+                } else {
+                    msgRec.textContent = data ? data.error : 'Erro no servidor. Verifique a configuração.';
+                    msgRec.className = 'mb-4 p-3 rounded-xl text-[11px] font-bold text-center bg-red-50 text-red-700 border border-red-100';
+                    msgRec.classList.remove('hidden');
+                }
+            } catch(err) {
+                console.error(err);
+                msgRec.textContent = 'Erro ao conectar. Verifique sua internet.';
+                msgRec.className = 'mb-4 p-3 rounded-xl text-[11px] font-bold text-center bg-red-50 text-red-700 border border-red-100';
+                msgRec.classList.remove('hidden');
+            }
+ finally {
+                btn.innerHTML = 'Enviar Nova Senha';
                 btn.disabled = false;
             }
         });

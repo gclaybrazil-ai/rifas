@@ -14,4 +14,3 @@ try {
 } catch(PDOException $e) {
     die(json_encode(['error' => 'Erro de conexão com o banco de dados: ' . $e->getMessage()]));
 }
-?>

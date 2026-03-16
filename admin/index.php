@@ -66,11 +66,15 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 <div class="hidden group-hover:block absolute right-0 mt-0 w-48 bg-white border border-gray-100 rounded-xl shadow-2xl z-[60] p-3 space-y-2">
                     <button id="btn-integrations" type="button" class="w-full bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        Integrações PIX
+                        Integrações
                     </button>
                     <button id="btn-security" type="button" class="w-full bg-red-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-red-600 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                         Novo Acesso
+                    </button>
+                    <button id="btn-open-smtp" type="button" class="w-full bg-blue-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Acesso Email
                     </button>
                     <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
                         <span class="text-[10px] font-bold text-gray-500 uppercase">Manutenção</span>
@@ -448,17 +452,174 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                    <input type="text" id="new-admin-user" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="admin" required>
                 </div>
                 <div>
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Email de Recuperação</label>
+                   <input type="email" id="new-admin-email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="admin@email.com" required>
+                </div>
+                <div>
                    <label class="text-[10px] font-bold text-gray-400 uppercase">Nova Senha</label>
-                   <input type="password" id="new-admin-pass" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="******" required>
+                   <input type="password" id="new-admin-pass" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="Deixe em branco para não alterar">
                 </div>
                 <button type="submit" id="btn-save-security" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-red-700 transition-colors">Atualizar Acesso</button>
             </form>
         </div>
     </div>
 
+    <!-- Modal Configurações de Email -->
+    <div id="modal-smtp" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full text-left shadow-2xl relative">
+            <button id="btn-close-smtp" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 bg-indigo-100 rounded-lg text-indigo-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-xl font-black text-gray-800">Parâmetros de Email</h2>
+                        <button type="button" id="btn-help-smtp" class="w-5 h-5 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-[10px] font-bold hover:bg-gray-300 transition-colors" title="Como configurar?">?</button>
+                    </div>
+                    <p class="text-xs text-gray-500">Configuração para Recuperação de Senha</p>
+                </div>
+            </div>
+            <form id="form-smtp" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Servidor SMTP</label>
+                   <input type="text" id="smtp-host" name="smtp_host" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="smtp.exemplo.com">
+                </div>
+                <div>
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Porta SMTP</label>
+                   <input type="text" id="smtp-port" name="smtp_port" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="587">
+                </div>
+                <div>
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Usuário SMTP</label>
+                   <input type="text" id="smtp-user" name="smtp_user" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="login@email.com">
+                </div>
+                <div>
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Senha SMTP</label>
+                   <input type="password" id="smtp-pass" name="smtp_pass" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="******">
+                </div>
+                <div>
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Nome do Remetente</label>
+                   <input type="text" id="smtp-from-name" name="smtp_from_name" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="Admin Sorte">
+                </div>
+                <div>
+                   <label class="text-[10px] font-bold text-gray-400 uppercase">Email do Remetente</label>
+                   <input type="email" id="smtp-from-email" name="smtp_from_email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="noreply@site.com">
+                </div>
+                <button type="submit" id="btn-save-smtp" class="md:col-span-2 bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-[#009647] transition-colors">Salvar Configuração</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ajuda SMTP -->
+    <div id="modal-help-smtp" class="fixed inset-0 bg-black bg-opacity-80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 max-w-lg w-full text-left shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button id="btn-close-help-smtp" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-2xl font-black text-gray-800 mb-6">Como Configurar o Email?</h2>
+            
+            <div class="space-y-6">
+                <div class="p-4 bg-orange-50 border-l-4 border-orange-400 text-orange-800 text-xs">
+                    <strong>Atenção:</strong> Escolha <strong>UM</strong> servidor abaixo para usar os dados no seu formulário.
+                </div>
+
+                <div class="border-b pb-4">
+                    <h3 class="font-bold text-indigo-600 mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-indigo-100 rounded flex items-center justify-center text-[10px]">1</span>
+                        Hostinger (Recomendado se usar Titan)
+                    </h3>
+                    <ul class="text-[11px] text-gray-600 space-y-1 ml-8 list-disc">
+                        <li><strong>Servidor:</strong> smtp.titan.email (ou o que estiver no seu guia Titan)</li>
+                        <li><strong>Porta:</strong> 465 (ou 587 se usar TLS)</li>
+                        <li><strong>Usuário:</strong> Seu email completo (ex: contato@seusite.com)</li>
+                        <li><strong>Senha:</strong> A mesma senha do seu email</li>
+                    </ul>
+                </div>
+
+                <div class="border-b pb-4">
+                    <h3 class="font-bold text-blue-600 mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-blue-100 rounded flex items-center justify-center text-[10px]">2</span>
+                        Outlook / Hotmail
+                    </h3>
+                    <ul class="text-[11px] text-gray-600 space-y-1 ml-8 list-disc">
+                        <li><strong>Servidor:</strong> smtp-mail.outlook.com</li>
+                        <li><strong>Porta:</strong> 587</li>
+                        <li><strong>Usuário:</strong> Seu e-mail completo</li>
+                        <li><strong>Senha:</strong> Senha do e-mail (ou Senha de App se tiver 2 fatores)</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-red-600 mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-red-100 rounded flex items-center justify-center text-[10px]">3</span>
+                        Gmail
+                    </h3>
+                    <ul class="text-[11px] text-gray-600 space-y-1 ml-8 list-disc">
+                        <li><strong>Servidor:</strong> smtp.gmail.com</li>
+                        <li><strong>Porta:</strong> 465</li>
+                        <li><strong>Usuário:</strong> Seu Gmail</li>
+                        <li><strong>Senha:</strong> Você precisa gerar uma <strong>"Senha de App"</strong> nas configurações de segurança da sua conta Google.</li>
+                    </ul>
+                </div>
+
+                <div class="p-4 bg-gray-50 rounded-xl text-[10px] text-gray-500">
+                    <p><strong>Dica:</strong> Se usar <strong>Hostinger Webmail</strong> comum, o servidor geralmente é <code>smtp.hostinger.com</code> na porta <code>465</code>.</p>
+                </div>
+            </div>
+            
+            <button id="btn-entendi-smtp" class="w-full bg-[#2c3e50] text-white font-black py-3 rounded-xl shadow uppercase text-xs mt-6 hover:bg-gray-800 transition-colors">Entendi e Voltar</button>
+        </div>
+    </div>
+
+
+    <!-- Modal Notificação -->
+    <div id="modal-notif" class="fixed inset-0 bg-black bg-opacity-80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative">
+            <div id="notif-icon-success" class="hidden mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <div id="notif-icon-error" class="hidden mx-auto w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+            </div>
+            <h2 id="notif-title" class="text-xl font-black text-gray-800 mb-2">Sucesso!</h2>
+            <p id="notif-message" class="text-sm text-gray-500 mb-6 font-medium">Informação atualizada com sucesso.</p>
+            <button id="btn-close-notif" class="w-full bg-[#2c3e50] text-white font-black py-4 rounded-xl shadow uppercase text-sm hover:bg-gray-800 transition-colors">Entendido</button>
+        </div>
+    </div>
 
     <script>
         const API = '../backend/api/admin.php';
+
+        function showNotification(title, message, type = 'success', callback = null) {
+            const modal = document.getElementById('modal-notif');
+            document.getElementById('notif-title').textContent = title;
+            document.getElementById('notif-message').textContent = message;
+            
+            const iconSuccess = document.getElementById('notif-icon-success');
+            const iconError = document.getElementById('notif-icon-error');
+            const btnClose = document.getElementById('btn-close-notif');
+
+            if(type === 'success') {
+                iconSuccess.classList.remove('hidden');
+                iconError.classList.add('hidden');
+            } else {
+                iconSuccess.classList.add('hidden');
+                iconError.classList.remove('hidden');
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('opacity-100'), 10);
+
+            btnClose.onclick = () => {
+                modal.classList.remove('opacity-100');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    if(callback) callback();
+                }, 300);
+            };
+        }
 
         let currentPage = 1;
         let currentStatus = '';
@@ -488,6 +649,24 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
                 if (document.getElementById('maintenance-toggle')) {
                     document.getElementById('maintenance-toggle').checked = (data.maintenance === '1');
+                }
+
+                // Populate Acesso (only if modal is closed)
+                const modalSecurity = document.getElementById('modal-security');
+                if(modalSecurity && modalSecurity.classList.contains('hidden')) {
+                    if(document.getElementById('new-admin-user')) document.getElementById('new-admin-user').value = data.admin_user || '';
+                    if(document.getElementById('new-admin-email')) document.getElementById('new-admin-email').value = data.admin_email || '';
+                }
+
+                // Populate SMTP (only if modal is closed)
+                const modalSMTP = document.getElementById('modal-smtp');
+                if(modalSMTP && modalSMTP.classList.contains('hidden') && data.email_config) {
+                    if(document.getElementById('smtp-host')) document.getElementById('smtp-host').value = data.email_config.smtp_host || '';
+                    if(document.getElementById('smtp-port')) document.getElementById('smtp-port').value = data.email_config.smtp_port || '';
+                    if(document.getElementById('smtp-user')) document.getElementById('smtp-user').value = data.email_config.smtp_user || '';
+                    if(document.getElementById('smtp-pass')) document.getElementById('smtp-pass').value = data.email_config.smtp_pass || '';
+                    if(document.getElementById('smtp-from-name')) document.getElementById('smtp-from-name').value = data.email_config.smtp_from_name || '';
+                    if(document.getElementById('smtp-from-email')) document.getElementById('smtp-from-email').value = data.email_config.smtp_from_email || '';
                 }
 
                 const tbody = document.getElementById('table-reservas');
@@ -672,6 +851,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         document.getElementById('form-security').addEventListener('submit', async (e) => {
             e.preventDefault();
             const user = document.getElementById('new-admin-user').value;
+            const email = document.getElementById('new-admin-email').value;
             const pass = document.getElementById('new-admin-pass').value;
             const btn = document.getElementById('btn-save-security');
             btn.innerHTML = 'Salvando...';
@@ -679,19 +859,75 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             const fd = new URLSearchParams();
             fd.append('action', 'update_access');
             fd.append('user', user);
+            fd.append('email', email);
             fd.append('pass', pass);
 
             const res = await fetch(API, { method: 'POST', body: fd });
             const data = await res.json();
             
             if(data.success) {
-                alert('Acesso atualizado! Você será deslogado.');
-                window.location.href = '../backend/api/logout.php';
+                if(pass.trim() !== "") {
+                   showNotification('Sucesso!', 'Acesso atualizado! Você será deslogado para entrar com a nova senha.', 'success', () => {
+                       window.location.href = '../backend/api/logout.php';
+                   });
+                } else {
+                   showNotification('Sucesso!', 'Acesso atualizado com sucesso.', 'success');
+                   btn.innerHTML = 'Atualizar Acesso';
+                   fetchStats(currentPage);
+                }
             } else {
-                alert(data.error);
+                showNotification('Erro', data.error, 'error');
                 btn.innerHTML = 'Atualizar Acesso';
             }
         });
+
+        // SMTP Modal
+        document.getElementById('btn-open-smtp').addEventListener('click', () => {
+            const m = document.getElementById('modal-smtp');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+        });
+
+        document.getElementById('btn-close-smtp').addEventListener('click', () => {
+            const m = document.getElementById('modal-smtp');
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        });
+
+        document.getElementById('form-smtp').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-smtp');
+            btn.innerHTML = 'Salvando...';
+
+            const fd = new URLSearchParams(new FormData(e.target));
+            fd.append('action', 'save_smtp');
+
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+            
+            if(data.success) {
+                showNotification('Sucesso!', 'Parâmetros de email salvos com sucesso.');
+                btn.innerHTML = 'Salvar Configuração';
+            } else {
+                showNotification('Erro', data.error, 'error');
+                btn.innerHTML = 'Salvar Configuração';
+            }
+        });
+
+        // SMTP Help Modal
+        document.getElementById('btn-help-smtp').addEventListener('click', () => {
+            const m = document.getElementById('modal-help-smtp');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+        });
+
+        const closeHelp = () => {
+            const m = document.getElementById('modal-help-smtp');
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        };
+        document.getElementById('btn-close-help-smtp').addEventListener('click', closeHelp);
+        document.getElementById('btn-entendi-smtp').addEventListener('click', closeHelp);
 
         // Maintenance Toggle
         document.getElementById('maintenance-toggle').addEventListener('change', async (e) => {

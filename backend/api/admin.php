@@ -60,12 +60,16 @@ if ($action === 'stats') {
     $stmt->bindValue($idx++, $limit, PDO::PARAM_INT);
     $stmt->bindValue($idx++, $offset, PDO::PARAM_INT);
 
+    $pdo->exec("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email VARCHAR(255) DEFAULT ''");
     $stmt->execute();
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Get maintenance status
-    $stmtM = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'modo_manutencao'");
-    $maintenance = $stmtM ? $stmtM->fetchColumn() : '0';
+    // Get maintenance and email settings
+    $stmtM = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('modo_manutencao', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email')");
+    $configs = $stmtM ? $stmtM->fetchAll(PDO::FETCH_KEY_PAIR) : [];
+    
+    $stmtUser = $pdo->query("SELECT email, username FROM usuarios WHERE id = 1");
+    $userData = $stmtUser->fetch(PDO::FETCH_ASSOC);
 
     echo json_encode([
         'stats' => $stats,
@@ -75,7 +79,10 @@ if ($action === 'stats') {
         'total_pages' => (int) $totalPages,
         'current_page' => (int) $page,
         'tempo_pagamento' => $tempo_pagamento,
-        'maintenance' => $maintenance,
+        'maintenance' => $configs['modo_manutencao'] ?? '0',
+        'email_config' => $configs,
+        'admin_email' => $userData['email'] ?? '',
+        'admin_user' => $userData['username'] ?? '',
         'server_time' => date('Y-m-d H:i:s')
     ]);
 } else if ($action === 'billing_report') {
@@ -458,18 +465,46 @@ if ($action === 'stats') {
 } else if ($action === 'update_access') {
     $user = $_POST['user'] ?? '';
     $pass = $_POST['pass'] ?? '';
+    $email = $_POST['email'] ?? '';
     
-    if(empty($user) || empty($pass)) {
-        die(json_encode(['error' => 'Usuário e senha são obrigatórios']));
+    if(empty($user) || empty($email)) {
+        die(json_encode(['error' => 'Usuário e email são obrigatórios']));
     }
     
     try {
-        $hash = password_hash($pass, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("UPDATE usuarios SET username = ?, password = ? WHERE id = 1");
-        $stmt->execute([$user, $hash]);
+        if(!empty($pass)) {
+            $hash = password_hash($pass, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("UPDATE usuarios SET username = ?, password = ?, email = ? WHERE id = 1");
+            $stmt->execute([$user, $hash, $email]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE usuarios SET username = ?, email = ? WHERE id = 1");
+            $stmt->execute([$user, $email]);
+        }
         echo json_encode(['success' => true]);
     } catch(Exception $e) {
         echo json_encode(['error' => 'Erro ao atualizar: ' . $e->getMessage()]);
     }
+} else if ($action === 'save_smtp') {
+    $host = $_POST['smtp_host'] ?? '';
+    $port = $_POST['smtp_port'] ?? '';
+    $user = $_POST['smtp_user'] ?? '';
+    $pass = $_POST['smtp_pass'] ?? '';
+    $from_name = $_POST['smtp_from_name'] ?? '';
+    $from_email = $_POST['smtp_from_email'] ?? '';
+
+    $params = [
+        'smtp_host' => $host,
+        'smtp_port' => $port,
+        'smtp_user' => $user,
+        'smtp_pass' => $pass,
+        'smtp_from_name' => $from_name,
+        'smtp_from_email' => $from_email
+    ];
+
+    foreach ($params as $key => $val) {
+        $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES (?, ?) ON DUPLICATE KEY UPDATE valor = ?");
+        $stmt->execute([$key, $val, $val]);
+    }
+    echo json_encode(['success' => true]);
 }
 ?>
