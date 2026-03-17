@@ -172,12 +172,16 @@ if ($action === 'login_register') {
     $stmt->execute([$_SESSION['afiliado_id']]);
     $af = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $stmtR = $pdo->query("SELECT id, nome FROM rifas WHERE status = 'aberta' ORDER BY id DESC");
+    $stmtR = $pdo->query("SELECT id, nome, preco_numero FROM rifas WHERE status = 'aberta' ORDER BY id DESC");
     $rifas = $stmtR->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmtConf = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_share_template'");
+    $shareTemplate = $stmtConf->fetchColumn() ?: "🎉 Participe da Rifa: {rifa_nome}\n\nConcorra agora: {link}";
 
     echo json_encode([
         'afiliado' => $af,
         'rifas' => $rifas,
+        'whatsapp_share_template' => $shareTemplate,
         'site_url' => (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . str_replace('/backend/api/afiliado.php', '', $_SERVER['PHP_SELF']),
         'expires_in' => 1200 - (time() - ($_SESSION['last_activity'] ?? time()))
     ]);

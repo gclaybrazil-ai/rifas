@@ -270,10 +270,17 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 <div>
                     <label
                         class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Mensagem
-                        Padrão (WhatsApp)</label>
+                        Padrão (WhatsApp Suporte)</label>
                     <textarea id="mensagem-suporte"
                         class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none h-20"
                         placeholder="Olá, $uper$orte! Preciso de ajuda."></textarea>
+                </div>
+                <div class="border-t border-gray-100 pt-4 mt-2">
+                    <label class="text-[10px] font-black text-purple-600 uppercase tracking-widest ml-1 mb-1 block">Template Compartilhamento (Afiliados)</label>
+                    <textarea id="whatsapp-share-template"
+                        class="w-full bg-purple-50 border border-purple-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none h-32"
+                        placeholder="🎉 Participe da Rifa e Concorra Agora!&#10;Escolha seu número e concorra...&#10;&#10;🔗 {link}"></textarea>
+                    <p class="text-[9px] text-gray-400 mt-1 ml-1 leading-tight">Use <b>{rifa_nome}</b>, <b>{link}</b> e <b>{preco}</b> como espaços reservados.</p>
                 </div>
                 <button type="submit" id="btn-save-integrations"
                     class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-4 mb-4 hover:bg-indigo-700 transition-colors">
@@ -991,6 +998,8 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if (data.group_vip) document.getElementById('group-vip').value = data.group_vip;
             if (data.whatsapp_suporte) document.getElementById('whatsapp-suporte').value = data.whatsapp_suporte;
             if (data.mensagem_suporte) document.getElementById('mensagem-suporte').value = data.mensagem_suporte;
+            if (data.repassar_taxa) document.getElementById('repassar_taxa').checked = data.repassar_taxa === '1';
+            if (data.whatsapp_share_template) document.getElementById('whatsapp-share-template').value = data.whatsapp_share_template;
             
             document.getElementById('repassar_taxa').checked = data.repassar_taxa === '1';
 
@@ -1062,6 +1071,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 fd.append('whatsapp_suporte', document.getElementById('whatsapp-suporte').value);
                 fd.append('mensagem_suporte', document.getElementById('mensagem-suporte').value);
                 fd.append('repassar_taxa', document.getElementById('repassar_taxa').checked ? '1' : '0');
+                fd.append('whatsapp_share_template', document.getElementById('whatsapp-share-template').value);
 
                 const res = await fetch(API, { method: 'POST', body: fd });
                 const result = await res.json();

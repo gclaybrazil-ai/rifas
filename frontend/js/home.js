@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const [reais, centavos] = strReais.split(',');
 
         let colorPulse = isFinalized ? 'bg-gray-600' : (rifa.tag.includes('AO VIVO') ? 'animate-pulse bg-red-600' : 'bg-blue-600');
-        let cardLink = isFinalized ? '#' : `rifa.html?id=${rifa.id}`;
+        let cardLink = isFinalized ? '#' : `rifa.php?id=${rifa.id}`;
         let pointerClass = isFinalized ? 'cursor-default' : 'cursor-pointer active:scale-95 group hover:shadow-2xl';
 
         let buttonArea = isFinalized ? `

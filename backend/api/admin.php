@@ -313,6 +313,7 @@ if ($action === 'stats') {
     $mensagem_suporte = $_POST['mensagem_suporte'] ?? '';
     $repassar_taxa = $_POST['repassar_taxa'] ?? '0';
     $valor_taxa = $_POST['valor_taxa'] ?? '0.00';
+    $whatsapp_share_template = $_POST['whatsapp_share_template'] ?? '';
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
     
@@ -362,10 +363,13 @@ if ($action === 'stats') {
     $stmt8 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('valor_taxa', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt8->execute([$valor_taxa, $valor_taxa]);
 
+    $stmt9 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('whatsapp_share_template', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt9->execute([$whatsapp_share_template, $whatsapp_share_template]);
+
     echo json_encode(['success' => true]);
 } else if ($action === 'get_integration') {
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa')");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa', 'whatsapp_share_template')");
     $conf = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     echo json_encode($conf ?: []);
 } else if ($action === 'create_rifa') {

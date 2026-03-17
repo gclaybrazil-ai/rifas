@@ -43,7 +43,7 @@
             <form id="form-auth" class="space-y-4">
                 <div>
                     <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">WhatsApp (Somente números)</label>
-                    <input type="text" id="auth-whatsapp" placeholder="Ex: 11999999999" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-semibold focus:ring-2 focus:ring-purple-500 outline-none transition-all">
+                    <input type="text" id="auth-whatsapp" placeholder="(11) 99999-9999" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-semibold focus:ring-2 focus:ring-purple-500 outline-none transition-all">
                 </div>
 
                 <div id="login-fields" class="space-y-4">
@@ -94,6 +94,9 @@
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
                     <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Saldo Atual</p>
                     <h3 class="text-2xl font-black text-purple-600" id="dash-saldo">R$ 0,00</h3>
+                    <div class="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
+                        <div id="payout-progress" class="bg-purple-600 h-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
                     <p class="text-[9px] text-gray-400 font-bold mt-2" id="dash-proximo-pgto">VERIFICANDO CICLO...</p>
                 </div>
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
@@ -153,6 +156,13 @@
         let currentToken = '';
         let timerInterval = null;
         let secondsLeft = 0;
+        let whatsappTemplate = '';
+        
+        // Máscara para WhatsApp (11) 99999-9999
+        document.getElementById('auth-whatsapp')?.addEventListener('input', function (e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
 
         async function checkSession() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -274,9 +284,17 @@
             document.getElementById('section-auth').classList.add('hidden');
             document.getElementById('section-dash').classList.remove('hidden');
             document.getElementById('btn-logout').classList.remove('hidden');
+            
+            whatsappTemplate = data.whatsapp_share_template || '';
 
             const af = data.afiliado;
             document.getElementById('dash-saldo').textContent = parseFloat(af.saldo).toLocaleString('pt-BR', {style: 'currency', currency:'BRL'});
+            
+            // Progress Bar for R$ 20.00
+            const saldo = parseFloat(af.saldo);
+            const percPayout = Math.min(100, (saldo / 20) * 100);
+            document.getElementById('payout-progress').style.width = percPayout + '%';
+
             document.getElementById('dash-total').textContent = parseFloat(af.total_ganho).toLocaleString('pt-BR', {style: 'currency', currency:'BRL'});
             document.getElementById('dash-vendas').textContent = `${af.vendas_pagas} VENDAS PAGAS`;
             document.getElementById('dash-pix-key').value = af.pix_key;
@@ -300,14 +318,14 @@
             cont.innerHTML = '';
             
             data.rifas.forEach(r => {
-                const link = `${data.site_url}/rifa.html?id=${r.id}&ref=${af.id}`;
+                const link = `${data.site_url}/rifa.php?id=${r.id}&ref=${af.id}`;
                 const item = `
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                         <p class="text-[10px] font-black text-purple-600 uppercase mb-1">${r.nome}</p>
                         <div class="flex gap-2">
                             <input type="text" readonly value="${link}" class="flex-1 bg-white border border-gray-200 rounded-lg p-2 text-xs font-mono outline-none">
                             <button onclick="copyToClipboard('${link}')" class="bg-gray-800 text-white text-[10px] font-black px-4 rounded-lg uppercase tracking-widest hover:bg-black transition-all">Copiar</button>
-                            <button onclick="shareWA('${link}', '${r.nome}')" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-all flex items-center justify-center">
+                            <button onclick="shareWA('${link}', '${r.nome}', '${r.preco_numero}')" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-all flex items-center justify-center">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                             </button>
                         </div>
@@ -317,8 +335,16 @@
             });
         }
 
-        function shareWA(link, rifaNome) {
-            const msg = encodeURIComponent(`Olá! Veja esta rifa incrível: ${rifaNome}\nParticipe agora: ${link}`);
+        function shareWA(link, rifaNome, preco) {
+            let template = whatsappTemplate || "🎉 Participe da Rifa: {rifa_nome}\n\nConcorra agora: {link}";
+            
+            // Replace placeholders
+            let finalMsg = template
+                .replace(/{rifa_nome}/g, rifaNome)
+                .replace(/{link}/g, link)
+                .replace(/{preco}/g, parseFloat(preco).toLocaleString('pt-BR', {style: 'currency', currency:'BRL'}));
+
+            const msg = encodeURIComponent(finalMsg);
             window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
         }
 
