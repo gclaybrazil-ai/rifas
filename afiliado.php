@@ -24,7 +24,10 @@
                 <img src="frontend/png/cifrao.png" class="w-8 h-8 animate-float" alt="Logo">
                 <h1 class="text-xl font-black gradient-text">PROGRAMA DE AFILIADOS</h1>
             </div>
-            <button id="btn-logout" class="hidden text-xs font-bold text-red-500 uppercase tracking-widest hover:bg-red-50 px-3 py-1.5 rounded-lg transition-all">Sair</button>
+            <div class="flex items-center gap-4">
+                <span id="session-timer" class="hidden text-[10px] font-black text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">EXPIRA EM: 20:00</span>
+                <button id="btn-logout" class="hidden text-xs font-bold text-red-500 uppercase tracking-widest hover:bg-red-50 px-3 py-1.5 rounded-lg transition-all">Sair</button>
+            </div>
         </div>
     </header>
 
@@ -147,6 +150,8 @@
     <script>
         const API = 'backend/api/afiliado.php';
         let currentToken = '';
+        let timerInterval = null;
+        let secondsLeft = 0;
 
         async function checkSession() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -160,8 +165,29 @@
             const res = await fetch(`${API}?action=get_stats`);
             const data = await res.json();
             if(data.afiliado) {
+                secondsLeft = data.expires_in || 1200;
+                startTimer();
                 showDash(data);
             }
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            const display = document.getElementById('session-timer');
+            display.classList.remove('hidden');
+
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    location.reload();
+                    return;
+                }
+
+                const mins = Math.floor(secondsLeft / 60);
+                const secs = secondsLeft % 60;
+                display.textContent = `EXPIRA EM: ${mins}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
         }
 
         async function handleToken(token) {

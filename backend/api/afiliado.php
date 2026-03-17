@@ -10,6 +10,16 @@ use PHPMailer\PHPMailer\Exception;
 
 session_start();
 
+// Timeout de 20 minutos (1200 segundos)
+if (isset($_SESSION['afiliado_id'])) {
+    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1200)) {
+        session_unset();
+        session_destroy();
+    } else {
+        $_SESSION['last_activity'] = time();
+    }
+}
+
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // Helper function to send emails
@@ -67,6 +77,7 @@ if ($action === 'login_register') {
         if (empty($senha)) die(json_encode(['error' => 'Informe sua senha.']));
         if (password_verify($senha, $afiliado['senha'])) {
             $_SESSION['afiliado_id'] = $afiliado['id'];
+            $_SESSION['last_activity'] = time();
             echo json_encode(['success' => true, 'message' => 'Login realizado!']);
         } else {
             echo json_encode(['error' => 'Senha incorreta.']);
@@ -81,6 +92,7 @@ if ($action === 'login_register') {
             $stmt = $pdo->prepare("INSERT INTO afiliados (nome, whatsapp, email, senha, pix_key) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$nome, $whatsapp, $email, $hash, $pix_key]);
             $_SESSION['afiliado_id'] = $pdo->lastInsertId();
+            $_SESSION['last_activity'] = time();
             echo json_encode(['success' => true, 'message' => 'Cadastro realizado!']);
         } catch (PDOException $e) {
             if ($e->getCode() == 23000) die(json_encode(['error' => 'Email ou WhatsApp já cadastrado.']));
@@ -166,7 +178,8 @@ if ($action === 'login_register') {
     echo json_encode([
         'afiliado' => $af,
         'rifas' => $rifas,
-        'site_url' => (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . str_replace('/backend/api/afiliado.php', '', $_SERVER['PHP_SELF'])
+        'site_url' => (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . str_replace('/backend/api/afiliado.php', '', $_SERVER['PHP_SELF']),
+        'expires_in' => 1200 - (time() - ($_SESSION['last_activity'] ?? time()))
     ]);
 
 } else if ($action === 'request_update') {
