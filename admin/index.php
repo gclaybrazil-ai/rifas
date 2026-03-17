@@ -636,8 +636,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 const data = await res.json();
 
                 // Server Time Sync
-                const serverTime = new Date(data.server_time).getTime();
-                serverTimeOffset = serverTime - new Date().getTime();
+                const sTime = new Date(data.server_time).getTime();
+                const cTime = new Date().getTime();
+                serverTimeOffset = sTime - cTime;
+                console.log("Sync Admin:", { server: data.server_time, client: new Date().toISOString(), offset: serverTimeOffset });
                 tempoPagamento = data.tempo_pagamento;
                 countdowns = [];
 
@@ -688,7 +690,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     else if (r.status === 'pendente') {
                         bgStatus = 'bg-yellow-100 text-yellow-700';
                         // Calc expiry
-                        const dataReserva = new Date(r.data_reserva).getTime();
+                        const dataReserva = new Date(r.data_reserva_iso).getTime();
                         const expiry = dataReserva + (tempoPagamento * 60 * 1000);
                         const idTimer = `timer-${r.id}`;
                         timerHtml = `<div id="${idTimer}" class="text-[9px] font-black text-red-500 mt-1 flex items-center gap-1">

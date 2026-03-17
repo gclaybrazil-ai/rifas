@@ -60,9 +60,13 @@ if ($action === 'stats') {
     $stmt->bindValue($idx++, $limit, PDO::PARAM_INT);
     $stmt->bindValue($idx++, $offset, PDO::PARAM_INT);
 
-    $pdo->exec("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email VARCHAR(255) DEFAULT ''");
     $stmt->execute();
     $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Formatar datas para ISO para o JS não se perder
+    foreach($reservas as &$r) {
+        $r['data_reserva_iso'] = date('c', strtotime($r['data_reserva']));
+    }
 
     // Get maintenance and email settings
     $stmtM = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('modo_manutencao', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email')");
@@ -83,7 +87,7 @@ if ($action === 'stats') {
         'email_config' => $configs,
         'admin_email' => $userData['email'] ?? '',
         'admin_user' => $userData['username'] ?? '',
-        'server_time' => date('Y-m-d H:i:s')
+        'server_time' => date('c')
     ]);
 } else if ($action === 'billing_report') {
     $start = $_GET['start'] ?? '';
@@ -115,9 +119,96 @@ if ($action === 'stats') {
     ]);
 } else if ($action === 'mark_paid') {
     $id = intval($_POST['id'] ?? 0);
-    $pdo->prepare("UPDATE reservas SET status = 'pago' WHERE id = ?")->execute([$id]);
-    $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$id]);
-    echo json_encode(['success' => true]);
+    
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("SELECT id, status, afiliado_id, valor_total, rifa_id FROM reservas WHERE id = ?");
+        $stmt->execute([$id]);
+        $reserva = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($reserva && $reserva['status'] === 'pendente') {
+            // Marca como pago
+            $pdo->prepare("UPDATE reservas SET status = 'pago' WHERE id = ?")->execute([$id]);
+            $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$id]);
+            
+            // Lógica de Comissão de Afiliado
+            if (!empty($reserva['afiliado_id'])) {
+                $afId = intval($reserva['afiliado_id']);
+                $valorTotal = (float)$reserva['valor_total'];
+                
+                // Busca % de comissão
+                $stmtC = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'comissao_padrao'");
+                $comissionPct = (float)($stmtC->fetchColumn() ?: 10.00);
+                $comissao = round(($valorTotal * $comissionPct) / 100, 2);
+                
+                // Atualiza saldo do afiliado
+                $pdo->prepare("UPDATE afiliados SET saldo = saldo + ?, total_ganho = total_ganho + ?, vendas_pagas = vendas_pagas + 1 WHERE id = ?")
+                    ->execute([$comissao, $comissao, $afId]);
+            }
+
+            $pdo->commit();
+
+            // Webhook common logic: 100% sold check
+            $rifaId = intval($reserva['rifa_id']);
+            $stmtCountTotal = $pdo->prepare("SELECT COUNT(*) FROM numeros WHERE rifa_id = ?");
+            $stmtCountTotal->execute([$rifaId]);
+            $totalNums = (int)$stmtCountTotal->fetchColumn();
+
+            $stmtCountPaid = $pdo->prepare("SELECT COUNT(*) FROM numeros WHERE rifa_id = ? AND status = 'pago'");
+            $stmtCountPaid->execute([$rifaId]);
+            $totalPaid = (int)$stmtCountPaid->fetchColumn();
+
+            if ($totalPaid >= $totalNums && $totalNums > 0) {
+                // Trigger 100% email notification (Same logic as webhook)
+                require_once '../libs/PHPMailer/PHPMailer.php';
+                require_once '../libs/PHPMailer/SMTP.php';
+                require_once '../libs/PHPMailer/Exception.php';
+
+                $stmtRifa = $pdo->prepare("SELECT nome FROM rifas WHERE id = ?");
+                $stmtRifa->execute([$rifaId]);
+                $rifaNome = $stmtRifa->fetchColumn();
+
+                $stmtConfMail = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave LIKE 'smtp_%'");
+                $confMail = $stmtConfMail->fetchAll(PDO::FETCH_KEY_PAIR);
+
+                $host = $confMail['smtp_host'] ?? '';
+                $user_smtp = $confMail['smtp_user'] ?? '';
+                $pass_smtp = $confMail['smtp_pass'] ?? '';
+                $port = (int)($confMail['smtp_port'] ?? 465);
+                $from_name = $confMail['smtp_from_name'] ?? 'Rifas Online';
+                $from_email = $confMail['smtp_from_email'] ?? 'noreply@seusite.com';
+                $admin_email = $confMail['smtp_user'] ?? $from_email;
+
+                if (!empty($host) && !empty($user_smtp) && !empty($pass_smtp)) {
+                    try {
+                        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                        $mail->isSMTP();
+                        $mail->Host       = $host;
+                        $mail->SMTPAuth   = true;
+                        $mail->Username   = $user_smtp;
+                        $mail->Password   = $pass_smtp;
+                        $mail->SMTPSecure = ($port == 465) ? 'ssl' : 'tls';
+                        $mail->Port       = $port;
+                        $mail->CharSet    = 'UTF-8';
+                        $mail->setFrom($from_email, $from_name);
+                        $mail->addAddress($admin_email);
+                        $mail->isHTML(true);
+                        $mail->Subject = "RIFA 100% VENDIDA: {$rifaNome}";
+                        $mail->Body    = "<h2>Parabens!</h2><p>A rifa #{$rifaId} atingiu 100%.</p>";
+                        $mail->send();
+                    } catch (Exception $e) {}
+                }
+            }
+
+            echo json_encode(['success' => true]);
+        } else {
+            $pdo->rollBack();
+            echo json_encode(['error' => 'Reserva nao encontrada ou ja paga.']);
+        }
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        echo json_encode(['error' => $e->getMessage()]);
+    }
 } else if ($action === 'draw_multiple') {
     $rifa_id = intval($_POST['rifa_id'] ?? 0);
     $qtd = intval($_POST['qtd'] ?? 1);

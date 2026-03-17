@@ -2,7 +2,14 @@
 date_default_timezone_set('America/Sao_Paulo');
 $db_host = 'localhost';
 
-if ($_SERVER['SERVER_ADDR'] == '127.0.0.1' || $_SERVER['SERVER_ADDR'] == '::1' || $_SERVER['HTTP_HOST'] == 'localhost') {
+$is_local = (
+    ($_SERVER['SERVER_ADDR'] ?? '') == '127.0.0.1' || 
+    ($_SERVER['SERVER_ADDR'] ?? '') == '::1' || 
+    ($_SERVER['HTTP_HOST'] ?? '') == 'localhost' ||
+    php_sapi_name() == 'cli'
+);
+
+if ($is_local) {
     // Local (XAMPP)
     $db_name = 'top_sorte';
     $db_user = 'root';
@@ -20,6 +27,9 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$db_name`");
     $pdo->exec("USE `$db_name`");
+    
+    // Sincronizar Horário do MySQL com o do PHP
+    $pdo->exec("SET time_zone = '-03:00'");
 
     // Tabelas do Sistema de Afiliados
     $pdo->exec("CREATE TABLE IF NOT EXISTS afiliados (
@@ -43,6 +53,10 @@ try {
     $checkAfSenha = $pdo->query("SHOW COLUMNS FROM afiliados LIKE 'senha'");
     if (!$checkAfSenha->fetch()) {
         $pdo->exec("ALTER TABLE afiliados ADD COLUMN senha VARCHAR(255) NOT NULL AFTER email");
+    }
+    $checkAfDataSaque = $pdo->query("SHOW COLUMNS FROM afiliados LIKE 'data_ultimo_saque'");
+    if (!$checkAfDataSaque->fetch()) {
+        $pdo->exec("ALTER TABLE afiliados ADD COLUMN data_ultimo_saque DATETIME DEFAULT CURRENT_TIMESTAMP AFTER data_cadastro");
     }
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS afiliado_tokens (
@@ -78,7 +92,8 @@ try {
     $defaults = [
         'minimo_saque' => '20.00',
         'comissao_padrao' => '10.00', // 10%
-        'afiliados_ativo' => '1'
+        'afiliados_ativo' => '1',
+        'ciclo_pagamento_dias' => '15'
     ];
     foreach($defaults as $chave => $valor) {
         $stmt = $pdo->prepare("INSERT IGNORE INTO configuracoes (chave, valor) VALUES (?, ?)");

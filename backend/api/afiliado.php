@@ -168,7 +168,7 @@ if ($action === 'login_register') {
 } else if ($action === 'get_stats') {
     if (!isset($_SESSION['afiliado_id'])) die(json_encode(['error' => 'Não logado']));
 
-    $stmt = $pdo->prepare("SELECT id, nome, whatsapp, email, pix_key, saldo, total_ganho, vendas_pagas FROM afiliados WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, nome, whatsapp, email, pix_key, saldo, total_ganho, vendas_pagas, data_ultimo_saque FROM afiliados WHERE id = ?");
     $stmt->execute([$_SESSION['afiliado_id']]);
     $af = $stmt->fetch(PDO::FETCH_ASSOC);
 

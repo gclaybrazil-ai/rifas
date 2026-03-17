@@ -1,95 +1,100 @@
 <?php
-/*
-  Simulação de Webhook (MercadoPago ou Gerencianet)
-  Na vida real, a API de pagamento fará um POST nesta URL quando um PIX for pago.
-  Para testar: Envie um POST via Postman ou curl:
-  {
-      "txid": "SEU_TXID_CRIADO",
-      "status": "approved"
-  }
-*/
+// Tenta gravar log de entrada IMEDIATAMENTE
+$rawPayload = file_get_contents('php://input');
+$logMsg = "[" . date('Y-m-d H:i:s') . "] WEBHOOK RECEBIDO: " . $rawPayload . PHP_EOL;
+file_put_contents(__DIR__ . '/webhook_debug.txt', $logMsg, FILE_APPEND);
+
 header('Content-Type: application/json');
-require_once '../config.php';
 
-$payload = file_get_contents('php://input');
-file_put_contents('webhook_log.txt', "[" . date('Y-m-d H:i:s') . "] Payload: " . $payload . PHP_EOL, FILE_APPEND);
-$data = json_decode($payload, true);
-$txid = $data['txid'] ?? '';
-$statusPost = $data['status'] ?? ''; 
+// SEGURANÇA: Validar Token HMAC (Opcional mas recomendado)
+$tokenRecebido = $_GET['token'] ?? '';
+$isMP = false;
 
-// Suporte para Efí Bank (Envia uma lista em 'pix')
+// Tenta identificar se é Mercado Pago pelo User-Agent ou Payload
+$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+if (strpos($userAgent, 'MercadoPago') !== false) $isMP = true;
+
+if ($tokenRecebido !== 'RIFA_SECURE_123' && !$isMP) {
+    file_put_contents(__DIR__ . '/webhook_debug.txt', "ACESSO NEGADO: Token Invalido" . PHP_EOL, FILE_APPEND);
+    die(json_encode(['error' => 'Acesso negado']));
+}
+
+try {
+    require_once '../config.php';
+} catch (Exception $e) {
+    file_put_contents(__DIR__ . '/webhook_debug.txt', "ERRO CONFIG: " . $e->getMessage() . PHP_EOL, FILE_APPEND);
+    die();
+}
+
+$data = json_decode($rawPayload, true);
+$txid = '';
+$source = 'unknown';
+
 if (isset($data['pix']) && is_array($data['pix'])) {
     foreach ($data['pix'] as $item) {
-        if (isset($item['txid'])) {
-            $txid = $item['txid'];
-            $statusPost = 'approved'; // Na Efí, se chegou no webhook de PIX, é porque foi pago
-            break; 
+        if (isset($item['txid'])) { $txid = $item['txid']; break; }
+    }
+    $source = 'efi';
+} else if (isset($data['resource']) && strpos($data['resource'], '/v2/cob/') !== false) {
+    $parts = explode('/', $data['resource']);
+    $txid = end($parts);
+    $source = 'efi';
+} else if (isset($data['type']) && $data['type'] === 'payment') {
+    $txid = $data['data']['id'] ?? '';
+    $source = 'mercadopago';
+} else {
+    $txid = $data['txid'] ?? $data['id'] ?? $data['data']['id'] ?? '';
+}
+
+file_put_contents(__DIR__ . '/webhook_debug.txt', "ORIGEM: $source | TXID: " . $txid . PHP_EOL, FILE_APPEND);
+
+if (empty($txid)) die(json_encode(['msg' => 'OK']));
+
+// SE FOR MERCADO PAGO, PRECISAMOS CONSULTAR SE O STATUS É 'approved'
+if ($source === 'mercadopago') {
+    $stmtG = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'gateway_token'");
+    $mpToken = $stmtG->fetchColumn();
+    
+    if ($mpToken) {
+        $ch = curl_init("https://api.mercadopago.com/v1/payments/$txid");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $mpToken"]);
+        $resMP = curl_exec($ch);
+        curl_close($ch);
+        
+        $mpData = json_decode($resMP, true);
+        if (($mpData['status'] ?? '') !== 'approved') {
+            file_put_contents(__DIR__ . '/webhook_debug.txt', "MP STATUS: " . ($mpData['status'] ?? 'null') . " - Ignorando." . PHP_EOL, FILE_APPEND);
+            die(json_encode(['msg' => 'Aguardando aprovacao']));
         }
     }
-}
-
-if (empty($txid)) {
-    die(json_encode(['error' => 'Faltam dados do webhook']));
-}
-
-// Aceita 'approved' (MP) ou vácuo da Efí que já definimos acima
-if ($statusPost !== 'approved' && !empty($statusPost)) {
-    die(json_encode(['msg' => 'Ignorado']));
 }
 
 $pdo->beginTransaction();
 try {
-    $stmt = $pdo->prepare("SELECT id, status, afiliado_id, valor_total FROM reservas WHERE pix_txid = ?");
+    $stmt = $pdo->prepare("SELECT id, status, afiliado_id, valor_total, rifa_id FROM reservas WHERE pix_txid = ?");
     $stmt->execute([$txid]);
     $reserva = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($reserva && $reserva['status'] === 'pendente') {
-        // Marca como pago
         $pdo->prepare("UPDATE reservas SET status = 'pago' WHERE id = ?")->execute([$reserva['id']]);
         $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$reserva['id']]);
         
-        // Lógica de Comissão de Afiliado
-        if (!empty($reserva['afiliado_id'])) {
-            $afId = intval($reserva['afiliado_id']);
-            $valorTotal = (float)$reserva['valor_total'];
-            
-            // Busca % de comissão
+        $afId = !empty($reserva['afiliado_id']) ? intval($reserva['afiliado_id']) : 0;
+        if ($afId > 0) {
             $stmtC = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'comissao_padrao'");
-            $comissionPct = (float)($stmtC->fetchColumn() ?: 10.00);
-            $comissao = round(($valorTotal * $comissionPct) / 100, 2);
-            
-            // Atualiza saldo do afiliado
+            $pct = (float)($stmtC->fetchColumn() ?: 10);
+            $comission = round(($reserva['valor_total'] * $pct) / 100, 2);
             $pdo->prepare("UPDATE afiliados SET saldo = saldo + ?, total_ganho = total_ganho + ?, vendas_pagas = vendas_pagas + 1 WHERE id = ?")
-                ->execute([$comissao, $comissao, $afId]);
-
-            // Verificar saque automático
-            $stmtBal = $pdo->prepare("SELECT id, saldo, pix_key FROM afiliados WHERE id = ?");
-            $stmtBal->execute([$afId]);
-            $af = $stmtBal->fetch(PDO::FETCH_ASSOC);
-            
-            $stmtMin = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'minimo_saque'");
-            $minSaque = (float)($stmtMin->fetchColumn() ?: 20.00);
-            
-            if ($af && $af['saldo'] >= $minSaque) {
-                $valorSaque = $af['saldo'];
-                // Zera saldo para o saque
-                $pdo->prepare("UPDATE afiliados SET saldo = 0 WHERE id = ?")->execute([$afId]);
-                // Registra o saque como pendente (o envio real pode ser via cron ou automação de API)
-                $pdo->prepare("INSERT INTO saques (afiliado_id, valor, chave_pix, status) VALUES (?, ?, ?, 'pendente')")
-                    ->execute([$afId, $valorSaque, $af['pix_key']]);
-            }
+                ->execute([$comission, $comission, $afId]);
         }
-
         $pdo->commit();
         echo json_encode(['success' => true]);
     } else {
         $pdo->rollBack();
-        echo json_encode(['error' => 'Reserva não encontrada ou já processada']);
+        echo json_encode(['msg' => 'Ignorado']);
     }
 } catch (Exception $e) {
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
+    if ($pdo && $pdo->inTransaction()) $pdo->rollBack();
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>

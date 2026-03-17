@@ -94,7 +94,7 @@
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
                     <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Saldo Atual</p>
                     <h3 class="text-2xl font-black text-purple-600" id="dash-saldo">R$ 0,00</h3>
-                    <p class="text-[9px] text-gray-400 font-bold mt-2">SAQUE MÍN: R$ 20,00</p>
+                    <p class="text-[9px] text-gray-400 font-bold mt-2" id="dash-proximo-pgto">VERIFICANDO CICLO...</p>
                 </div>
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
                     <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Total Ganho</p>
@@ -130,6 +130,7 @@
                             </div>
                         </div>
                     </div>
+                    <p class="text-[10px] opacity-40 mt-4 font-medium uppercase tracking-widest text-center">Pagamentos realizados a cada 15 dias para saldos acima de R$ 20,00</p>
                     <p class="text-[9px] opacity-30 mt-6 font-medium uppercase tracking-widest text-center">Alterações de PIX ou Email exigem confirmação via link enviado ao seu email por segurança.</p>
                 </div>
             </div>
@@ -280,6 +281,20 @@
             document.getElementById('dash-vendas').textContent = `${af.vendas_pagas} VENDAS PAGAS`;
             document.getElementById('dash-pix-key').value = af.pix_key;
             document.getElementById('dash-email').value = af.email;
+
+            // Calcular Próximo Pagamento (15 dias após o último)
+            if (af.data_ultimo_saque) {
+                const ultimaData = new Date(af.data_ultimo_saque);
+                ultimaData.setDate(ultimaData.getDate() + 15);
+                const hoje = new Date();
+                const dif = Math.ceil((ultimaData - hoje) / (1000 * 60 * 60 * 24));
+                
+                let msg = `PRÓXIMA DISPONIBILIDADE: ${ultimaData.toLocaleDateString('pt-BR')}`;
+                if (dif > 0) msg += ` (${dif} DIAS)`;
+                else msg = "PAGAMENTO DISPONÍVEL NO PRÓXIMO CICLO";
+                
+                document.getElementById('dash-proximo-pgto').textContent = msg;
+            }
 
             const cont = document.getElementById('links-container');
             cont.innerHTML = '';
