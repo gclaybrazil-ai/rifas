@@ -8,6 +8,7 @@ $rifa_id = isset($data['rifa_id']) ? intval($data['rifa_id']) : 1;
 $nome = $data['nome'] ?? '';
 $whatsapp = $data['whatsapp'] ?? '';
 $numerosSelecionados = $data['numeros'] ?? [];
+$afiliado_id = isset($data['afiliado_id']) && is_numeric($data['afiliado_id']) ? intval($data['afiliado_id']) : null;
 
 if(empty($nome) || empty($whatsapp) || empty($numerosSelecionados)) {
     die(json_encode(['error' => 'Por favor, preencha todos os dados.']));
@@ -235,8 +236,8 @@ try {
     }
 
     // Inserir reserva
-    $stmt = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, valor_total, data_reserva, status, pix_txid, pix_qrcode, pix_copiacola, valor_taxa) VALUES (?, ?, ?, ?, NOW(), 'pendente', ?, ?, ?, ?)");
-    $stmt->execute([$rifa_id, $nome, $whatsapp, $total, $txid, $pix_qrcode, $pix_copiacola, $valor_taxa_calculada]);
+    $stmt = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, valor_total, data_reserva, status, pix_txid, pix_qrcode, pix_copiacola, valor_taxa, afiliado_id) VALUES (?, ?, ?, ?, NOW(), 'pendente', ?, ?, ?, ?, ?)");
+    $stmt->execute([$rifa_id, $nome, $whatsapp, $total, $txid, $pix_qrcode, $pix_copiacola, $valor_taxa_calculada, $afiliado_id]);
     $reserva_id = $pdo->lastInsertId();
 
     // Atualizar números
