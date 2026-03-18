@@ -1,3 +1,7 @@
+<?php
+header('Content-Type: application/json');
+require_once '../config.php';
+
 // session_start and PHPMailer already in config.php
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -7,6 +11,8 @@ if ($action === 'login_register') {
     $email = trim($_POST['email'] ?? '');
     $senha = $_POST['senha'] ?? '';
     $pix_key = trim($_POST['pix_key'] ?? '');
+    $lat = $_POST['lat'] ?? null;
+    $lng = $_POST['lng'] ?? null;
 
     if (empty($whatsapp)) die(json_encode(['error' => 'WhatsApp é obrigatório.']));
 
@@ -18,17 +24,17 @@ if ($action === 'login_register') {
         // Login flow
         if (empty($senha)) die(json_encode(['error' => 'Informe sua senha.']));
         if (password_verify($senha, $afiliado['senha'])) {
-            $check = checkLocationChallenge('afiliado', $afiliado['id'], $afiliado['email'], $afiliado['nome']);
+            $check = checkLocationChallenge('afiliado', $afiliado['id'], $afiliado['email'], $afiliado['nome'], $lat, $lng);
             if (isset($check['challenge'])) {
                 die(json_encode(['challenge_required' => true, 'message' => 'Novo local detectado. Verifique seu e-mail para autorizar este acesso.']));
             }
 
             $_SESSION['afiliado_id'] = $afiliado['id'];
             $_SESSION['last_activity'] = time();
-            registrarLog('acao_afiliado', "Afiliado logado com sucesso", $afiliado['id']);
+            registrarLog('acao_afiliado', "Afiliado logado com sucesso", $afiliado['id'], null, $lat, $lng);
             echo json_encode(['success' => true, 'message' => 'Login realizado!']);
         } else {
-            registrarLog('acao_afiliado', "Tentativa de login falhou (WP: $whatsapp)");
+            registrarLog('acao_afiliado', "Tentativa de login falhou (WP: $whatsapp)", null, null, $lat, $lng);
             echo json_encode(['error' => 'Senha incorreta.']);
         }
     } else {
@@ -36,12 +42,18 @@ if ($action === 'login_register') {
         if (empty($nome) || empty($pix_key) || empty($email) || empty($senha)) {
             die(json_encode(['error' => 'Para novo cadastro, preencha todos os campos.']));
         }
+        $valid = validatePasswordComplexity($senha);
+        if ($valid !== true) {
+            die(json_encode(['error' => $valid]));
+        }
         $hash = password_hash($senha, PASSWORD_DEFAULT);
         try {
             $stmt = $pdo->prepare("INSERT INTO afiliados (nome, whatsapp, email, senha, pix_key) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$nome, $whatsapp, $email, $hash, $pix_key]);
-            $_SESSION['afiliado_id'] = $pdo->lastInsertId();
+            $new_id = $pdo->lastInsertId();
+            $_SESSION['afiliado_id'] = $new_id;
             $_SESSION['last_activity'] = time();
+            registrarLog('acao_afiliado', "Novo afiliado cadastrado", $new_id, null, $lat, $lng);
             echo json_encode(['success' => true, 'message' => 'Cadastro realizado!']);
         } catch (PDOException $e) {
             if ($e->getCode() == 23000) die(json_encode(['error' => 'Email ou WhatsApp já cadastrado.']));
@@ -70,7 +82,7 @@ if ($action === 'login_register') {
     $subject = "Recuperação de Senha - Afiliado";
     $message = "Olá {$af['nome']},\n\nPara redefinir sua senha de acesso ao painel de afiliados, clique no link abaixo:\n\n{$link}\n\nO link expira em 1 hora.";
 
-    if (sendMailer($af['email'], $af['nome'], $subject, $message, $pdo)) {
+    if (sendMailer($af['email'], $af['nome'], $subject, $message)) {
         echo json_encode(['success' => true, 'message' => 'Link de recuperação enviado para seu email.']);
     } else {
         echo json_encode(['error' => 'Falha ao enviar email. ' . (in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']) ? "Simulação (Local): $link" : "")]);
@@ -97,7 +109,8 @@ if ($action === 'login_register') {
     $pdo->beginTransaction();
     try {
         if ($t['tipo'] === 'reset_senha') {
-            if (strlen($valor) < 6) throw new Exception("A senha deve ter pelo menos 6 caracteres.");
+            $valid = validatePasswordComplexity($valor);
+            if ($valid !== true) throw new Exception($valid);
             $hash = password_hash($valor, PASSWORD_DEFAULT);
             $pdo->prepare("UPDATE afiliados SET senha = ? WHERE id = ?")->execute([$hash, $t['afiliado_id']]);
         } else if ($t['tipo'] === 'update_pix') {

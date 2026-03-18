@@ -70,8 +70,9 @@
 
                 <button type="submit" id="btn-auth-submit" class="w-full bg-[#2c3e50] text-white font-black py-5 rounded-2xl shadow-xl hover:bg-gray-800 transition-all uppercase tracking-widest text-sm">Entrar / Cadastrar</button>
                 
-                <div class="text-center">
+                <div class="text-center flex flex-col gap-3">
                     <button type="button" id="btn-forgot" class="text-[10px] font-black text-purple-600 uppercase tracking-widest hover:underline">Esqueci minha senha</button>
+                    <a href="index.html" class="text-center text-[11px] text-gray-400 underline hover:text-gray-600">Voltar para a Loja</a>
                 </div>
             </form>
         </div>
@@ -144,10 +145,10 @@
 
     <!-- Modal Notificação -->
     <div id="modal-notif" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative">
-            <h2 id="notif-title" class="text-xl font-black text-gray-800 mb-2 uppercase">Atenção</h2>
-            <p id="notif-message" class="text-sm text-gray-500 mb-6 font-medium">Informação aqui.</p>
-            <button onclick="document.getElementById('modal-notif').classList.add('hidden')" class="w-full bg-purple-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-sm hover:bg-purple-700 transition-all">Entendido</button>
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative border border-gray-100">
+            <h2 id="notif-title" class="text-2xl font-black text-[#2c3e50] mb-4 uppercase tracking-tight italic">$UPER$ORTE</h2>
+            <p id="notif-message" class="text-sm text-gray-500 mb-8 font-medium leading-relaxed">Informação aqui.</p>
+            <button onclick="document.getElementById('modal-notif').classList.add('hidden')" class="w-full bg-[#8e44ad] text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs tracking-widest hover:bg-[#7d3c98] transition-all">Entendido</button>
         </div>
     </div>
 
@@ -256,8 +257,41 @@
             else showAlert(data.error);
         };
 
+        async function getLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject('Seu navegador não suporta geolocalização exata.');
+                } else {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve({lat: pos.coords.latitude, lng: pos.coords.longitude}),
+                        (err) => {
+                            if (err.code === 1) reject('A geolocalização exata é obrigatória para parceiros por segurança. Por favor, autorize no seu navegador.');
+                            else reject('Erro ao obter localização: ' + err.message);
+                        },
+                        { enableHighAccuracy: true, timeout: 5000 }
+                    );
+                }
+            });
+        }
+
         document.getElementById('form-auth').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btn-auth-submit');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="animate-spin mr-2">📍</i> Localizando...';
+            btn.disabled = true;
+
+            let coords = {lat: '', lng: ''};
+            try {
+                coords = await getLocation();
+            } catch (err) {
+                showAlert(err);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            btn.innerHTML = 'Processando...';
             const fd = new FormData();
             fd.append('action', 'login_register');
             fd.append('whatsapp', document.getElementById('auth-whatsapp').value);
@@ -265,9 +299,14 @@
             fd.append('email', document.getElementById('auth-email').value);
             fd.append('senha', document.getElementById('auth-senha').value);
             fd.append('pix_key', document.getElementById('auth-pix').value);
+            fd.append('lat', coords.lat);
+            fd.append('lng', coords.lng);
 
             const res = await fetch(API, { method: 'POST', body: fd });
             const data = await res.json();
+
+            btn.disabled = false;
+            btn.innerHTML = originalText;
 
             if(data.error) {
                 if(data.error.includes('preencha todos os campos')) {
@@ -277,7 +316,8 @@
                 showAlert(data.error);
             } else if (data.challenge_required) {
                 showAlert(data.message, 'Segurança');
-                document.getElementById('btn-auth').innerHTML = 'Aguardando E-mail...';
+                btn.innerHTML = 'Aguardando E-mail...';
+                btn.disabled = true;
             } else {
                 checkSession();
             }
@@ -379,8 +419,8 @@
             showAlert('Link copiado para a área de transferência!');
         }
 
-        function showAlert(msg, title='Atenção') {
-            document.getElementById('notif-title').textContent = title;
+        function showAlert(msg, title='$UPER$ORTE') {
+            document.getElementById('notif-title').textContent = title === 'Atenção' ? 'ATENÇÃO' : title;
             document.getElementById('notif-message').textContent = msg;
             document.getElementById('modal-notif').classList.remove('hidden');
         }

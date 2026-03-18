@@ -16,7 +16,13 @@ try {
         $stmtUpdate = $pdo->prepare("UPDATE login_autorizacoes SET autorizado = 1, data_autenticacao = CURRENT_TIMESTAMP WHERE id = ?");
         $stmtUpdate->execute([$auth['id']]);
 
-        $redirect = ($auth['user_type'] === 'admin') ? '../admin/login.php' : '../afiliado.php';
+        if ($auth['user_type'] === 'admin') {
+            session_start();
+            $_SESSION['admin_logged'] = true;
+            $redirect = '../admin/index.php';
+        } else {
+            $redirect = '../afiliado.php';
+        }
 
         echo "
         <div style='font-family: sans-serif; text-align: center; padding: 50px;'>

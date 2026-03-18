@@ -1,4 +1,5 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
 date_default_timezone_set('America/Sao_Paulo');
 
 require_once __DIR__ . '/libs/PHPMailer/PHPMailer.php';
@@ -7,6 +8,7 @@ require_once __DIR__ . '/libs/PHPMailer/Exception.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+
 $db_host = 'localhost';
 
 $is_local = (
@@ -52,26 +54,12 @@ try {
         data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
-    // Garantir colunas novas se a tabela já existia
-    $checkAfEmail = $pdo->query("SHOW COLUMNS FROM afiliados LIKE 'email'");
-    if (!$checkAfEmail->fetch()) {
-        $pdo->exec("ALTER TABLE afiliados ADD COLUMN email VARCHAR(255) NOT NULL UNIQUE AFTER whatsapp");
-    }
-    $checkAfSenha = $pdo->query("SHOW COLUMNS FROM afiliados LIKE 'senha'");
-    if (!$checkAfSenha->fetch()) {
-        $pdo->exec("ALTER TABLE afiliados ADD COLUMN senha VARCHAR(255) NOT NULL AFTER email");
-    }
-    $checkAfDataSaque = $pdo->query("SHOW COLUMNS FROM afiliados LIKE 'data_ultimo_saque'");
-    if (!$checkAfDataSaque->fetch()) {
-        $pdo->exec("ALTER TABLE afiliados ADD COLUMN data_ultimo_saque DATETIME DEFAULT CURRENT_TIMESTAMP AFTER data_cadastro");
-    }
-
     $pdo->exec("CREATE TABLE IF NOT EXISTS afiliado_tokens (
         id INT AUTO_INCREMENT PRIMARY KEY,
         afiliado_id INT NOT NULL,
         token VARCHAR(100) NOT NULL,
         tipo ENUM('reset_senha', 'update_pix', 'update_email') NOT NULL,
-        novo_valor TEXT, -- Para guardar o novo email ou pix temporariamente
+        novo_valor TEXT, 
         data_expiracao DATETIME NOT NULL,
         usado TINYINT(1) DEFAULT 0
     )");
@@ -86,23 +74,18 @@ try {
         data_solicitacao DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
-    // Adicionar afiliado_id na tabela reservas se não existir
-    $checkReserva = $pdo->query("SHOW COLUMNS FROM reservas LIKE 'afiliado_id'");
-    if (!$checkReserva->fetch()) {
-        $pdo->exec("ALTER TABLE reservas ADD COLUMN afiliado_id INT DEFAULT NULL");
-    }
-
-    // Log System Tables
     $pdo->exec("CREATE TABLE IF NOT EXISTS site_logs (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NULL, -- ID do afiliado
-        admin_id INT NULL, -- ID do admin (tabela usuarios)
+        user_id INT NULL,
+        admin_id INT NULL,
         ip VARCHAR(45) NOT NULL,
         categoria ENUM('acesso_site', 'acao_admin', 'acao_afiliado') NOT NULL,
         acao VARCHAR(255) NOT NULL,
         pagina VARCHAR(255),
         pais VARCHAR(100),
         cidade VARCHAR(100),
+        latitude VARCHAR(50),
+        longitude VARCHAR(50),
         data_hora DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
@@ -111,7 +94,7 @@ try {
         user_type ENUM('admin', 'afiliado') NOT NULL,
         user_id INT NOT NULL,
         ip VARCHAR(45) NOT NULL,
-        location_slug VARCHAR(255), -- cidade-pais
+        location_slug VARCHAR(255),
         token VARCHAR(100) UNIQUE,
         autorizado TINYINT(1) DEFAULT 0,
         data_solicitacao DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -128,10 +111,35 @@ try {
         ultima_atividade DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )");
 
-    // Adicionar admin_email padrão
+    // Adicionar colunas faltantes de uma vez
+    $cols = [
+        'afiliados' => ['email', 'senha', 'data_ultimo_saque'],
+        'rifas' => ['imagem_url', 'premio1', 'premio2', 'premio3', 'premio4', 'premio5', 'sorteio_por'],
+        'usuarios' => ['email'],
+        'reservas' => ['afiliado_id'],
+        'site_logs' => ['latitude', 'longitude']
+    ];
+    
+    foreach($cols as $table => $tableCols) {
+        foreach($tableCols as $col) {
+            try {
+                $check = $pdo->query("SHOW COLUMNS FROM `$table` LIKE '$col'");
+                if (!$check->fetch()) {
+                    if($table == 'usuarios' && $col == 'email') $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$col` VARCHAR(255) DEFAULT 'admin@seusite.com'");
+                    else if($table == 'afiliados' && ($col == 'email' || $col == 'senha')) $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$col` VARCHAR(255) NOT NULL");
+                    else if($table == 'afiliados' && $col == 'data_ultimo_saque') $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$col` DATETIME DEFAULT CURRENT_TIMESTAMP");
+                    else if($table == 'rifas' && $col == 'sorteio_por') $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$col` VARCHAR(50) DEFAULT 'Loteria Federal'");
+                    else if($table == 'reservas' && $col == 'afiliado_id') $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$col` INT DEFAULT NULL");
+                    else $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$col` VARCHAR(255) DEFAULT ''");
+                }
+            } catch(Exception $e) {}
+        }
+    }
+
+    // Site Defaults
     $defaults = [
         'minimo_saque' => '20.00',
-        'comissao_padrao' => '10.00', // 10%
+        'comissao_padrao' => '10.00', 
         'afiliados_ativo' => '1',
         'ciclo_pagamento_dias' => '15',
         'admin_email' => 'admin@seusite.com'
@@ -172,6 +180,7 @@ function sendMailer($to_email, $to_name, $subject, $message) {
             $mail->setFrom($from_email, $from_name);
             $mail->addAddress($to_email, $to_name);
             $mail->Subject = $subject;
+            $mail->isHTML(true); // Set email format to HTML
             $mail->Body    = $message;
             return $mail->send();
         } else {
@@ -199,16 +208,53 @@ function getGeoInfo($ip) {
     return $info;
 }
 
-function registrarLog($categoria, $acao, $user_id = null, $admin_id = null) {
+function getAddressFromCoords($lat, $lng) {
+    if (empty($lat) || empty($lng)) return "Localização exata não disponível";
+    try {
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => ['User-Agent: PHP-Riffas-App/1.0']
+            ]
+        ];
+        $ctx = stream_context_create($opts);
+        $res = @file_get_contents("https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$lng&zoom=18&addressdetails=1", false, $ctx);
+        if ($res) {
+            $data = json_decode($res, true);
+            if (isset($data['address'])) {
+                $a = $data['address'];
+                $road = $a['road'] ?? '';
+                $number = $a['house_number'] ?? '';
+                $suburb = $a['suburb'] ?? $a['neighbourhood'] ?? '';
+                $city = $a['city'] ?? $a['town'] ?? $a['village'] ?? '';
+                $state = $a['state'] ?? '';
+                $postcode = $a['postcode'] ?? '';
+
+                $formatted = "";
+                if ($road) $formatted .= $road;
+                if ($number) $formatted .= ", " . $number;
+                if ($suburb) $formatted .= " - " . $suburb;
+                if ($city) $formatted .= ", " . $city;
+                if ($state) $formatted .= " - " . $state;
+                if ($postcode) $formatted .= ", " . $postcode;
+
+                return $formatted ?: ($data['display_name'] ?? "Endereço não formatado");
+            }
+        }
+    } catch (Exception $e) {}
+    return "Localização exata: $lat, $lng";
+}
+
+function registrarLog($categoria, $acao, $user_id = null, $admin_id = null, $lat = null, $lng = null) {
     global $pdo;
     $ip = $_SERVER['REMOTE_ADDR'];
     $geo = getGeoInfo($ip);
     $pagina = $_SERVER['REQUEST_URI'] ?? '/';
-    $stmt = $pdo->prepare("INSERT INTO site_logs (user_id, admin_id, ip, categoria, acao, pagina, pais, cidade) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$user_id, $admin_id, $ip, $categoria, $acao, $pagina, $geo['pais'], $geo['cidade']]);
+    $stmt = $pdo->prepare("INSERT INTO site_logs (user_id, admin_id, ip, categoria, acao, pagina, pais, cidade, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$user_id, $admin_id, $ip, $categoria, $acao, $pagina, $geo['pais'], $geo['cidade'], $lat, $lng]);
 }
 
-function checkLocationChallenge($user_type, $user_id, $email, $nome) {
+function checkLocationChallenge($user_type, $user_id, $email, $nome, $lat = null, $lng = null) {
     global $pdo;
     $ip = $_SERVER['REMOTE_ADDR'];
     $geo = getGeoInfo($ip);
@@ -223,14 +269,34 @@ function checkLocationChallenge($user_type, $user_id, $email, $nome) {
     $stmt = $pdo->prepare("INSERT INTO login_autorizacoes (user_type, user_id, ip, location_slug, token) VALUES (?, ?, ?, ?, ?)");
     $stmt->execute([$user_type, $user_id, $ip, $geo['slug'], $token]);
 
-    $baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . str_replace('backend/config.php', '', $_SERVER['PHP_SELF']);
-    $link = rtrim($baseUrl, '/') . "/backend/confirmar_acesso.php?token=" . $token;
+    // Better way to find Site Root
+    $dir = str_replace('\\', '/', __DIR__);
+    $root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+    $webPath = str_replace($root, '', $dir); // e.g. /rifas/backend
+    $sitePath = rtrim(str_replace('/backend', '', $webPath), '/'); 
+    
+    $baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $sitePath;
+    $link = $baseUrl . "/backend/confirmar_acesso.php?token=" . $token;
+
+    // Get Detailed Address if Coordinates are available
+    $address = getAddressFromCoords($lat, $lng);
+    $mapsLink = (!empty($lat) && !empty($lng)) ? "https://www.google.com/maps/search/?api=1&query=$lat,$lng" : "";
 
     $subject = "🚨 Acesso Suspeito Detectado - " . ($user_type === 'admin' ? 'Painel Admin' : 'Painel Afiliado');
-    $msg = "Olá {$nome},\n\nDetectamos uma tentativa de login em sua conta a partir de um novo local:\n\n🌍 Local: {$geo['cidade']}, {$geo['pais']}\n🖥 IP: {$ip}\n\nSe foi você, autorize este acesso clicando no link abaixo:\n\n{$link}\n\nSe não foi você, ignore este email e considere alterar sua senha.";
+    
+    $msg = "Olá <strong>{$nome}</strong>,<br><br>";
+    $msg .= "Detectamos uma tentativa de login em sua conta a partir de um novo local:<br><br>";
+    $msg .= "🌍 <strong>Endereço:</strong> {$address}<br>";
+    $msg .= "🖥 <strong>IP:</strong> {$ip}<br>";
+    if ($mapsLink) {
+        $msg .= "📍 <strong>Ver no Mapa:</strong> <a href='{$mapsLink}'>Clique aqui para abrir o Google Maps</a><br>";
+    }
+    $msg .= "<br>Se foi você, autorize este acesso clicando no botão abaixo:<br><br>";
+    $msg .= "<a href='{$link}' style='display:inline-block; padding:12px 24px; background:#2c3e50; color:white; text-decoration:none; border-radius:10px; font-weight:bold;'>AUTORIZAR ACESSO AGORA</a><br><br>";
+    $msg .= "Se não foi você, ignore este email e considere alterar sua senha para sua segurança.";
     
     sendMailer($email, $nome, $subject, $msg);
-    registrarLog($user_type === 'admin' ? 'acao_admin' : 'acao_afiliado', "Tentativa de login de novo local ({$geo['cidade']}) bloqueada", $user_type === 'afiliado' ? $user_id : null, $user_type === 'admin' ? $user_id : null);
+    registrarLog($user_type === 'admin' ? 'acao_admin' : 'acao_afiliado', "Tentativa de login bloqueada. Local: $address", $user_type === 'afiliado' ? $user_id : null, $user_type === 'admin' ? $user_id : null, $lat, $lng);
     
     return ['challenge' => true];
 }
@@ -251,4 +317,31 @@ if (!empty($sessao_id)) {
     if (strpos($pagina_track, '/api/') === false && strpos($pagina_track, '.php') !== false) {
         registrarLog('acesso_site', "Acessou página: $pagina_track", $user_id_track);
     }
+}
+
+function validatePasswordComplexity($password) {
+    global $pdo;
+    $stmt = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'password_complexity'");
+    $complexity = $stmt->fetchColumn() ?: '1';
+
+    if (strlen($password) < 8) {
+        return "A senha deve ter pelo menos 8 caracteres.";
+    }
+
+    if ($complexity == '1') {
+        // Alphanumeric min 8 (at least one letter and one number)
+        if (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+            return "A senha deve conter letras e números (mínimo 8 caracteres).";
+        }
+    } else if ($complexity == '2') {
+        // Alphanumeric with special characters, uppercase, lowercase, and digit (min 8)
+        if (!preg_match('/[A-Z]/', $password) || 
+            !preg_match('/[a-z]/', $password) || 
+            !preg_match('/[0-9]/', $password) || 
+            !preg_match('/[^A-Za-z0-9]/', $password)) {
+            return "A senha deve conter letras maiúsculas, minúsculas, números e caracteres especiais (@, #, $, etc) e no mínimo 8 caracteres.";
+        }
+    }
+
+    return true; // Valid
 }

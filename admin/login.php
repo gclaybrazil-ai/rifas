@@ -72,21 +72,53 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
     </div>
 
     <script>
+        async function getLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject('Navegador sem suporte a GPS/Localização.');
+                } else {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve({lat: pos.coords.latitude, lng: pos.coords.longitude}),
+                        (err) => {
+                            if (err.code === 1) reject('⚠️ Acesso Negado: A localização exata é obrigatória para administradores.');
+                            else reject('Erro ao obter GPS: ' + err.message);
+                        },
+                        { enableHighAccuracy: true, timeout: 5000 }
+                    );
+                }
+            });
+        }
+
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btn-submit');
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
-            const btn = document.getElementById('btn-submit');
             const errEl = document.getElementById('error-msg');
             
-            btn.innerHTML = 'Validando...';
+            btn.innerHTML = '📍 Localizando...';
             btn.disabled = true;
+            errEl.classList.add('hidden');
+
+            let coords = {lat: '', lng: ''};
+            try {
+                coords = await getLocation();
+            } catch (err) {
+                errEl.textContent = err;
+                errEl.className = 'bg-red-50 border border-red-100 text-red-600 text-[11px] font-bold p-3 rounded-xl text-center';
+                errEl.classList.remove('hidden');
+                btn.innerHTML = 'Entrar no Painel';
+                btn.disabled = false;
+                return;
+            }
+
+            btn.innerHTML = 'Validando...';
 
             try {
                 const res = await fetch('../backend/api/login.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({username: u, password: p})
+                    body: JSON.stringify({username: u, password: p, lat: coords.lat, lng: coords.lng})
                 });
                 const data = await res.json();
                 
@@ -96,7 +128,24 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
                     errEl.textContent = data.message;
                     errEl.className = 'bg-indigo-50 border border-indigo-100 text-indigo-700 text-[11px] font-bold p-4 rounded-xl text-center leading-relaxed';
                     errEl.classList.remove('hidden');
-                    btn.innerHTML = 'Aguardando Autorização';
+                    btn.innerHTML = 'Aguardando Aprovação no E-mail...';
+                    btn.disabled = true;
+
+                    // Polling para autorização automática
+                    const pollInterval = setInterval(async () => {
+                        try {
+                            const checkRes = await fetch('../backend/api/login.php', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({action: 'check_auth', username: u})
+                            });
+                            const checkData = await checkRes.json();
+                            if (checkData.authorized) {
+                                clearInterval(pollInterval);
+                                window.location.href = 'index.php';
+                            }
+                        } catch (e) {}
+                    }, 3000);
                 } else {
                     errEl.textContent = data.error;
                     errEl.className = 'bg-red-50 border border-red-100 text-red-600 text-[11px] font-bold p-3 rounded-xl text-center';
@@ -112,7 +161,6 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
             }
         });
 
-        const modalRec = document.getElementById('modal-recovery');
         const msgRec = document.getElementById('recovery-msg');
 
         function openRecovery() {

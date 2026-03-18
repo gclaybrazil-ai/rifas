@@ -75,6 +75,10 @@ if ($action === 'stats') {
     $stmtUser = $pdo->query("SELECT email, username FROM usuarios WHERE id = 1");
     $userData = $stmtUser->fetch(PDO::FETCH_ASSOC);
 
+    // Recent Failed Access
+    $stmtFail = $pdo->query("SELECT COUNT(*) FROM site_logs WHERE acao LIKE '%falhou%' AND data_hora > DATE_SUB(NOW(), INTERVAL 1 MINUTE)");
+    $failedRecent = (int)$stmtFail->fetchColumn();
+
     echo json_encode([
         'stats' => $stats,
         'faturamento' => $faturamento,
@@ -87,6 +91,7 @@ if ($action === 'stats') {
         'email_config' => $configs,
         'admin_email' => $userData['email'] ?? '',
         'admin_user' => $userData['username'] ?? '',
+        'failed_recent' => $failedRecent,
         'server_time' => date('c')
     ]);
 } else if ($action === 'security_stats') {
@@ -103,8 +108,24 @@ if ($action === 'stats') {
     $stmtTopPages = $pdo->query("SELECT pagina, COUNT(*) as acessos FROM site_logs WHERE categoria = 'acesso_site' GROUP BY pagina ORDER BY acessos DESC LIMIT 5");
     $topPages = $stmtTopPages->fetchAll(PDO::FETCH_ASSOC);
 
-    // 3. Últimos Logs (Separados por categoria no mesmo array)
-    $stmtLogs = $pdo->query("SELECT * FROM site_logs ORDER BY id DESC LIMIT 50");
+    // 3. Últimos Logs com Filtro
+    $cat = $_GET['category'] ?? '';
+    $ip = $_GET['ip'] ?? '';
+    
+    $whereLogs = " WHERE 1=1 ";
+    $paramsLogs = [];
+    
+    if(!empty($cat)) {
+        $whereLogs .= " AND categoria = ? ";
+        $paramsLogs[] = $cat;
+    }
+    if(!empty($ip)) {
+        $whereLogs .= " AND ip LIKE ? ";
+        $paramsLogs[] = "%$ip%";
+    }
+
+    $stmtLogs = $pdo->prepare("SELECT * FROM site_logs $whereLogs ORDER BY id DESC LIMIT 100");
+    $stmtLogs->execute($paramsLogs);
     $logs = $stmtLogs->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
@@ -396,10 +417,14 @@ if ($action === 'stats') {
     $stmt9 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('whatsapp_share_template', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt9->execute([$whatsapp_share_template, $whatsapp_share_template]);
 
+    $password_complexity = $_POST['password_complexity'] ?? '1';
+    $stmt10 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('password_complexity', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt10->execute([$password_complexity, $password_complexity]);
+
     echo json_encode(['success' => true]);
 } else if ($action === 'get_integration') {
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa', 'whatsapp_share_template')");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa', 'whatsapp_share_template', 'password_complexity')");
     $conf = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     echo json_encode($conf ?: []);
 } else if ($action === 'create_rifa') {
@@ -631,6 +656,10 @@ if ($action === 'stats') {
     
     try {
         if(!empty($pass)) {
+            $valid = validatePasswordComplexity($pass);
+            if ($valid !== true) {
+                die(json_encode(['error' => $valid]));
+            }
             $hash = password_hash($pass, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("UPDATE usuarios SET username = ?, password = ?, email = ? WHERE id = 1");
             $stmt->execute([$user, $hash, $email]);
@@ -664,5 +693,50 @@ if ($action === 'stats') {
         $stmt->execute([$key, $val, $val]);
     }
     echo json_encode(['success' => true]);
+
+} else if ($action === 'send_test_email') {
+    // Pega dados do formulário (sem salvar ainda)
+    $host = $_POST['smtp_host'] ?? '';
+    $port = (int)($_POST['smtp_port'] ?? 465);
+    $user_smtp = $_POST['smtp_user'] ?? '';
+    $pass_smtp = $_POST['smtp_pass'] ?? '';
+    $from_name = $_POST['smtp_from_name'] ?? 'Teste Sistema';
+    $from_email = $_POST['smtp_from_email'] ?? '';
+
+    // Busca o email do admin para enviar o teste
+    $stmt = $pdo->query("SELECT email FROM usuarios WHERE id = 1");
+    $admin_email = $stmt->fetchColumn() ?: $from_email;
+
+    if (empty($host) || empty($user_smtp) || empty($pass_smtp)) {
+        die(json_encode(['error' => 'Preencha todos os campos do SMTP antes de testar.']));
+    }
+
+    require_once __DIR__ . '/../libs/PHPMailer/PHPMailer.php';
+    require_once __DIR__ . '/../libs/PHPMailer/SMTP.php';
+    require_once __DIR__ . '/../libs/PHPMailer/Exception.php';
+
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = $host;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = $user_smtp;
+        $mail->Password   = $pass_smtp;
+        $mail->SMTPSecure = ($port == 465) ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = $port;
+        $mail->CharSet    = 'UTF-8';
+
+        $mail->setFrom($from_email ?: $user_smtp, $from_name);
+        $mail->addAddress($admin_email);
+
+        $mail->isHTML(true);
+        $mail->Subject = '📧 Teste de Configuração de E-mail - Riffas';
+        $mail->Body    = "<h1>Sucesso!</h1><p>Sua configuração SMTP no site de Rifas está funcionando corretamente.</p><hr><p>Enviado em: " . date('d/m/Y H:i:s') . "</p>";
+
+        $mail->send();
+        echo json_encode(['success' => true, 'email' => $admin_email]);
+    } catch (Exception $e) {
+        echo json_encode(['error' => 'Falha no PHPMailer: ' . $mail->ErrorInfo]);
+    }
 }
 ?>

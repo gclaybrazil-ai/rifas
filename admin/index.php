@@ -59,26 +59,26 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <a href="ganhadores.php"
                 class="bg-yellow-500 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-yellow-600 text-[11px] md:text-xs text-center flex justify-center items-center text-[#2c3e50]">Ganhadores</a>
             <div class="relative group">
-                <button type="button" class="bg-indigo-600 text-white font-bold px-3 py-1.5 rounded shadow hover:bg-indigo-700 text-[11px] md:text-xs text-center flex items-center gap-1 h-full">
+                <button type="button" id="btn-config-main" class="w-full bg-indigo-600 text-white font-bold px-3 py-1.5 rounded shadow hover:bg-indigo-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-1 h-full min-h-[32px]">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     Configurações
                 </button>
-                <div class="hidden group-hover:block absolute right-0 mt-0 w-48 bg-white border border-gray-100 rounded-xl shadow-2xl z-[60] p-3 space-y-2">
+                <div id="dropdown-config" class="hidden group-hover:block absolute right-0 md:mt-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-2xl z-[60] p-3 space-y-2">
                     <button id="btn-integrations" type="button" class="w-full bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         Integrações
                     </button>
                     <button id="btn-security" type="button" class="w-full bg-red-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-red-600 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        Novo Acesso
+                        Acesso Admin
                     </button>
-                    <button id="btn-open-security" type="button" class="w-full bg-red-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-red-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
+                    <button id="btn-open-security-monitor" type="button" class="w-full bg-red-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-red-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                         Segurança & Logs
                     </button>
                     <button id="btn-open-smtp" type="button" class="w-full bg-blue-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        Acesso Email
+                        Acesso SMTP
                     </button>
                     <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
                         <span class="text-[10px] font-bold text-gray-500 uppercase">Manutenção</span>
@@ -181,8 +181,8 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </svg>
                 </div>
                 <div>
-                    <h2 class="text-xl font-black text-gray-800">Integrações</h2>
-                    <p class="text-xs text-gray-500">Gateway de Pagamento PIX</p>
+                    <h2 class="text-xl font-black text-gray-800">Configurações Gerais</h2>
+                    <p class="text-xs text-gray-500">Acessos, PIX e Segurança</p>
                 </div>
             </div>
 
@@ -211,14 +211,9 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </div>
                 <div id="fields-mercadopago">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Token / Access Key (MP)</label>
-                    <div class="relative">
-                        <input type="password" id="gateway-token"
-                            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                            placeholder="APP_USR-...">
-                        <button type="button" onclick="toggleVisibility('gateway-token')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors">
-                            <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                        </button>
-                    </div>
+                    <input type="password" id="gateway-token"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="APP_USR-...">
                 </div>
 
                 <!-- Efí Fields -->
@@ -231,14 +226,9 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Client Secret (Efí)</label>
-                        <div class="relative">
-                            <input type="password" id="efi-client-secret"
-                                class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                                placeholder="Client_Secret_...">
-                            <button type="button" onclick="toggleVisibility('efi-client-secret')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors">
-                                <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            </button>
-                        </div>
+                        <input type="password" id="efi-client-secret"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="Client_Secret_...">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Certificado .p12 (Upload)</label>
@@ -255,6 +245,17 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         placeholder="3" min="1" max="5" value="3">
                     <p class="text-[10px] text-gray-400 mt-1 ml-1">Para garantir máxima urgência de conversão, use no
                         máximo 5 min.</p>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 flex items-center gap-2">
+                        Exigência de Senha (Usuários)
+                        <button type="button" id="btn-help-password" class="w-4 h-4 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center text-[10px] font-bold hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm" title="💡 Ajuda sobre senhas">?</button>
+                    </label>
+                    <select id="password-complexity" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="1">Alfanumérica (Mín 8 dígitos)</option>
+                        <option value="2">Alfanumérica + Caracteres Especiais (Mín 8 dígitos)</option>
+                    </select>
+                    <p class="text-[9px] text-gray-400 mt-1 ml-1 leading-tight">Define o nível de segurança exigido para todos os usuários e afiliados.</p>
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Link
@@ -294,6 +295,37 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     Salvar Configurações
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Ajuda Senha -->
+    <div id="modal-password-help" class="fixed inset-0 bg-black bg-opacity-80 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full text-left shadow-2xl relative">
+            <button id="btn-close-password-help" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 bg-indigo-100 rounded-lg text-indigo-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800">Regras de Senha</h2>
+                    <p class="text-xs text-gray-500">Mínimo 8 caracteres</p>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <h3 class="text-xs font-bold text-gray-700 uppercase mb-2">1. Alfanumérica</h3>
+                    <p class="text-xs text-gray-500 leading-relaxed mb-2">Exige a combinação de letras e números para garantir que a senha não seja apenas sequencial.</p>
+                    <div class="bg-white p-2 rounded border border-gray-200 text-xs font-mono text-indigo-600">Ex: sorteio2024</div>
+                </div>
+                <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <h3 class="text-xs font-bold text-indigo-700 uppercase mb-2">2. + Caracteres Especiais</h3>
+                    <p class="text-xs text-indigo-600/70 leading-relaxed mb-2">Segurança Máxima. Exige ao menos uma <b>letra maiúscula</b>, uma <b>minúscula</b>, um <b>número</b> e um <b>caractere especial</b> (ex: @, #, $).</p>
+                    <div class="bg-white p-2 rounded border border-indigo-200 text-xs font-mono text-indigo-700 font-bold">Ex: Sorte@2024!</div>
+                </div>
+            </div>
+            <button type="button" onclick="document.getElementById('modal-password-help').classList.add('hidden')" class="w-full bg-gray-800 text-white font-bold py-3 rounded-xl mt-6 hover:bg-black transition-colors uppercase text-xs tracking-widest">Entendi</button>
         </div>
     </div>
 
@@ -474,6 +506,12 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                    <input type="password" id="new-admin-pass" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="Deixe em branco para não alterar">
                 </div>
                 <button type="submit" id="btn-save-security" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-red-700 transition-colors">Atualizar Acesso</button>
+                <button type="button" id="btn-test-location-admin" class="w-full bg-gray-100 text-gray-600 font-bold py-3 rounded-xl shadow-sm uppercase text-[10px] mt-2 border border-gray-200 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                    <span>📍 Testar Meu Acesso (GPS)</span>
+                </button>
+                <div id="location-test-cont-admin" class="hidden mt-2 p-3 bg-blue-50 rounded-xl text-[10px] text-blue-700 border border-blue-100 leading-relaxed">
+                    <div id="location-test-result-admin"></div>
+                </div>
             </form>
         </div>
     </div>
@@ -521,7 +559,13 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                    <label class="text-[10px] font-bold text-gray-400 uppercase">Email do Remetente</label>
                    <input type="email" id="smtp-from-email" name="smtp_from_email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="noreply@site.com">
                 </div>
-                <button type="submit" id="btn-save-smtp" class="md:col-span-2 bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-[#009647] transition-colors">Salvar Configuração</button>
+                <div class="md:col-span-2 flex gap-2">
+                    <button type="submit" id="btn-save-smtp" class="flex-1 bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-[#009647] transition-colors">Salvar Configuração</button>
+                    <button type="button" id="btn-test-email" class="bg-blue-500 text-white font-bold py-4 px-6 rounded-xl shadow uppercase text-sm mt-2 hover:bg-blue-600 transition-colors flex items-center gap-2">
+                        <span>Testar Envio</span>
+                        <i id="icon-test-email">📧</i>
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -652,9 +696,9 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
 
     <!-- Modal Segurança & Logs -->
-    <div id="modal-security" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+    <div id="modal-security-monitor" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-2xl p-6 md:p-8 max-w-4xl w-full text-left shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeSecurity()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+            <button onclick="closeSecurityMonitor()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
             <div class="flex items-center gap-3 mb-6">
@@ -683,8 +727,20 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             </div>
 
             <div class="border-t border-gray-100 pt-6">
-                <h3 class="text-[10px] font-black text-gray-400 uppercase mb-4">Últimas Atividades</h3>
-                <div class="overflow-x-auto overflow-y-auto max-h-[300px]">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase">Últimas Atividades</h3>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <select id="filter-log-cat" class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-[10px] font-bold text-gray-600 outline-none">
+                            <option value="">TODAS CATEGORIAS</option>
+                            <option value="acao_admin">ADMINISTRATIVO</option>
+                            <option value="acao_afiliado">AFILIADOS</option>
+                            <option value="acesso_site">VISITANTES</option>
+                        </select>
+                        <input type="text" id="filter-log-ip" placeholder="PESQUISAR IP..." class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-[10px] font-bold text-gray-600 outline-none w-32 uppercase">
+                        <button onclick="fetchSecurityStats()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-indigo-700 transition-colors">Filtrar</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto overflow-y-auto max-h-[300px] border border-gray-50 rounded-xl">
                     <table class="w-full text-left text-[11px]">
                         <thead>
                             <tr class="text-[10px] font-black text-gray-400 uppercase">
@@ -715,6 +771,21 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <h2 id="notif-title" class="text-xl font-black text-gray-800 mb-2">Sucesso!</h2>
             <p id="notif-message" class="text-sm text-gray-500 mb-6 font-medium">Informação atualizada com sucesso.</p>
             <button id="btn-close-notif" class="w-full bg-[#2c3e50] text-white font-black py-4 rounded-xl shadow uppercase text-sm hover:bg-gray-800 transition-colors">Entendido</button>
+        </div>
+    </div>
+
+    <!-- Modal Alerta de Segurança (Invasão/Erro) -->
+    <div id="modal-security-alert" class="fixed inset-0 bg-black bg-opacity-90 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity duration-500">
+        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-[0_0_50px_rgba(239,68,68,0.4)] relative border-4 border-red-500 animate-pulse">
+            <div class="mx-auto w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 ring-8 ring-red-50 shadow-inner">
+                <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h2 class="text-2xl font-black text-red-700 mb-2 uppercase italic tracking-tighter">ALERTA DE SEGURANÇA!</h2>
+            <p id="security-alert-msg" class="text-sm text-gray-600 mb-8 font-bold leading-relaxed">Detectamos múltiplas tentativas de acesso inválidas ao sistema administrativo recentemente.</p>
+            <div class="flex flex-col gap-3">
+                <button onclick="openSecurityMonitorAndCloseAlert()" class="w-full bg-red-600 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs hover:bg-red-700 transition-all transform hover:scale-105">Ver Logs de Atividade</button>
+                <button onclick="closeSecurityAlert()" class="w-full bg-gray-100 text-gray-400 font-bold py-3 rounded-2xl uppercase text-[10px] hover:bg-gray-200 transition-colors">Ignorar Aviso</button>
+            </div>
         </div>
     </div>
 
@@ -854,6 +925,9 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
                 renderPagination(data.total_pages, data.current_page);
                 startGlobalTimer();
+                
+                // Alert for recent failed attempts
+                checkSecurityAlerts(data.failed_recent || 0);
 
             } catch (e) {
                 console.error(e);
@@ -1114,6 +1188,13 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             }
         }
 
+        document.getElementById('btn-help-password').addEventListener('click', () => {
+            document.getElementById('modal-password-help').classList.remove('hidden');
+        });
+        document.getElementById('btn-close-password-help').addEventListener('click', () => {
+            document.getElementById('modal-password-help').classList.add('hidden');
+        });
+
         document.getElementById('btn-integrations').addEventListener('click', async () => {
             const modal = document.getElementById('modal-integrations');
 
@@ -1135,6 +1216,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if (data.mensagem_suporte) document.getElementById('mensagem-suporte').value = data.mensagem_suporte;
             if (data.repassar_taxa) document.getElementById('repassar_taxa').checked = data.repassar_taxa === '1';
             if (data.whatsapp_share_template) document.getElementById('whatsapp-share-template').value = data.whatsapp_share_template;
+            if (data.password_complexity) document.getElementById('password-complexity').value = data.password_complexity;
             
             document.getElementById('repassar_taxa').checked = data.repassar_taxa === '1';
 
@@ -1207,6 +1289,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 fd.append('mensagem_suporte', document.getElementById('mensagem-suporte').value);
                 fd.append('repassar_taxa', document.getElementById('repassar_taxa').checked ? '1' : '0');
                 fd.append('whatsapp_share_template', document.getElementById('whatsapp-share-template').value);
+                fd.append('password_complexity', document.getElementById('password-complexity').value);
 
                 const res = await fetch(API, { method: 'POST', body: fd });
                 const result = await res.json();
@@ -1286,23 +1369,25 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             }
         });
 
-        // Security Modal
-        document.getElementById('btn-open-security').addEventListener('click', () => {
-            const m = document.getElementById('modal-security');
+        // Security Modal Monitor
+        document.getElementById('btn-open-security-monitor').addEventListener('click', () => {
+            const m = document.getElementById('modal-security-monitor');
             m.classList.remove('hidden');
             setTimeout(() => m.classList.add('opacity-100'), 10);
             fetchSecurityStats();
         });
 
-        window.closeSecurity = () => {
-            const m = document.getElementById('modal-security');
+        window.closeSecurityMonitor = () => {
+            const m = document.getElementById('modal-security-monitor');
             m.classList.remove('opacity-100');
             setTimeout(() => m.classList.add('hidden'), 300);
         };
 
         async function fetchSecurityStats() {
             try {
-                const res = await fetch(API + '?action=security_stats');
+                const cat = document.getElementById('filter-log-cat').value;
+                const ip = document.getElementById('filter-log-ip').value;
+                const res = await fetch(`${API}?action=security_stats&category=${cat}&ip=${ip}`);
                 const data = await res.json();
                 
                 // Render Online
@@ -1345,17 +1430,147 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                             <div class="text-[9px] text-gray-400 uppercase">${l.cidade}, ${l.pais}</div>
                         </td>
                         <td class="py-3 pr-4">${cats[l.categoria] || l.categoria}</td>
-                        <td class="py-3 leading-tight">${l.acao} <div class="text-[9px] text-gray-300 font-mono">${l.pagina}</div></td>
+                        <td class="py-3 leading-tight">
+                            ${l.acao.includes('falhou') ? '<span class="text-red-600 font-bold">⚠️ '+l.acao+'</span>' : l.acao} 
+                            <div class="text-[9px] text-gray-300 font-mono">${l.pagina}</div>
+                        </td>
                     </tr>
                 `).join('');
             } catch(e) {}
         }
 
+        let lastFailedAlert = 0;
+        async function checkSecurityAlerts(count) {
+            if (count > 0 && Date.now() - lastFailedAlert > 60000) {
+                const m = document.getElementById('modal-security-alert');
+                m.classList.remove('hidden');
+                setTimeout(() => m.classList.add('opacity-100'), 10);
+                lastFailedAlert = Date.now();
+            }
+        }
+
+        window.closeSecurityAlert = () => {
+            const m = document.getElementById('modal-security-alert');
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 500);
+        };
+
+        window.openSecurityMonitorAndCloseAlert = () => {
+            closeSecurityAlert();
+            document.getElementById('btn-open-security-monitor').click();
+        };
+
+        async function getLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject('Seu navegador não suporta geolocalização exata.');
+                } else {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve({lat: pos.coords.latitude, lng: pos.coords.longitude}),
+                        (err) => {
+                            if (err.code === 1) reject('A geolocalização exata é obrigatória para parceiros por segurança. Por favor, autorize no seu navegador.');
+                            else reject('Erro ao obter localização: ' + err.message);
+                        },
+                        { enableHighAccuracy: true, timeout: 5000 }
+                    );
+                }
+            });
+        }
+
+        // Test Location Admin Panel
+        document.getElementById('btn-test-location-admin').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-test-location-admin');
+            const resCont = document.getElementById('location-test-cont-admin');
+            const resDiv = document.getElementById('location-test-result-admin');
+
+            btn.disabled = true;
+            btn.innerHTML = '🔍 Localizando...';
+            resCont.classList.add('hidden');
+
+            try {
+                const coords = await getLocation();
+                
+                const res = await fetch('../backend/api/login.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'test_location', lat: coords.lat, lng: coords.lng})
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    resDiv.innerHTML = `
+                        <div class="font-black uppercase border-b border-blue-100 pb-1 mb-1">Seus Dados de Acesso Atuais:</div>
+                        <div class="mb-1"><strong>🖥 Seu IP:</strong> ${data.ip}</div>
+                        <div><strong>📍 Endereço Resolvido:</strong> ${data.address}</div>
+                    `;
+                    resCont.classList.remove('hidden');
+                } else {
+                    alert('Erro ao testar: ' + (data.error || 'Erro desconhecido.'));
+                }
+            } catch (err) {
+                alert(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📍 Testar Meu Acesso (GPS)';
+            }
+        });
+
+        // Test Email
+        document.getElementById('btn-test-email').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-test-email');
+            const icon = document.getElementById('icon-test-email');
+            const form = document.getElementById('form-smtp');
+            const fd = new FormData(form);
+            fd.append('action', 'send_test_email');
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Enviando...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(API, { method: 'POST', body: fd });
+                const data = await res.json();
+                if(data.success) {
+                    alert('✅ Sucesso! O e-mail de teste foi enviado para ' + data.email);
+                } else {
+                    alert('❌ Erro no envio: ' + (data.error || 'Verifique as configurações.'));
+                }
+            } catch(e) {
+                alert('Erro na comunicação com o servidor.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
         fetchStats();
         setInterval(() => {
             fetchStats();
-            if(!document.getElementById('modal-security').classList.contains('hidden')) fetchSecurityStats();
+            const mon = document.getElementById('modal-security-monitor');
+            if(mon && !mon.classList.contains('hidden')) fetchSecurityStats();
         }, 10000);
+
+        // Toggle Config Dropdown on Mobile click
+        document.getElementById('btn-config-main').addEventListener('click', (e) => {
+            if (window.innerWidth < 768) {
+                e.preventDefault();
+                const drop = document.getElementById('dropdown-config');
+                drop.classList.toggle('hidden');
+                drop.classList.toggle('block');
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const btn = document.getElementById('btn-config-main');
+            const drop = document.getElementById('dropdown-config');
+            if (!btn.contains(e.target) && !drop.contains(e.target)) {
+                if (window.innerWidth < 768) {
+                    drop.classList.add('hidden');
+                    drop.classList.remove('block');
+                }
+            }
+        });
     </script>
 </body>
 
