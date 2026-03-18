@@ -665,6 +665,11 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                                 <input type="text" name="assistant_attendant" id="assistant_attendant" value="David" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none shadow-sm">
                             </div>
                         </div>
+                        <div class="mt-4">
+                            <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">Mensagem de Boas-Vindas</label>
+                            <textarea name="assistant_welcome_message" id="assistant_welcome_message" rows="3" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none shadow-sm resize-none" placeholder="Olá! 👋 Sou o assistente..."></textarea>
+                             <p class="text-[9px] text-purple-400 mt-1 ml-1 font-bold italic">Dica: Use &lt;br&gt; para pular linha.</p>
+                        </div>
                     </div>
 
                     <div class="bg-green-50 p-4 rounded-2xl border border-green-100">
@@ -934,6 +939,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     if(document.getElementById('assistant_name')) document.getElementById('assistant_name').value = data.assistant.name || '';
                     if(document.getElementById('assistant_attendant')) document.getElementById('assistant_attendant').value = data.assistant.attendant || '';
                     if(document.getElementById('assistant_whatsapp')) document.getElementById('assistant_whatsapp').value = data.assistant.whatsapp || '';
+                    if(document.getElementById('assistant_welcome_message')) document.getElementById('assistant_welcome_message').value = data.assistant.welcome_message || '';
                     
                     const msgList = document.getElementById('assistant-messages-list');
                     if(msgList) {

@@ -18,12 +18,13 @@
         #assistant-container {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 9999;
             font-family: 'Inter', sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
         }
 
         #assistant-trigger {
@@ -34,10 +35,11 @@
             box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4);
             cursor: pointer;
             display: flex;
-            items-center;
+            align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
             color: white;
+            overflow: hidden;
         }
 
         #assistant-trigger:hover {
@@ -89,6 +91,13 @@
             justify-content: center;
             color: #8e44ad;
             font-size: 20px;
+            overflow: hidden;
+        }
+
+        #assistant-header .bot-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         #assistant-header h3 {
@@ -301,6 +310,7 @@
                     name: data.name || 'Assistente Virtual',
                     attendant: data.attendant || 'Atendente',
                     whatsapp: data.whatsapp || '',
+                    welcome_message: data.welcome_message || '',
                     messages: data.messages || []
                 };
 
@@ -330,7 +340,9 @@
                     <div id="assistant-window">
                         <div id="assistant-header">
                             <div class="bot-info">
-                                <div class="bot-avatar">🎯</div>
+                                <div class="bot-avatar">
+                                    <img src="frontend/png/assistente-virtual.png" alt="Avatar">
+                                </div>
                                 <div>
                                     <h3 id="bot-name-display">${this.config.name}</h3>
                                     <p>Online • Responde na hora!</p>
@@ -354,7 +366,7 @@
                         </div>
                     </div>
                     <div id="assistant-trigger">
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="trigger-icon-chat"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <img src="frontend/png/assistente-virtual.png" id="trigger-icon-chat" style="width: 100%; height: 100%; object-fit: cover;">
                         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="trigger-icon-close" style="display: none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </div>
                 </div>
@@ -406,7 +418,11 @@
         }
 
         async showWelcome() {
-            await this.addMessage(`Olá! 👋 Sou o assistente da ${this.config.name.replace('Assistente ', '')}!<br><br>Estou aqui para te ajudar com qualquer dúvida sobre o sorteio. Como posso te ajudar hoje?`, 'bot');
+            let msg = this.config.welcome_message;
+            if(!msg) {
+                msg = `Olá! 👋 Sou o assistente da ${this.config.name.replace('Assistente ', '')}!<br><br>Estou aqui para te ajudar com qualquer dúvida sobre o sorteio. Como posso te ajudar hoje?`;
+            }
+            await this.addMessage(msg, 'bot');
             document.getElementById('assistant-quick-replies').style.display = 'flex';
         }
 

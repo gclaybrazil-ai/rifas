@@ -69,7 +69,7 @@ if ($action === 'stats') {
     }
 
     // Get configs
-    $stmtM = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('modo_manutencao', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email', 'assistant_enabled', 'assistant_name', 'assistant_attendant', 'assistant_whatsapp')");
+    $stmtM = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('modo_manutencao', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email', 'assistant_enabled', 'assistant_name', 'assistant_attendant', 'assistant_whatsapp', 'assistant_welcome_message')");
     $configs = $stmtM ? $stmtM->fetchAll(PDO::FETCH_KEY_PAIR) : [];
     
     $stmtUser = $pdo->query("SELECT email, username FROM usuarios WHERE id = 1");
@@ -97,6 +97,7 @@ if ($action === 'stats') {
             'name' => $configs['assistant_name'] ?? 'Assistente Top Sorte',
             'attendant' => $configs['assistant_attendant'] ?? 'David',
             'whatsapp' => $configs['assistant_whatsapp'] ?? '5511999999999',
+            'welcome_message' => $configs['assistant_welcome_message'] ?? '',
             'messages' => $pdo->query("SELECT * FROM assistant_messages ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC)
         ],
         'server_time' => date('c')
@@ -110,13 +111,19 @@ if ($action === 'stats') {
     $name = $_POST['assistant_name'] ?? '';
     $attendant = $_POST['assistant_attendant'] ?? '';
     $whatsapp = $_POST['assistant_whatsapp'] ?? '';
+    $welcome = $_POST['assistant_welcome_message'] ?? '';
 
-    $stmt = $pdo->prepare("UPDATE configuracoes SET valor = ? WHERE chave = 'assistant_name'");
-    $stmt->execute([$name]);
-    $stmt = $pdo->prepare("UPDATE configuracoes SET valor = ? WHERE chave = 'assistant_attendant'");
-    $stmt->execute([$attendant]);
-    $stmt = $pdo->prepare("UPDATE configuracoes SET valor = ? WHERE chave = 'assistant_whatsapp'");
-    $stmt->execute([$whatsapp]);
+    $params = [
+        'assistant_name' => $name,
+        'assistant_attendant' => $attendant,
+        'assistant_whatsapp' => $whatsapp,
+        'assistant_welcome_message' => $welcome
+    ];
+
+    foreach ($params as $key => $val) {
+        $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES (?, ?) ON DUPLICATE KEY UPDATE valor = ?");
+        $stmt->execute([$key, $val, $val]);
+    }
 
     echo json_encode(['success' => true]);
 } else if ($action === 'save_assistant_msg') {

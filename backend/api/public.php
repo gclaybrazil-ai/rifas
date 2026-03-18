@@ -5,7 +5,7 @@ require_once '../config.php';
 $action = $_GET['action'] ?? '';
 
 if ($action === 'get_assistant_config') {
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('assistant_enabled', 'assistant_name', 'assistant_attendant', 'assistant_whatsapp')");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('assistant_enabled', 'assistant_name', 'assistant_attendant', 'assistant_whatsapp', 'assistant_welcome_message')");
     $configs = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     
     echo json_encode([
@@ -13,6 +13,7 @@ if ($action === 'get_assistant_config') {
         'name' => $configs['assistant_name'] ?? 'Assistente Top Sorte',
         'attendant' => $configs['assistant_attendant'] ?? 'David',
         'whatsapp' => $configs['assistant_whatsapp'] ?? '5511999999999',
+        'welcome_message' => $configs['assistant_welcome_message'] ?? '',
         'messages' => $pdo->query("SELECT * FROM assistant_messages ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC)
     ]);
 }
