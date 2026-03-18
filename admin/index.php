@@ -101,6 +101,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
                         Mensagem e Config. IA
                     </button>
+                    <button id="btn-open-popup" type="button" class="w-full bg-orange-50 text-orange-600 font-bold px-3 py-2.5 rounded-xl hover:bg-orange-100 text-xs text-left flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                        Config. Popup de Entrada
+                    </button>
                     <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
                         <span class="text-[10px] font-black text-gray-500 uppercase">Modo de Manutenção</span>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -379,14 +383,20 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </div>
 
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Imagem Banner (URL ou Arquivo
-                        Próprio)</label>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Imagem Banner (URL ou Arquivo Próprio)</label>
                     <div class="flex gap-2">
                         <input type="url" id="new-imagem"
                             class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 text-[10px] md:text-xs focus:ring-2 focus:ring-[#00a650] outline-none"
                             placeholder="Ou cole o Link https://...">
                         <input type="file" id="new-imagem-file" accept="image/*"
                             class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-1.5 text-[10px] md:text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:bg-[#00a650] file:text-white file:font-bold hover:file:bg-[#009647]">
+                    </div>
+                    <!-- Global Image Preview -->
+                    <div id="preview-new-rifa" class="hidden mt-2 h-20 w-full rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center relative group">
+                        <img id="img-new-rifa" class="h-full w-full object-cover">
+                        <button type="button" onclick="clearImagePreview('new-imagem-file', 'new-imagem', 'img-new-rifa', 'preview-new-rifa')" class="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full shadow-md hover:bg-red-600 z-10" title="Limpar">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
                     </div>
                 </div>
 
@@ -652,6 +662,71 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
+    <!-- Modal Config Popup -->
+    <div id="modal-popup-config" class="fixed inset-0 bg-[#2c3e50]/80 backdrop-blur-sm z-[150] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-black text-gray-800 uppercase tracking-widest text-sm flex items-center gap-2">
+                    <span class="w-8 h-8 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center italic">📣</span>
+                    Popup de Entrada (Início)
+                </h3>
+                <button id="btn-close-popup-config" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="form-popup-config" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div class="flex items-center justify-between p-3 bg-orange-50 rounded-2xl border border-orange-100">
+                    <span class="text-xs font-black text-orange-700 uppercase">Status do Popup</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="popup-active" name="popup_active" value="1" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    </label>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Título do Alerta</label>
+                    <input type="text" id="popup-title" name="popup_title" placeholder="Ex: Grande Promoção!" class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Conteúdo (Texto ou HTML)</label>
+                    <textarea id="popup-content" name="popup_content" rows="4" placeholder="Descreva aqui o que será exibido no popup..." class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Texto do Botão</label>
+                        <input type="text" id="popup-button" name="popup_button" placeholder="Entendi" class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Link (Opcional)</label>
+                        <input type="text" id="popup-link" name="popup_link" placeholder="https://..." class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Banner Promocional (Opcional)</label>
+                    <div class="flex flex-col gap-2">
+                        <input type="file" id="popup-image-file" name="popup_image_file" accept="image/*" class="text-xs font-bold text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 transition-all">
+                        <div id="popup-image-preview" class="hidden h-32 w-full rounded-2xl border-2 border-dashed border-gray-100 bg-gray-50 overflow-hidden flex items-center justify-center relative group">
+                            <img src="" id="popup-img-tag" class="h-full w-full object-cover">
+                            <button type="button" onclick="clearImagePreview('popup-image-file', '', 'popup-img-tag', 'popup-image-preview', 'current-popup-image')" class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 z-10" title="Remover Imagem">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                        <input type="hidden" id="current-popup-image" name="current_popup_image">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1 ml-1">
+                        <label class="text-[10px] font-black text-gray-400 uppercase block">Vídeo Promocional (Embed/URL - Opcional)</label>
+                        <button type="button" onclick="document.getElementById('modal-help-video').classList.remove('hidden'); document.getElementById('modal-help-video').classList.add('flex')" class="w-4 h-4 bg-blue-100 text-blue-600 border border-blue-200 rounded-full flex items-center justify-center text-[8px] font-black shadow-sm hover:bg-blue-200 transition-colors">?</button>
+                    </div>
+                    <input type="text" id="popup-video" name="popup_video" placeholder="https://youtube.com/embed/..." class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all">
+                </div>
+            </form>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-2">
+                <button type="submit" form="form-popup-config" id="btn-save-popup" class="flex-1 bg-orange-500 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-orange-600 transition-all uppercase tracking-widest text-xs">Salvar Configurações</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Assistente -->
     <div id="modal-assistant" class="fixed inset-0 bg-black bg-opacity-80 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-thin">
@@ -730,6 +805,29 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     <button type="button" id="btn-close-msg-modal" class="bg-gray-100 text-gray-500 font-black py-4 px-4 rounded-2xl uppercase text-[10px] tracking-widest">Cancelar</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Ajuda Vídeo Popup -->
+    <div id="modal-help-video" class="fixed inset-0 bg-[#2c3e50]/80 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative animate-in fade-in zoom-in duration-300">
+            <h2 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2 uppercase tracking-tighter italic">
+                <span class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center not-italic">?</span>
+                Como pegar o link?
+            </h2>
+            <div class="space-y-4 text-xs font-medium text-gray-500 leading-relaxed">
+                <p>Para exibir um vídeo no popup, você precisa do link de <strong>incorporação (embed)</strong>:</p>
+                <ol class="list-decimal ml-4 space-y-2">
+                    <li>No YouTube, clique no botão <strong>Compartilhar</strong>.</li>
+                    <li>Escolha a opção <strong>Incorporar (Embed)</strong>.</li>
+                    <li>Copie apenas o link que está dentro das aspas do <code>src="..."</code>.</li>
+                </ol>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 font-mono text-[10px] break-all">
+                    Exemplo correto:<br>
+                    <span class="text-blue-600">https://www.youtube.com/embed/XXXXX</span>
+                </div>
+            </div>
+            <button onclick="document.getElementById('modal-help-video').classList.add('hidden')" class="w-full bg-[#2c3e50] text-white font-black py-4 rounded-2xl shadow-lg mt-6 uppercase text-[10px] tracking-widest hover:bg-black transition-all">Entendi</button>
         </div>
     </div>
 
@@ -1554,12 +1652,12 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         btn.innerHTML = 'Salvar Configurações';
                     }, 1000);
                 } else {
-                    alert(result.error || 'Erro ao salvar');
+                    showNotification('Erro', result.error || 'Erro ao salvar', 'error');
                     btn.innerHTML = 'Salvar Configurações';
                 }
             } catch (err) {
                 console.error(err);
-                alert('Erro na requisição. Verifique o console.');
+                showNotification('Erro', 'Erro na requisição. Verifique o console.', 'error');
                 btn.innerHTML = 'Salvar Configurações';
             }
         });
@@ -1796,6 +1894,76 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             }
         });
 
+        // Popup Config
+        document.getElementById('btn-open-popup').addEventListener('click', async () => {
+            const modal = document.getElementById('modal-popup-config');
+            
+            // Fetch Setup
+            const res = await fetch(`${API}?action=get_popup_settings`);
+            const json = await res.json();
+            if(json.success && json.data) {
+                const d = json.data;
+                document.getElementById('popup-active').checked = d.popup_active === '1';
+                document.getElementById('popup-title').value = d.popup_title || '';
+                document.getElementById('popup-content').value = d.popup_content || '';
+                document.getElementById('popup-button').value = d.popup_button || 'Entendi';
+                document.getElementById('popup-link').value = d.popup_link || '';
+                document.getElementById('popup-video').value = d.popup_video || '';
+                document.getElementById('current-popup-image').value = d.popup_image || '';
+                
+                const preview = document.getElementById('popup-image-preview');
+                const img = document.getElementById('popup-img-tag');
+                if(d.popup_image) {
+                    img.src = '../' + d.popup_image;
+                    preview.classList.remove('hidden');
+                } else {
+                    preview.classList.add('hidden');
+                }
+            }
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
+        });
+
+        document.getElementById('btn-close-popup-config').addEventListener('click', () => {
+            const modal = document.getElementById('modal-popup-config');
+            modal.classList.remove('opacity-100');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        });
+
+        document.getElementById('form-popup-config').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-popup');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Salvando...';
+            btn.disabled = true;
+
+            const fd = new FormData(e.target);
+            fd.append('action', 'save_popup_settings');
+            if (!fd.has('popup_active')) fd.append('popup_active', '0');
+
+            try {
+                const res = await fetch(API, { method: 'POST', body: fd });
+                const result = await res.json();
+                if (result.success) {
+                    btn.innerHTML = '✅ Salvo!';
+                    setTimeout(() => { 
+                        document.getElementById('btn-close-popup-config').click();
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 1000);
+                } else {
+                    showNotification('Erro', result.error || 'Erro ao salvar', 'error');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                showNotification('Erro', 'Erro na requisição', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
         fetchStats();
         setInterval(() => {
             fetchStats();
@@ -1830,6 +1998,47 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 drop.classList.remove('flex');
             }
         });
+
+        // Image Preview Helper (Global)
+        function setupImagePreview(inputId, imgId, containerId) {
+            const input = document.getElementById(inputId);
+            const img = document.getElementById(imgId);
+            const container = document.getElementById(containerId);
+            if (!input || !img || !container) return;
+
+            input.onchange = (e) => {
+                const [file] = input.files;
+                if (file) {
+                    img.src = URL.createObjectURL(file);
+                    container.classList.remove('hidden');
+                }
+            };
+        }
+
+        // Apply previews
+        setupImagePreview('new-imagem-file', 'img-new-rifa', 'preview-new-rifa');
+        setupImagePreview('popup-image-file', 'popup-img-tag', 'popup-image-preview');
+
+        // URL input preview for new rifa
+        if(document.getElementById('new-imagem')) {
+            document.getElementById('new-imagem').addEventListener('input', (e) => {
+                const val = e.target.value;
+                const img = document.getElementById('img-new-rifa');
+                const cont = document.getElementById('preview-new-rifa');
+                if(val && val.startsWith('http')) {
+                    img.src = val;
+                    cont.classList.remove('hidden');
+                }
+            });
+        }
+
+        window.clearImagePreview = function(inputId, urlId, imgId, contId, hiddenId = '') {
+            if(inputId) document.getElementById(inputId).value = '';
+            if(urlId) document.getElementById(urlId).value = '';
+            if(imgId) document.getElementById(imgId).src = '';
+            if(contId) document.getElementById(contId).classList.add('hidden');
+            if(hiddenId) document.getElementById(hiddenId).value = '';
+        };
     </script>
 </body>
 

@@ -67,11 +67,29 @@ try {
         }
     } catch(PDOException $e) {}
 
+    // Obter Dados do Popup
+    $popup = null;
+    try {
+        $stmtP = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave LIKE 'popup_%'");
+        $popupData = $stmtP->fetchAll(PDO::FETCH_KEY_PAIR);
+        if(($popupData['popup_active'] ?? '0') === '1') {
+            $popup = [
+                'title' => $popupData['popup_title'] ?? '',
+                'content' => $popupData['popup_content'] ?? '',
+                'image' => $popupData['popup_image'] ?? '',
+                'link' => $popupData['popup_link'] ?? '',
+                'button' => $popupData['popup_button'] ?? 'Entendi',
+                'video' => $popupData['popup_video'] ?? ''
+            ];
+        }
+    } catch(PDOException $e) {}
+
     echo json_encode([
         'success' => true,
         'ativas' => $ativas,
         'finalizadas' => array_slice($finalizadas, 0, 5),
-        'link_suporte' => $link_suporte
+        'link_suporte' => $link_suporte,
+        'popup' => $popup
     ]);
 
 } catch(Exception $e) {

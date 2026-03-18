@@ -161,6 +161,23 @@
         </div>
     </nav>
 
+    <!-- Popup Modal -->
+    <div id="modal-popup" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden opacity-0 transition-opacity duration-500 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden transform scale-95 transition-transform duration-500">
+            <div id="popup-media-container" class="hidden relative h-48 bg-gray-100">
+                <img id="popup-image" src="" class="w-full h-full object-cover">
+                <div id="popup-video-container" class="hidden absolute inset-0">
+                    <iframe id="popup-video-iframe" class="w-full h-full" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="p-8 text-center">
+                <h3 id="popup-title" class="text-2xl font-black text-gray-800 mb-2 leading-tight"></h3>
+                <div id="popup-content" class="text-sm text-gray-500 font-medium mb-6 leading-relaxed"></div>
+                <button id="btn-close-popup" class="w-full bg-gradient-to-r from-[#00a650] to-[#008c44] text-white font-black py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all uppercase tracking-widest text-xs active:scale-95"></button>
+            </div>
+        </div>
+    </div>
+
     <script src="frontend/js/home.js?v=2.1"></script>
     <!-- Virtual Assistant -->
     <script src="frontend/js/assistant.js"></script>

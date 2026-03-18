@@ -563,6 +563,69 @@ if ($action === 'stats') {
         $pdo->rollBack();
         echo json_encode(['error' => $e->getMessage()]);
     }
+} else if ($action === 'save_popup_settings') {
+    $active = $_POST['popup_active'] ?? '0';
+    $title = $_POST['popup_title'] ?? '';
+    $content = $_POST['popup_content'] ?? '';
+    $link = $_POST['popup_link'] ?? '';
+    $button = $_POST['popup_button'] ?? 'Entendi';
+    $video_url = $_POST['popup_video'] ?? '';
+
+    $image = $_POST['current_popup_image'] ?? '';
+    $newUpload = false;
+    if (isset($_FILES['popup_image_file']) && $_FILES['popup_image_file']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../../uploads/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        $ext = pathinfo($_FILES['popup_image_file']['name'], PATHINFO_EXTENSION);
+        $filename = 'popup_' . uniqid() . '.' . $ext;
+        if (move_uploaded_file($_FILES['popup_image_file']['tmp_name'], $uploadDir . $filename)) {
+            // Delete old image if it's a local file
+            if (!empty($_POST['current_popup_image'])) {
+                $oldFile = '../../' . $_POST['current_popup_image'];
+                if (file_exists($oldFile) && is_file($oldFile)) @unlink($oldFile);
+            }
+            $image = 'uploads/' . $filename;
+            $newUpload = true;
+        }
+    }
+
+    // If user clicked trash can (empty image sent) and NO new upload
+    if (empty($_POST['current_popup_image']) && !$newUpload) {
+        // Find what was there before to delete file
+        $st_get = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'popup_image'");
+        $old_val = $st_get->fetchColumn();
+        if ($old_val && strpos($old_val, 'uploads/') === 0) {
+            $f_old = '../../' . $old_val;
+            if (file_exists($f_old) && is_file($f_old)) @unlink($f_old);
+        }
+        $image = '';
+    }
+
+    $settings = [
+        'popup_active' => $active,
+        'popup_title' => $title,
+        'popup_content' => $content,
+        'popup_image' => $image,
+        'popup_link' => $link,
+        'popup_button' => $button,
+        'popup_video' => $video_url
+    ];
+
+    $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES (?, ?) ON DUPLICATE KEY UPDATE valor = ?");
+    foreach ($settings as $k => $v) {
+        $stmt->execute([$k, $v, $v]);
+    }
+
+    registrarLog('acao_admin', "Atualizou configurações do Popup de Entrada", null, 1);
+    echo json_encode(['success' => true]);
+} else if ($action === 'get_popup_settings') {
+    try {
+        $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave LIKE 'popup_%'");
+        $data = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        echo json_encode(['success' => true, 'data' => $data]);
+    } catch(PDOException $e) {
+        echo json_encode(['error' => $e->getMessage()]);
+    }
 } else if ($action === 'edit_rifa') {
     $id = intval($_POST['id'] ?? 0);
     $nome = $_POST['nome'] ?? 'Rifa Nova';
@@ -570,6 +633,11 @@ if ($action === 'stats') {
 
     $imagem = $_POST['imagem'] ?? '';
     if (isset($_FILES['imagem_file']) && $_FILES['imagem_file']['error'] === UPLOAD_ERR_OK) {
+        // Fetch current image to delete later
+        $stmt_old = $pdo->prepare("SELECT imagem_url FROM rifas WHERE id=?");
+        $stmt_old->execute([$id]);
+        $old_img_path = $stmt_old->fetchColumn();
+
         $uploadDir = '../../uploads/';
         if (!is_dir($uploadDir))
             mkdir($uploadDir, 0777, true);
@@ -577,6 +645,11 @@ if ($action === 'stats') {
         $ext = pathinfo($_FILES['imagem_file']['name'], PATHINFO_EXTENSION);
         $filename = uniqid('banner_') . '.' . $ext;
         if (move_uploaded_file($_FILES['imagem_file']['tmp_name'], $uploadDir . $filename)) {
+            // Delete old physical file
+            if ($old_img_path && strpos($old_img_path, 'uploads/') === 0) {
+                $file_to_del = '../../' . $old_img_path;
+                if (file_exists($file_to_del) && is_file($file_to_del)) @unlink($file_to_del);
+            }
             $imagem = 'uploads/' . $filename; // override com upload
         }
     }
@@ -588,13 +661,21 @@ if ($action === 'stats') {
     $p4 = $_POST['p4'] ?? '';
     $p5 = $_POST['p5'] ?? '';
 
-    if ($imagem !== '') {
-        $stmt = $pdo->prepare("UPDATE rifas SET nome=?, preco_numero=?, imagem_url=?, premio1=?, premio2=?, premio3=?, premio4=?, premio5=?, sorteio_por=? WHERE id=?");
-        $stmt->execute([$nome, $preco, $imagem, $p1, $p2, $p3, $p4, $p5, $sorteio, $id]);
-    } else {
-        $stmt = $pdo->prepare("UPDATE rifas SET nome=?, preco_numero=?, premio1=?, premio2=?, premio3=?, premio4=?, premio5=?, sorteio_por=? WHERE id=?");
-        $stmt->execute([$nome, $preco, $p1, $p2, $p3, $p4, $p5, $sorteio, $id]);
+    // If imagem is empty in POST and no file uploaded, it means REMOVE image
+    if (empty($imagem) && !isset($_FILES['imagem_file'])) {
+        // Delete current file
+        $stmt_old = $pdo->prepare("SELECT imagem_url FROM rifas WHERE id=?");
+        $stmt_old->execute([$id]);
+        $old_p = $stmt_old->fetchColumn();
+        if ($old_p && strpos($old_p, 'uploads/') === 0) {
+            $f_p = '../../' . $old_p;
+            if (file_exists($f_p) && is_file($f_p)) @unlink($f_p);
+        }
+        $imagem = '';
     }
+
+    $stmt = $pdo->prepare("UPDATE rifas SET nome=?, preco_numero=?, imagem_url=?, premio1=?, premio2=?, premio3=?, premio4=?, premio5=?, sorteio_por=? WHERE id=?");
+    $stmt->execute([$nome, $preco, $imagem, $p1, $p2, $p3, $p4, $p5, $sorteio, $id]);
 
     echo json_encode(['success' => true]);
 } else if ($action === 'get_rifas_list') {
@@ -649,6 +730,16 @@ if ($action === 'stats') {
     echo json_encode(['winners' => $stmt->fetchAll(PDO::FETCH_ASSOC), 'prizes' => $prizes]);
 } else if ($action === 'delete_rifa') {
     $id = intval($_POST['id'] ?? 0);
+    
+    // Physical file deletion
+    $stmt_img = $pdo->prepare("SELECT imagem_url FROM rifas WHERE id=?");
+    $stmt_img->execute([$id]);
+    $img_del = $stmt_img->fetchColumn();
+    if ($img_del && strpos($img_del, 'uploads/') === 0) {
+        $f = '../../' . $img_del;
+        if (file_exists($f) && is_file($f)) @unlink($f);
+    }
+
     $pdo->prepare("DELETE FROM reservas WHERE rifa_id = ?")->execute([$id]);
     $pdo->prepare("DELETE FROM numeros WHERE rifa_id = ?")->execute([$id]);
     $pdo->prepare("DELETE FROM rifas WHERE id = ?")->execute([$id]);
@@ -672,6 +763,17 @@ if ($action === 'stats') {
 
     $imagem = '';
     if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        // Fetch old image if updating
+        if ($id > 0) {
+            $st_old = $pdo->prepare("SELECT imagem_url FROM publicacoes_ganhadores WHERE id=?");
+            $st_old->execute([$id]);
+            $old_f = $st_old->fetchColumn();
+            if ($old_f && strpos($old_f, 'uploads/') === 0) {
+                $f_to_del = '../../' . $old_f;
+                if (file_exists($f_to_del) && is_file($f_to_del)) @unlink($f_to_del);
+            }
+        }
+
         $uploadDir = '../../uploads/';
         if (!is_dir($uploadDir))
             mkdir($uploadDir, 0777, true);
@@ -684,12 +786,25 @@ if ($action === 'stats') {
     }
 
     if ($id > 0) {
+        // If updating and no new image, we might want to CLEAR current image if explicitly requested
+        // In our winners logic, if 'current_image' is sent empty we clear it.
+        // Let's assume if $_FILES is empty and no imagem string is sent from frontend, we keep existing or clear.
+        // But the winner form only has file. So if no file, we keep old UNLESS we add a 'remove' flag.
+        // For simplicity, I'll just keep the existing behavior for winners unless explicitly cleared.
+        
         if ($imagem !== '') {
             $stmt = $pdo->prepare("UPDATE publicacoes_ganhadores SET nome_ganhador=?, numero_premiado=?, premio_descricao=?, imagem_url=? WHERE id=?");
             $stmt->execute([$nome, $numero, $desc, $imagem, $id]);
         } else {
-            $stmt = $pdo->prepare("UPDATE publicacoes_ganhadores SET nome_ganhador=?, numero_premiado=?, premio_descricao=? WHERE id=?");
-            $stmt->execute([$nome, $numero, $desc, $id]);
+            // Keep old or clear? Let's check if the user cleared it (frontend would need to tell us)
+            // I'll add a check for 'clear_image'
+            if (isset($_POST['clear_image']) && $_POST['clear_image'] == '1') {
+                $stmt = $pdo->prepare("UPDATE publicacoes_ganhadores SET nome_ganhador=?, numero_premiado=?, premio_descricao=?, imagem_url='' WHERE id=?");
+                $stmt->execute([$nome, $numero, $desc, $id]);
+            } else {
+                $stmt = $pdo->prepare("UPDATE publicacoes_ganhadores SET nome_ganhador=?, numero_premiado=?, premio_descricao=? WHERE id=?");
+                $stmt->execute([$nome, $numero, $desc, $id]);
+            }
         }
     } else {
         $stmt = $pdo->prepare("INSERT INTO publicacoes_ganhadores (nome_ganhador, numero_premiado, premio_descricao, imagem_url) VALUES (?, ?, ?, ?)");
@@ -705,6 +820,14 @@ if ($action === 'stats') {
     ]);
 } else if ($action === 'delete_publicacao') {
     $id = intval($_POST['id'] ?? 0);
+    // Delete file
+    $st_img = $pdo->prepare("SELECT imagem_url FROM publicacoes_ganhadores WHERE id=?");
+    $st_img->execute([$id]);
+    $id_img = $st_img->fetchColumn();
+    if ($id_img && strpos($id_img, 'uploads/') === 0) {
+        $path = '../../' . $id_img;
+        if (file_exists($path) && is_file($path)) @unlink($path);
+    }
     $pdo->prepare("DELETE FROM publicacoes_ganhadores WHERE id = ?")->execute([$id]);
     echo json_encode(['success' => true]);
 } else if ($action === 'set_maintenance') {

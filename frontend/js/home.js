@@ -43,6 +43,59 @@ document.addEventListener('DOMContentLoaded', async () => {
                     navAjuda.target = "_blank";
                 }
             }
+
+            // Exibir Popup se Ativo
+            if (data.popup) {
+                const modal = document.getElementById('modal-popup');
+                const pTitle = document.getElementById('popup-title');
+                const pContent = document.getElementById('popup-content');
+                const pBtn = document.getElementById('btn-close-popup');
+                const pMedia = document.getElementById('popup-media-container');
+                const pImg = document.getElementById('popup-image');
+                const pVideo = document.getElementById('popup-video-container');
+                const pIframe = document.getElementById('popup-video-iframe');
+
+                pTitle.innerText = data.popup.title;
+                pContent.innerHTML = data.popup.content;
+                pBtn.innerText = data.popup.button;
+
+                // Handle Media
+                let hasMedia = false;
+                if (data.popup.video) {
+                    pIframe.src = data.popup.video;
+                    pVideo.classList.remove('hidden');
+                    pImg.classList.add('hidden');
+                    hasMedia = true;
+                } else if (data.popup.image) {
+                    pImg.src = data.popup.image;
+                    pImg.classList.remove('hidden');
+                    pVideo.classList.add('hidden');
+                    hasMedia = true;
+                }
+
+                if (hasMedia) pMedia.classList.remove('hidden');
+
+                // Show Modal
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.add('opacity-100');
+                    modal.querySelector('div').classList.remove('scale-95');
+                }, 100);
+
+                pBtn.onclick = () => {
+                    const link = data.popup.link;
+                    modal.classList.remove('opacity-100');
+                    modal.querySelector('div').classList.add('scale-95');
+                    
+                    // STOP VIDEO
+                    pIframe.src = '';
+                    
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        if (link) window.location.href = link;
+                    }, 500);
+                };
+            }
         }
 
         // Fetch Ganhadores

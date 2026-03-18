@@ -180,13 +180,19 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </div>
 
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Mudar Imagem de Fundo (Deixe em
-                        branco para manter)</label>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Mudar Imagem de Fundo (Deixe em branco para manter)</label>
                     <div class="grid grid-cols-2 gap-2 mt-1">
                         <input type="text" id="edit-imagem" name="imagem" placeholder="URL opcional..."
                             class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs">
                         <input type="file" id="edit-imagem-file" name="imagem_file" accept="image/*"
                             class="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 p-1">
+                    </div>
+                    <!-- Image Preview -->
+                    <div id="preview-edit-rifa" class="hidden mt-2 h-20 w-full rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center relative group">
+                        <img id="img-edit-rifa" class="h-full w-full object-cover">
+                        <button type="button" onclick="clearEditImage()" class="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full shadow-md hover:bg-red-600 z-10" title="Remover">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
                     </div>
                 </div>
 
@@ -468,8 +474,9 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 if (secondsLeft <= 0) {
                     clearInterval(sessionTimerInterval);
                     display.textContent = "EXPIRADO!";
-                    alert('Sua sessão expirou por segurança. Fazendo logout...');
-                    window.location.href = 'login.php';
+                    showNotification('Sessão Expirada', 'Sua sessão expirou por segurança. Fazendo logout...', 'error', () => {
+                         window.location.href = 'login.php';
+                    });
                     return;
                 }
 
@@ -518,11 +525,11 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     document.getElementById('btn-close-edit').click();
                     fetchRifas();
                 } else {
-                    alert(data.error || 'Erro ao editar.');
+                    showNotification('Erro', data.error || 'Erro ao editar.', 'error');
                 }
             } catch (e) {
                 console.error(e);
-                alert('Erro fatal. Veja o console.');
+                showNotification('Erro', 'Erro fatal. Veja o console.', 'error');
             }
         });
 
@@ -592,16 +599,68 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         setTimeout(() => { document.getElementById('modal-winners').classList.add('opacity-100'); }, 10);
                         fetchRifas(); // Update table visually to reflect 'fechada'
                     } else {
-                        alert('Nenhum número pago nesta rifa para ser sorteado!');
+                        showNotification('Atenção', 'Nenhum número pago nesta rifa para ser sorteado!', 'error');
                     }
                 } else {
-                    alert(data.error || 'Erro ao sortear.');
+                    showNotification('Erro', data.error || 'Erro ao sortear.', 'error');
                 }
             } catch (e) {
                 console.error(e);
-                alert('Erro fatal. Veja o console.');
+                showNotification('Erro', 'Erro fatal. Veja o console.', 'error');
             }
         });
+        // Image Preview logic
+        document.getElementById('edit-imagem-file').onchange = (e) => {
+            const [file] = e.target.files;
+            if (file) {
+                document.getElementById('img-edit-rifa').src = URL.createObjectURL(file);
+                document.getElementById('preview-edit-rifa').classList.remove('hidden');
+            }
+        };
+        document.getElementById('edit-imagem').oninput = (e) => {
+             const val = e.target.value;
+             const img = document.getElementById('img-edit-rifa');
+             const cont = document.getElementById('preview-edit-rifa');
+             if(val && val.startsWith('http')) {
+                 img.src = val;
+                 cont.classList.remove('hidden');
+             }
+        };
+
+        window.clearEditImage = function() {
+            document.getElementById('edit-imagem-file').value = '';
+            document.getElementById('edit-imagem').value = '';
+            document.getElementById('img-edit-rifa').src = '';
+            document.getElementById('preview-edit-rifa').classList.add('hidden');
+        };
+
+        fetchRifas();
+    </script>
+    <!-- Modal Notificação -->
+    <div id="modal-notif" class="fixed inset-0 bg-black bg-opacity-80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative border border-gray-100">
+            <h2 id="notif-title" class="text-2xl font-black text-[#2c3e50] mb-4 uppercase tracking-tight italic">$UPER$ORTE</h2>
+            <p id="notif-message" class="text-sm text-gray-500 mb-8 font-medium leading-relaxed">Informação aqui.</p>
+            <button id="btn-close-notif" class="w-full bg-[#8e44ad] text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs tracking-widest hover:bg-[#7d3c98] transition-all">Entendido</button>
+        </div>
+    </div>
+
+    <script>
+        function showNotification(title, message, type = 'success', callback = null) {
+            const modal = document.getElementById('modal-notif');
+            document.getElementById('notif-title').textContent = title === 'Erro' || title === 'Atenção' ? 'ATENÇÃO' : title;
+            document.getElementById('notif-message').textContent = message;
+            const btnClose = document.getElementById('btn-close-notif');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('opacity-100'), 10);
+            btnClose.onclick = () => {
+                modal.classList.remove('opacity-100');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    if(callback) callback();
+                }, 300);
+            };
+        }
     </script>
 </body>
 
