@@ -1,0 +1,24 @@
+{
+  "name": "$UPER$ORTE - Prêmios Online",
+  "short_name": "$UPER$orte",
+  "description": "Participe dos melhores sorteios online com segurança e agilidade.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00a650",
+  "icons": [
+    {
+      "src": "frontend/png/cifrao.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "frontend/png/cifrao.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "orientation": "portrait"
+}
