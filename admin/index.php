@@ -72,6 +72,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                         Novo Acesso
                     </button>
+                    <button id="btn-open-security" type="button" class="w-full bg-red-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-red-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        Segurança & Logs
+                    </button>
                     <button id="btn-open-smtp" type="button" class="w-full bg-blue-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                         Acesso Email
@@ -276,10 +280,13 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         placeholder="Olá, $uper$orte! Preciso de ajuda."></textarea>
                 </div>
                 <div class="border-t border-gray-100 pt-4 mt-2">
-                    <label class="text-[10px] font-black text-purple-600 uppercase tracking-widest ml-1 mb-1 block">Template Compartilhamento (Afiliados)</label>
+                    <label class="text-[10px] font-black text-purple-600 uppercase tracking-widest ml-1 mb-1 inline-flex items-center gap-2">
+                        Template Compartilhamento (Afiliados)
+                        <button type="button" id="btn-help-template" class="w-4 h-4 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-[10px] font-bold hover:bg-purple-200 transition-colors shadow-sm" title="Clique para ver como usar">?</button>
+                    </label>
                     <textarea id="whatsapp-share-template"
                         class="w-full bg-purple-50 border border-purple-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none h-32"
-                        placeholder="🎉 Participe da Rifa e Concorra Agora!&#10;Escolha seu número e concorra...&#10;&#10;🔗 {link}"></textarea>
+                        placeholder="🚨 {rifa_nome} 🚨&#10;&#10;🎟 Apenas {preco} por número!&#10;&#10;🎁 Prêmios:&#10;🥇 1º: {premio1}&#10;🥈 2º: {premio2}&#10;&#10;👇 Participe:&#10;{link}"></textarea>
                     <p class="text-[9px] text-gray-400 mt-1 ml-1 leading-tight">Use <b>{rifa_nome}</b>, <b>{link}</b> e <b>{preco}</b> como espaços reservados.</p>
                 </div>
                 <button type="submit" id="btn-save-integrations"
@@ -580,6 +587,121 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
+    <!-- Modal Ajuda Template -->
+    <div id="modal-help-template" class="fixed inset-0 bg-black bg-opacity-80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 max-w-lg w-full text-left shadow-2xl relative">
+            <button onclick="closeHelpTemplate()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-2xl font-black text-gray-800 mb-6">Como usar o Template?</h2>
+            
+            <div class="space-y-6">
+                <div class="p-4 bg-purple-50 border-l-4 border-purple-400 text-purple-800 text-[11px] leading-relaxed">
+                    Personalize a mensagem que os afiliados enviam. Use as <b>"Tags"</b> abaixo para preencher os dados reais automaticamente:
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="flex items-center gap-2">
+                        <code class="bg-gray-100 px-1.5 py-0.5 rounded text-purple-600 font-bold text-[10px]">{rifa_nome}</code>
+                        <span class="text-[9px] text-gray-500">Nome da Rifa</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <code class="bg-gray-100 px-1.5 py-0.5 rounded text-purple-600 font-bold text-[10px]">{link}</code>
+                        <span class="text-[9px] text-gray-500">Link Afiliado</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <code class="bg-gray-100 px-1.5 py-0.5 rounded text-purple-600 font-bold text-[10px]">{preco}</code>
+                        <span class="text-[9px] text-gray-500">Preço</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <code class="bg-gray-100 px-1.5 py-0.5 rounded text-purple-600 font-bold text-[10px]">{premio1}</code>
+                        <span class="text-[9px] text-gray-500">1º Prêmio</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <code class="bg-gray-100 px-1.5 py-0.5 rounded text-purple-600 font-bold text-[10px]">{premio2}</code>
+                        <span class="text-[9px] text-gray-500">2º Prêmio</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <code class="bg-gray-100 px-1.5 py-0.5 rounded text-purple-600 font-bold text-[10px]">{premio3}..5</code>
+                        <span class="text-[9px] text-gray-500">Demais Prêmios</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-4">
+                    <p class="text-[10px] font-black text-gray-400 uppercase mb-2">Exemplo Prático:</p>
+                    <div class="bg-gray-50 p-4 rounded-xl space-y-3">
+                        <div>
+                            <p class="text-[9px] font-bold text-gray-400 uppercase mb-1">Se você preencher assim:</p>
+                            <p class="text-[9px] bg-white p-2 rounded border border-gray-200 font-mono italic">🚨 *RIFA TOP* 🚨&#10;Apenas {preco}!&#10;1º: {premio1}&#10;2º: {premio2}&#10;{link}</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-bold text-green-600 uppercase mb-1">No WhatsApp aparecerá:</p>
+                            <p class="text-[9px] bg-white p-2 rounded border border-green-100 font-medium whitespace-pre-wrap">🚨 <b>RIFA TOP</b> 🚨&#10;Apenas R$ 0,10!&#10;1º: iPhone 16&#10;2º: R$ 500 no PIX&#10;seusite.com/rifa.php?id=1&ref=12</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gray-50 rounded-xl text-[10px] text-gray-500">
+                    <p><b>Dica:</b> No WhatsApp, use <code>*texto em negrito*</code> e emojis para chamar atenção!</p>
+                </div>
+            </div>
+            
+            <button onclick="closeHelpTemplate()" class="w-full bg-[#2c3e50] text-white font-black py-4 rounded-xl shadow uppercase text-sm mt-6 hover:bg-gray-800 transition-colors">Entendi</button>
+        </div>
+    </div>
+
+
+    <!-- Modal Segurança & Logs -->
+    <div id="modal-security" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-4xl w-full text-left shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeSecurity()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 bg-red-100 rounded-lg text-red-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter">Monitor de Segurança</h2>
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Logs de Atividade e Acessos Real-time</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase mb-3">Quem está Online</h3>
+                    <div id="security-online-list" class="space-y-2">
+                        <!-- Injected JS -->
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 md:col-span-2">
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase mb-3">Páginas mais Acessadas</h3>
+                    <div id="security-top-pages" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-bold text-gray-600">
+                        <!-- Injected JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 pt-6">
+                <h3 class="text-[10px] font-black text-gray-400 uppercase mb-4">Últimas Atividades</h3>
+                <div class="overflow-x-auto overflow-y-auto max-h-[300px]">
+                    <table class="w-full text-left text-[11px]">
+                        <thead>
+                            <tr class="text-[10px] font-black text-gray-400 uppercase">
+                                <th class="pb-3 pr-4">Data/Hora</th>
+                                <th class="pb-3 pr-4">IP / Local</th>
+                                <th class="pb-3 pr-4">Categoria</th>
+                                <th class="pb-3">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="security-logs-tbody" class="divide-y divide-gray-50">
+                            <!-- Injected JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Notificação -->
     <div id="modal-notif" class="fixed inset-0 bg-black bg-opacity-80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
@@ -930,6 +1052,19 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             setTimeout(() => m.classList.add('opacity-100'), 10);
         });
 
+        // Template Help Modal
+        document.getElementById('btn-help-template').addEventListener('click', () => {
+            const m = document.getElementById('modal-help-template');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+        });
+
+        window.closeHelpTemplate = () => {
+            const m = document.getElementById('modal-help-template');
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        };
+
         const closeHelp = () => {
             const m = document.getElementById('modal-help-smtp');
             m.classList.remove('opacity-100');
@@ -1151,8 +1286,76 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             }
         });
 
+        // Security Modal
+        document.getElementById('btn-open-security').addEventListener('click', () => {
+            const m = document.getElementById('modal-security');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+            fetchSecurityStats();
+        });
+
+        window.closeSecurity = () => {
+            const m = document.getElementById('modal-security');
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        };
+
+        async function fetchSecurityStats() {
+            try {
+                const res = await fetch(API + '?action=security_stats');
+                const data = await res.json();
+                
+                // Render Online
+                const onlineCont = document.getElementById('security-online-list');
+                onlineCont.innerHTML = '';
+                const types = { 'visitante': '👤 Visitantes', 'afiliado': '🤝 Afiliados', 'admin': '🛡️ Admin' };
+                
+                for (let type in types) {
+                    const qtd = data.online[type] || 0;
+                    onlineCont.innerHTML += `
+                        <div class="flex justify-between items-center text-xs font-bold text-gray-700 bg-white p-2 rounded shadow-sm border border-gray-100">
+                            <span>${types[type]}</span>
+                            <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">${qtd}</span>
+                        </div>
+                    `;
+                }
+
+                // Render Top Pages
+                const pCont = document.getElementById('security-top-pages');
+                pCont.innerHTML = data.top_pages.map(p => `
+                    <div class="flex items-center gap-2 bg-white px-2 py-1.5 rounded border border-gray-100 overflow-hidden text-ellipsis whitespace-nowrap">
+                        <span class="bg-gray-100 px-1.5 rounded text-gray-400">${p.acessos}x</span>
+                        <span class="flex-1">${p.pagina}</span>
+                    </div>
+                `).join('');
+
+                // Render Logs
+                const tbody = document.getElementById('security-logs-tbody');
+                const cats = {
+                    'acesso_site': '<span class="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full font-black text-[9px] uppercase">Acesso</span>',
+                    'acao_admin': '<span class="px-1.5 py-0.5 bg-red-100 text-red-600 rounded-full font-black text-[9px] uppercase">Admin</span>',
+                    'acao_afiliado': '<span class="px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full font-black text-[9px] uppercase">Afiliado</span>'
+                };
+
+                tbody.innerHTML = data.logs.map(l => `
+                    <tr class="text-gray-600 hover:bg-gray-50 transition-colors">
+                        <td class="py-3 pr-4 font-mono">${new Date(l.data_hora).toLocaleString('pt-BR', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})}</td>
+                        <td class="py-3 pr-4">
+                            <div class="font-bold text-gray-800">${l.ip}</div>
+                            <div class="text-[9px] text-gray-400 uppercase">${l.cidade}, ${l.pais}</div>
+                        </td>
+                        <td class="py-3 pr-4">${cats[l.categoria] || l.categoria}</td>
+                        <td class="py-3 leading-tight">${l.acao} <div class="text-[9px] text-gray-300 font-mono">${l.pagina}</div></td>
+                    </tr>
+                `).join('');
+            } catch(e) {}
+        }
+
         fetchStats();
-        setInterval(fetchStats, 10000);
+        setInterval(() => {
+            fetchStats();
+            if(!document.getElementById('modal-security').classList.contains('hidden')) fetchSecurityStats();
+        }, 10000);
     </script>
 </body>
 

@@ -89,6 +89,31 @@ if ($action === 'stats') {
         'admin_user' => $userData['username'] ?? '',
         'server_time' => date('c')
     ]);
+} else if ($action === 'security_stats') {
+    // Monitor de Segurança e Acessos
+    
+    // 1. Quem está online (últimos 5 minutos)
+    $stmtOnline = $pdo->query("SELECT user_type, COUNT(*) as qtd FROM online_tracking WHERE ultima_atividade > DATE_SUB(NOW(), INTERVAL 5 MINUTE) GROUP BY user_type");
+    $online = $stmtOnline->fetchAll(PDO::FETCH_KEY_PAIR);
+    
+    $stmtOnlineTotal = $pdo->query("SELECT COUNT(*) FROM online_tracking WHERE ultima_atividade > DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
+    $totalOnline = $stmtOnlineTotal->fetchColumn();
+
+    // 2. Páginas mais acessadas
+    $stmtTopPages = $pdo->query("SELECT pagina, COUNT(*) as acessos FROM site_logs WHERE categoria = 'acesso_site' GROUP BY pagina ORDER BY acessos DESC LIMIT 5");
+    $topPages = $stmtTopPages->fetchAll(PDO::FETCH_ASSOC);
+
+    // 3. Últimos Logs (Separados por categoria no mesmo array)
+    $stmtLogs = $pdo->query("SELECT * FROM site_logs ORDER BY id DESC LIMIT 50");
+    $logs = $stmtLogs->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        'online' => $online,
+        'total_online' => $totalOnline,
+        'top_pages' => $topPages,
+        'logs' => $logs
+    ]);
+
 } else if ($action === 'billing_report') {
     $start = $_GET['start'] ?? '';
     $end = $_GET['end'] ?? '';
@@ -300,6 +325,11 @@ if ($action === 'stats') {
     $stmtRifa->execute([$rifa_id]);
     $prizes = $stmtRifa->fetch(PDO::FETCH_ASSOC);
 
+    $stmtRifaName = $pdo->prepare("SELECT nome FROM rifas WHERE id = ?");
+    $stmtRifaName->execute([$rifa_id]);
+    $rifaNome = $stmtRifaName->fetchColumn();
+    registrarLog('acao_admin', "Rifa Finalizada e Sorteada: $rifaNome", null, 1);
+    
     echo json_encode(['success' => true, 'winners' => $winners, 'prizes' => $prizes]);
 } else if ($action === 'save_integration') {
     $gateway = $_POST['gateway'] ?? '';
@@ -439,6 +469,7 @@ if ($action === 'stats') {
         $pdo->exec("SET foreign_key_checks=1;");
 
         $pdo->commit();
+        registrarLog('acao_admin', "Criou nova rifa: $nome (ID: $rifa_id)", null, 1);
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
         $pdo->rollBack();

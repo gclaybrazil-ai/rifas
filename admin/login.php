@@ -92,8 +92,14 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
                 
                 if(data.success) {
                     window.location.href = 'index.php';
+                } else if (data.challenge_required) {
+                    errEl.textContent = data.message;
+                    errEl.className = 'bg-indigo-50 border border-indigo-100 text-indigo-700 text-[11px] font-bold p-4 rounded-xl text-center leading-relaxed';
+                    errEl.classList.remove('hidden');
+                    btn.innerHTML = 'Aguardando Autorização';
                 } else {
                     errEl.textContent = data.error;
+                    errEl.className = 'bg-red-50 border border-red-100 text-red-600 text-[11px] font-bold p-3 rounded-xl text-center';
                     errEl.classList.remove('hidden');
                     btn.innerHTML = 'Entrar no Painel';
                     btn.disabled = false;

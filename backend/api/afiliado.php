@@ -1,63 +1,5 @@
-<?php
-header('Content-Type: application/json');
-require_once '../config.php';
-require_once '../libs/PHPMailer/PHPMailer.php';
-require_once '../libs/PHPMailer/SMTP.php';
-require_once '../libs/PHPMailer/Exception.php';
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-session_start();
-
-// Timeout de 20 minutos (1200 segundos)
-if (isset($_SESSION['afiliado_id'])) {
-    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1200)) {
-        session_unset();
-        session_destroy();
-    } else {
-        $_SESSION['last_activity'] = time();
-    }
-}
-
+// session_start and PHPMailer already in config.php
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
-
-// Helper function to send emails
-function sendMailer($to_email, $to_name, $subject, $message, $pdo) {
-    $stmtConf = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave LIKE 'smtp_%'");
-    $conf = $stmtConf->fetchAll(PDO::FETCH_KEY_PAIR);
-
-    $host = $conf['smtp_host'] ?? '';
-    $port = (int)($conf['smtp_port'] ?? 465);
-    $user_smtp = $conf['smtp_user'] ?? '';
-    $pass_smtp = $conf['smtp_pass'] ?? '';
-    $from_name = $conf['smtp_from_name'] ?? 'Admin Sorte';
-    $from_email = $conf['smtp_from_email'] ?? 'noreply@seusite.com';
-
-    $mail = new PHPMailer(true);
-    try {
-        if (!empty($host) && !empty($user_smtp) && !empty($pass_smtp)) {
-            $mail->isSMTP();
-            $mail->Host       = $host;
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $user_smtp;
-            $mail->Password   = $pass_smtp;
-            $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = $port;
-            $mail->CharSet    = 'UTF-8';
-            $mail->setFrom($from_email, $from_name);
-            $mail->addAddress($to_email, $to_name);
-            $mail->Subject = $subject;
-            $mail->Body    = $message;
-            return $mail->send();
-        } else {
-            $headers = "From: " . $from_name . " <" . $from_email . ">\r\n";
-            return mail($to_email, $subject, $message, $headers);
-        }
-    } catch (Exception $e) {
-        return false;
-    }
-}
 
 if ($action === 'login_register') {
     $whatsapp = preg_replace('/\D/', '', $_POST['whatsapp'] ?? '');
@@ -76,10 +18,17 @@ if ($action === 'login_register') {
         // Login flow
         if (empty($senha)) die(json_encode(['error' => 'Informe sua senha.']));
         if (password_verify($senha, $afiliado['senha'])) {
+            $check = checkLocationChallenge('afiliado', $afiliado['id'], $afiliado['email'], $afiliado['nome']);
+            if (isset($check['challenge'])) {
+                die(json_encode(['challenge_required' => true, 'message' => 'Novo local detectado. Verifique seu e-mail para autorizar este acesso.']));
+            }
+
             $_SESSION['afiliado_id'] = $afiliado['id'];
             $_SESSION['last_activity'] = time();
+            registrarLog('acao_afiliado', "Afiliado logado com sucesso", $afiliado['id']);
             echo json_encode(['success' => true, 'message' => 'Login realizado!']);
         } else {
+            registrarLog('acao_afiliado', "Tentativa de login falhou (WP: $whatsapp)");
             echo json_encode(['error' => 'Senha incorreta.']);
         }
     } else {
@@ -172,7 +121,7 @@ if ($action === 'login_register') {
     $stmt->execute([$_SESSION['afiliado_id']]);
     $af = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $stmtR = $pdo->query("SELECT id, nome, preco_numero FROM rifas WHERE status = 'aberta' ORDER BY id DESC");
+    $stmtR = $pdo->query("SELECT id, nome, preco_numero, premio1, premio2, premio3, premio4, premio5 FROM rifas WHERE status = 'aberta' ORDER BY id DESC");
     $rifas = $stmtR->fetchAll(PDO::FETCH_ASSOC);
 
     $stmtConf = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_share_template'");
@@ -210,7 +159,7 @@ if ($action === 'login_register') {
     $subject = "Confirmação de Alteração - {$label}";
     $message = "Olá {$af['nome']},\n\nVocê solicitou a alteração do seu {$label} para: {$novo_valor}.\n\nPara confirmar esta alteração por segurança, clique no link abaixo:\n\n{$link}\n\nSe não foi você, ignore este email.";
 
-    if (sendMailer($af['email'], $af['nome'], $subject, $message, $pdo)) {
+    if (sendMailer($af['email'], $af['nome'], $subject, $message)) {
         echo json_encode(['success' => true, 'message' => "Um link de confirmação foi enviado para o seu email atual ({$af['email']})."]);
     } else {
         echo json_encode(['error' => 'Falha ao enviar email. ' . (in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']) ? "Simulação (Local): $link" : "")]);
