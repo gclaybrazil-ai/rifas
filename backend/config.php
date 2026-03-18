@@ -111,6 +111,18 @@ try {
         ultima_atividade DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )");
 
+    $pdo->exec("CREATE TABLE IF NOT EXISTS assistant_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        pergunta VARCHAR(255) NOT NULL,
+        resposta TEXT NOT NULL,
+        icone VARCHAR(50) DEFAULT '✨'
+    )");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (
+        chave VARCHAR(100) PRIMARY KEY,
+        valor TEXT
+    )");
+
     // Adicionar colunas faltantes de uma vez
     $cols = [
         'afiliados' => ['email', 'senha', 'data_ultimo_saque'],
@@ -142,11 +154,28 @@ try {
         'comissao_padrao' => '10.00', 
         'afiliados_ativo' => '1',
         'ciclo_pagamento_dias' => '15',
-        'admin_email' => 'admin@seusite.com'
+        'admin_email' => 'admin@seusite.com',
+        'assistant_enabled' => '1',
+        'assistant_name' => 'Assistente Top Sorte',
+        'assistant_attendant' => 'David',
+        'assistant_whatsapp' => '5511999999999'
     ];
     foreach ($defaults as $chave => $valor) {
         $stmt = $pdo->prepare("INSERT IGNORE INTO configuracoes (chave, valor) VALUES (?, ?)");
         $stmt->execute([$chave, $valor]);
+    }
+
+    $countMsg = $pdo->query("SELECT COUNT(*) FROM assistant_messages")->fetchColumn();
+    if($countMsg == 0) {
+        $msgDefaults = [
+            ['💰 Qual o valor?', 'Cada número custa apenas **valor fixo**! 💰<br><br>Quanto mais números, mais chances de ganhar! 🍀', '💰'],
+            ['🎯 Como funciona?', 'É super simples! 😊<br><br>1️⃣ Escolha os números<br>2️⃣ Pague via PIX<br>3️⃣ Seus números são confirmados na hora! 🎯', '🎯'],
+            ['💳 Como pagar?', 'O pagamento é via **PIX**! ⚡<br><br>Após escolher seus números, você verá os dados do PIX e a confirmação é automática! 🎉', '💳'],
+            ['💬 Falar com atendente', 'Claro! Nosso atendente está à disposição! 😊<br><br>Clique no botão abaixo para falar com ele:', '💬']
+        ];
+        foreach($msgDefaults as $md) {
+            $pdo->prepare("INSERT INTO assistant_messages (pergunta, resposta, icone) VALUES (?, ?, ?)")->execute($md);
+        }
     }
 
 } catch (PDOException $e) {

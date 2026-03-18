@@ -81,6 +81,17 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         Acesso SMTP
                     </button>
                     <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase">Assistente</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="assistant-toggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
+                        </label>
+                    </div>
+                    <button id="btn-open-assistant" type="button" class="w-full bg-purple-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-purple-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                        Config. Assistente
+                    </button>
+                    <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
                         <span class="text-[10px] font-bold text-gray-500 uppercase">Manutenção</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="maintenance-toggle" class="sr-only peer">
@@ -631,6 +642,82 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
+    <!-- Modal Assistente -->
+    <div id="modal-assistant" class="fixed inset-0 bg-black bg-opacity-80 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-thin">
+            <button id="btn-close-assistant" class="absolute top-6 right-6 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-2xl font-black text-[#8e44ad] mb-2 uppercase tracking-tight italic">CONFIGURAR ASSISTENTE</h2>
+            <p class="text-xs text-gray-500 mb-8 font-medium">Personalize a identidade e o contato do seu bot de atendimento.</p>
+            
+            <form id="form-assistant" class="space-y-6">
+                <div class="space-y-4">
+                    <div class="bg-purple-50 p-4 rounded-2xl border border-purple-100">
+                        <h3 class="font-bold text-purple-700 text-[11px] uppercase mb-4 tracking-widest">Identidade Visual</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">Nome do Robô</label>
+                                <input type="text" name="assistant_name" id="assistant_name" value="Assistente Top Sorte" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none shadow-sm">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">Nome do Atendente</label>
+                                <input type="text" name="assistant_attendant" id="assistant_attendant" value="David" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 p-4 rounded-2xl border border-green-100">
+                        <h3 class="font-bold text-green-700 text-[11px] uppercase mb-4 tracking-widest">Contato de Suporte</h3>
+                        <div>
+                            <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">WhatsApp Atendente (Cód + DDD + Num)</label>
+                            <input type="text" name="assistant_whatsapp" id="assistant_whatsapp" value="5511999999999" placeholder="5511999999999" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none shadow-sm">
+                            <p class="text-[10px] text-green-600/70 mt-2 ml-1 font-bold">Importante: Use apenas números, incluindo o código do país (55).</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-700 text-[11px] uppercase tracking-widest">Respostas Automáticas</h3>
+                            <button type="button" id="btn-add-assistant-msg" class="bg-purple-600 text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase shadow-sm hover:bg-purple-700 transition-colors">Nova Resposta</button>
+                        </div>
+                        <div id="assistant-messages-list" class="space-y-3">
+                            <!-- Injected JS messages -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" id="btn-save-assistant" class="flex-1 bg-purple-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-purple-700 transition-colors uppercase text-xs tracking-widest">Salvar Dados do Robô</button>
+                    <button type="button" id="btn-close-assistant-footer" class="bg-gray-100 text-gray-500 font-black py-4 px-6 rounded-2xl shadow hover:bg-gray-200 transition-colors uppercase text-xs tracking-widest">Sair</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Mensagem Assistente -->
+    <div id="modal-assistant-msg" class="fixed inset-0 bg-black bg-opacity-90 z-[120] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative">
+            <h2 id="msg-modal-title" class="text-xl font-black text-[#8e44ad] mb-6 uppercase italic tracking-tighter">EDITAR RESPOSTA</h2>
+            <form id="form-assistant-msg" class="space-y-4 text-left">
+                <input type="hidden" name="msg_id" id="msg_id">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Pergunta do Botão</label>
+                    <input type="text" name="msg_pergunta" id="msg_pergunta" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Resposta do Chat</label>
+                    <textarea name="msg_resposta" id="msg_resposta" required rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none"></textarea>
+                    <p class="text-[9px] text-gray-400 mt-1">Dica: Use <code>&lt;br&gt;</code> para pular linha.</p>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-purple-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-purple-700 uppercase text-[10px] tracking-widest">Salvar Resposta</button>
+                    <button type="button" id="btn-close-msg-modal" class="bg-gray-100 text-gray-500 font-black py-4 px-4 rounded-2xl uppercase text-[10px] tracking-widest">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Ajuda Template -->
     <div id="modal-help-template" class="fixed inset-0 bg-black bg-opacity-80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-2xl p-8 max-w-lg w-full text-left shadow-2xl relative">
@@ -835,6 +922,36 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
                 if (document.getElementById('maintenance-toggle')) {
                     document.getElementById('maintenance-toggle').checked = (data.maintenance === '1');
+                }
+
+                if (document.getElementById('assistant-toggle')) {
+                    document.getElementById('assistant-toggle').checked = (data.assistant.enabled === '1');
+                }
+
+                // Populate Assistant (only if modal is closed)
+                const modalAssistant = document.getElementById('modal-assistant');
+                if(modalAssistant && modalAssistant.classList.contains('hidden') && data.assistant) {
+                    if(document.getElementById('assistant_name')) document.getElementById('assistant_name').value = data.assistant.name || '';
+                    if(document.getElementById('assistant_attendant')) document.getElementById('assistant_attendant').value = data.assistant.attendant || '';
+                    if(document.getElementById('assistant_whatsapp')) document.getElementById('assistant_whatsapp').value = data.assistant.whatsapp || '';
+                    
+                    const msgList = document.getElementById('assistant-messages-list');
+                    if(msgList) {
+                        msgList.innerHTML = '';
+                        (data.assistant.messages || []).forEach(m => {
+                            msgList.insertAdjacentHTML('beforeend', `
+                                <div class="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 shadow-sm group">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[10px] font-black text-purple-600 uppercase truncate">${m.pergunta}</p>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button type="button" onclick='editAssistantMsg(${JSON.stringify(m).replace(/'/g, "&apos;")})' class="text-gray-400 hover:text-blue-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                        <button type="button" onclick="deleteAssistantMsg(${m.id})" class="text-gray-400 hover:text-red-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                    </div>
+                                </div>
+                            `);
+                        });
+                    }
                 }
 
                 // Populate Acesso (only if modal is closed)
@@ -1131,13 +1248,108 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         document.getElementById('btn-close-help-smtp').addEventListener('click', closeHelp);
         document.getElementById('btn-entendi-smtp').addEventListener('click', closeHelp);
 
-        // Maintenance Toggle
-        document.getElementById('maintenance-toggle').addEventListener('change', async (e) => {
-            const val = e.target.checked ? '1' : '0';
+        // Assistant Modal Logic
+        document.getElementById('btn-open-assistant').addEventListener('click', () => {
+            const m = document.getElementById('modal-assistant');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+        });
+
+        const closeAssistant = () => {
+            const m = document.getElementById('modal-assistant');
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        };
+
+        document.getElementById('btn-close-assistant').addEventListener('click', closeAssistant);
+        document.getElementById('btn-close-assistant-footer').addEventListener('click', closeAssistant);
+
+        document.getElementById('form-assistant').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-assistant');
+            btn.innerHTML = 'Salvando...';
+
+            const fd = new URLSearchParams(new FormData(e.target));
+            fd.append('action', 'save_assistant');
+
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+            
+            if(data.success) {
+                closeAssistant();
+                setTimeout(() => {
+                    showNotification('Sucesso!', 'Dados do assistente salvos com sucesso.');
+                    btn.innerHTML = 'Salvar Dados do Robô';
+                    fetchStats();
+                }, 300);
+            } else {
+                showNotification('Erro', data.error, 'error');
+                btn.innerHTML = 'Salvar Dados do Robô';
+            }
+        });
+
+        document.getElementById('assistant-toggle').addEventListener('change', async (e) => {
             const fd = new URLSearchParams();
-            fd.append('action', 'set_maintenance');
-            fd.append('status', val);
+            fd.append('action', 'toggle_assistant');
+            fd.append('enabled', e.target.checked ? '1' : '0');
             await fetch(API, { method: 'POST', body: fd });
+            showNotification('Atualizado!', `O assistente foi ${e.target.checked ? 'ativado' : 'desativado'} com sucesso.`);
+        });
+
+        // Maintenance Toggle logic
+        if(document.getElementById('maintenance-toggle')) {
+            document.getElementById('maintenance-toggle').addEventListener('change', async (e) => {
+                const fd = new URLSearchParams();
+                fd.append('action', 'set_maintenance');
+                fd.append('status', e.target.checked ? '1' : '0');
+                await fetch(API, { method: 'POST', body: fd });
+                showNotification('Atualizado!', `O modo manutenção foi ${e.target.checked ? 'ativado' : 'desativado'} com sucesso.`);
+            });
+        }
+
+        // Assistant Messages CRUD Logic
+        document.getElementById('btn-add-assistant-msg').addEventListener('click', () => {
+            document.getElementById('msg_id').value = '0';
+            document.getElementById('msg_pergunta').value = '';
+            document.getElementById('msg_resposta').value = '';
+            document.getElementById('msg-modal-title').innerText = 'NOVA RESPOSTA';
+            const m = document.getElementById('modal-assistant-msg');
+            m.classList.remove('hidden');
+        });
+
+        window.editAssistantMsg = function(msg) {
+            document.getElementById('msg_id').value = msg.id;
+            document.getElementById('msg_pergunta').value = msg.pergunta;
+            document.getElementById('msg_resposta').value = msg.resposta;
+            document.getElementById('msg-modal-title').innerText = 'EDITAR RESPOSTA';
+            const m = document.getElementById('modal-assistant-msg');
+            m.classList.remove('hidden');
+        };
+
+        window.deleteAssistantMsg = async function(id) {
+            if(!confirm('Deseja excluir esta resposta?')) return;
+            const fd = new URLSearchParams();
+            fd.append('action', 'delete_assistant_msg');
+            fd.append('id', id);
+            const res = await fetch(API, { method: 'POST', body: fd });
+            if((await res.json()).success) {
+                fetchStats();
+            }
+        };
+
+        document.getElementById('btn-close-msg-modal').addEventListener('click', () => {
+            document.getElementById('modal-assistant-msg').classList.add('hidden');
+        });
+
+        document.getElementById('form-assistant-msg').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new URLSearchParams(new FormData(e.target));
+            fd.append('action', 'save_assistant_msg');
+            const res = await fetch(API, { method: 'POST', body: fd });
+            if((await res.json()).success) {
+                document.getElementById('modal-assistant-msg').classList.add('hidden');
+                fetchStats();
+            }
         });
 
         function toggleCustomRange() {

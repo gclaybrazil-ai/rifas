@@ -68,8 +68,8 @@ if ($action === 'stats') {
         $r['data_reserva_iso'] = date('c', strtotime($r['data_reserva']));
     }
 
-    // Get maintenance and email settings
-    $stmtM = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('modo_manutencao', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email')");
+    // Get configs
+    $stmtM = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('modo_manutencao', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email', 'assistant_enabled', 'assistant_name', 'assistant_attendant', 'assistant_whatsapp')");
     $configs = $stmtM ? $stmtM->fetchAll(PDO::FETCH_KEY_PAIR) : [];
     
     $stmtUser = $pdo->query("SELECT email, username FROM usuarios WHERE id = 1");
@@ -92,8 +92,50 @@ if ($action === 'stats') {
         'admin_email' => $userData['email'] ?? '',
         'admin_user' => $userData['username'] ?? '',
         'failed_recent' => $failedRecent,
+        'assistant' => [
+            'enabled' => $configs['assistant_enabled'] ?? '1',
+            'name' => $configs['assistant_name'] ?? 'Assistente Top Sorte',
+            'attendant' => $configs['assistant_attendant'] ?? 'David',
+            'whatsapp' => $configs['assistant_whatsapp'] ?? '5511999999999',
+            'messages' => $pdo->query("SELECT * FROM assistant_messages ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC)
+        ],
         'server_time' => date('c')
     ]);
+} else if ($action === 'toggle_assistant') {
+    $enabled = $_POST['enabled'] == '1' ? '1' : '0';
+    $stmt = $pdo->prepare("UPDATE configuracoes SET valor = ? WHERE chave = 'assistant_enabled'");
+    $stmt->execute([$enabled]);
+    echo json_encode(['success' => true]);
+} else if ($action === 'save_assistant') {
+    $name = $_POST['assistant_name'] ?? '';
+    $attendant = $_POST['assistant_attendant'] ?? '';
+    $whatsapp = $_POST['assistant_whatsapp'] ?? '';
+
+    $stmt = $pdo->prepare("UPDATE configuracoes SET valor = ? WHERE chave = 'assistant_name'");
+    $stmt->execute([$name]);
+    $stmt = $pdo->prepare("UPDATE configuracoes SET valor = ? WHERE chave = 'assistant_attendant'");
+    $stmt->execute([$attendant]);
+    $stmt = $pdo->prepare("UPDATE configuracoes SET valor = ? WHERE chave = 'assistant_whatsapp'");
+    $stmt->execute([$whatsapp]);
+
+    echo json_encode(['success' => true]);
+} else if ($action === 'save_assistant_msg') {
+    $id = intval($_POST['msg_id'] ?? 0);
+    $pergunta = $_POST['msg_pergunta'] ?? '';
+    $resposta = $_POST['msg_resposta'] ?? '';
+
+    if($id > 0) {
+        $stmt = $pdo->prepare("UPDATE assistant_messages SET pergunta = ?, resposta = ? WHERE id = ?");
+        $stmt->execute([$pergunta, $resposta, $id]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO assistant_messages (pergunta, resposta) VALUES (?, ?)");
+        $stmt->execute([$pergunta, $resposta]);
+    }
+    echo json_encode(['success' => true]);
+} else if ($action === 'delete_assistant_msg') {
+    $id = intval($_POST['id'] ?? 0);
+    $pdo->prepare("DELETE FROM assistant_messages WHERE id = ?")->execute([$id]);
+    echo json_encode(['success' => true]);
 } else if ($action === 'security_stats') {
     // Monitor de Segurança e Acessos
     
