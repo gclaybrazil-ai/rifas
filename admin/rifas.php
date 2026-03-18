@@ -26,8 +26,9 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <p class="text-sm text-gray-500">Controle completo sobre seus Sorteios</p>
         </div>
         <div class="mt-4 md:mt-0 flex gap-2">
+            <span id="session-timer" class="hidden text-[10px] font-black text-gray-400 bg-white px-3 py-2 rounded-xl border border-gray-200 shadow-sm">EXPIRA EM: 20:00</span>
             <a href="index.php"
-                class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full px-4 py-2 transition-colors flex items-center gap-1">
+                class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl px-4 py-2 transition-colors flex items-center gap-1 shadow-sm">
                 Voltar
             </a>
         </div>
@@ -243,6 +244,8 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         const API = '../backend/api/admin.php';
         let allRifas = [];
         let currentPage = 1;
+        let sessionTimerInterval = null;
+        let secondsLeft = 0;
 
         async function fetchRifas(page = 1) {
             currentPage = page;
@@ -250,6 +253,21 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             try {
                 const res = await fetch(`${API}?action=get_rifas_list&page=${page}&status=${status}`);
                 const data = await res.json();
+
+                if (data.error && data.expired) {
+                    alert('Sua sessão expirou por segurança. Por favor, entre novamente.');
+                    window.location.href = 'login.php';
+                    return;
+                }
+                if (data.error) {
+                    window.location.href = 'login.php';
+                    return;
+                }
+
+                if (data.expires_in) {
+                    secondsLeft = parseInt(data.expires_in);
+                    startTimer();
+                }
 
                 const tbody = document.getElementById('table-rifas');
                 tbody.innerHTML = '';
@@ -438,6 +456,28 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         };
 
         fetchRifas();
+
+        function startTimer() {
+            if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+            const display = document.getElementById('session-timer');
+            if(!display) return;
+            display.classList.remove('hidden');
+
+            sessionTimerInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    clearInterval(sessionTimerInterval);
+                    display.textContent = "EXPIRADO!";
+                    alert('Sua sessão expirou por segurança. Fazendo logout...');
+                    window.location.href = 'login.php';
+                    return;
+                }
+
+                const mins = Math.floor(secondsLeft / 60);
+                const secs = secondsLeft % 60;
+                display.textContent = `EXPIRA EM: ${mins}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
 
         // Close functions
         document.getElementById('btn-close-draw').addEventListener('click', () => {

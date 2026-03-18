@@ -30,7 +30,7 @@ if ($action === 'login_register') {
             }
 
             $_SESSION['afiliado_id'] = $afiliado['id'];
-            $_SESSION['last_activity'] = time();
+            $_SESSION['afiliado_login_time'] = time();
             registrarLog('acao_afiliado', "Afiliado logado com sucesso", $afiliado['id'], null, $lat, $lng);
             echo json_encode(['success' => true, 'message' => 'Login realizado!']);
         } else {
@@ -53,7 +53,7 @@ if ($action === 'login_register') {
             $stmt->execute([$nome, $whatsapp, $email, $hash, $pix_key]);
             $new_id = $pdo->lastInsertId();
             $_SESSION['afiliado_id'] = $new_id;
-            $_SESSION['last_activity'] = time();
+            $_SESSION['afiliado_login_time'] = time();
             registrarLog('acao_afiliado', "Novo afiliado cadastrado", $new_id, null, $lat, $lng);
             echo json_encode(['success' => true, 'message' => 'Cadastro realizado!']);
         } catch (PDOException $e) {
@@ -141,12 +141,25 @@ if ($action === 'login_register') {
     $stmtConf = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_share_template'");
     $shareTemplate = $stmtConf->fetchColumn() ?: "🎉 Participe da Rifa: {rifa_nome}\n\nConcorra agora: {link}";
 
+    if (!isset($_SESSION['afiliado_login_time'])) {
+        $_SESSION['afiliado_login_time'] = time();
+    }
+    $loginTime = $_SESSION['afiliado_login_time'];
+    $elapsed = time() - $loginTime;
+    $expiresIn = 300 - $elapsed;
+
+    if ($expiresIn <= 0) {
+        unset($_SESSION['afiliado_id']);
+        unset($_SESSION['afiliado_login_time']);
+        die(json_encode(['error' => 'Sessão expirada', 'expired' => true]));
+    }
+
     echo json_encode([
         'afiliado' => $af,
         'rifas' => $rifas,
         'whatsapp_share_template' => $shareTemplate,
         'site_url' => (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . str_replace('/backend/api/afiliado.php', '', $_SERVER['PHP_SELF']),
-        'expires_in' => 1200 - (time() - ($_SESSION['last_activity'] ?? time()))
+        'expires_in' => $expiresIn
     ]);
 
 } else if ($action === 'request_update') {

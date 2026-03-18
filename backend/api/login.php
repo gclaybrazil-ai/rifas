@@ -21,6 +21,7 @@ if ($action === 'check_auth') {
     $auth = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($auth) {
         $_SESSION['admin_logged'] = true;
+        $_SESSION['admin_login_time'] = time();
         registrarLog('acao_admin', "Acesso via novo local autorizado e logado automaticamente", null, $auth['id']);
         echo json_encode(['authorized' => true]);
     } else {
@@ -53,6 +54,7 @@ try {
         }
 
         $_SESSION['admin_logged'] = true;
+        $_SESSION['admin_login_time'] = time();
         registrarLog('acao_admin', "Login administrativo realizado", null, $usuario['id'], $lat, $lng);
         echo json_encode(['success' => true]);
     } else {

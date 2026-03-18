@@ -23,9 +23,10 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <h1 class="text-2xl font-black text-[#8e44ad]">Ganhadores</h1>
             <p class="text-sm text-gray-500">Publicações da Galeria de Ganhadores</p>
         </div>
-        <a href="index.php" class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full px-4 py-2 transition-colors flex items-center gap-1">
-            Voltar
-        </a>
+            <span id="session-timer" class="hidden text-[10px] font-black text-gray-400 bg-white px-3 py-2 rounded-xl border border-gray-200 shadow-sm">EXPIRA EM: 20:00</span>
+            <a href="index.php" class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl px-4 py-2 transition-colors flex items-center gap-1 shadow-sm">
+                Voltar
+            </a>
     </div>
 
     <!-- Container actions -->
@@ -91,6 +92,8 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
     <script>
         const API = '../backend/api/admin.php';
+        let sessionTimerInterval = null;
+        let secondsLeft = 0;
 
         document.getElementById('form-pub').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -115,6 +118,13 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             try {
                 const res = await fetch(API, { method: 'POST', body: fd });
                 const json = await res.json();
+
+                if (json.error && json.expired) {
+                    alert('Sua sessão expirou por segurança. Por favor, entre novamente.');
+                    window.location.href = 'login.php';
+                    return;
+                }
+
                 if(json.success) {
                     closeModal();
                     fetchList();
@@ -139,7 +149,20 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     if(match) json = JSON.parse(match[0]);
                 }
 
-                if(!json || !json.data) return;
+                if(!json) return;
+
+                if (json.error && json.expired) {
+                    alert('Sua sessão expirou por segurança. Por favor, entre novamente.');
+                    window.location.href = 'login.php';
+                    return;
+                }
+
+                if (json.expires_in) {
+                    secondsLeft = parseInt(json.expires_in);
+                    startTimer();
+                }
+
+                if(!json.data) return;
 
                 const tbody = document.getElementById('table-body');
                 tbody.innerHTML = '';
@@ -224,6 +247,28 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
         // Init
         document.addEventListener('DOMContentLoaded', fetchList);
+
+        function startTimer() {
+            if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+            const display = document.getElementById('session-timer');
+            if(!display) return;
+            display.classList.remove('hidden');
+
+            sessionTimerInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    clearInterval(sessionTimerInterval);
+                    display.textContent = "EXPIRADO!";
+                    alert('Sua sessão expirou por segurança. Fazendo logout...');
+                    window.location.href = 'login.php';
+                    return;
+                }
+
+                const mins = Math.floor(secondsLeft / 60);
+                const secs = secondsLeft % 60;
+                display.textContent = `EXPIRA EM: ${mins}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
     </script>
     <style>
         .modal-box {

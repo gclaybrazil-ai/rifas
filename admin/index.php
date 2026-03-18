@@ -46,53 +46,63 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         <div>
             <h1 class="text-2xl font-black text-[#8e44ad]">Painel Administrativo</h1>
             <p class="text-sm text-gray-500">Gestão de Rifas</p>
-        </div>
-        <div class="w-full md:w-auto grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 justify-center md:justify-end">
-            <button id="btn-new-rifa"
-                class="bg-[#00a650] text-white font-bold px-2 py-1.5 rounded shadow hover:bg-[#009647] text-[11px] md:text-xs text-center">Criar
-                Rifa</button>
-            <a href="rifas.php"
-                class="bg-blue-500 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-blue-600 text-[11px] md:text-xs text-center flex justify-center items-center">Gerenciar
-                Rifas</a>
-            <button id="btn-billing"
-                class="bg-purple-600 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-purple-700 text-[11px] md:text-xs text-center">FIN</button>
-            <a href="ganhadores.php"
-                class="bg-yellow-500 text-white font-bold px-2 py-1.5 rounded shadow hover:bg-yellow-600 text-[11px] md:text-xs text-center flex justify-center items-center text-[#2c3e50]">Ganhadores</a>
-            <div class="relative group">
-                <button type="button" id="btn-config-main" class="w-full bg-indigo-600 text-white font-bold px-3 py-1.5 rounded shadow hover:bg-indigo-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-1 h-full min-h-[32px]">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    Configurações
+        </div>        <div class="w-full md:w-auto flex flex-wrap gap-2 justify-center md:justify-end items-center">
+            <!-- Menu Dropdown -->
+            <div class="relative">
+                <button id="btn-menu" class="bg-[#8e44ad] text-white font-black px-4 py-2 rounded-xl shadow-lg hover:bg-[#7d3c98] text-xs flex items-center gap-2 uppercase tracking-widest transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    Menu de Gestão
                 </button>
-                <div id="dropdown-config" class="hidden group-hover:block absolute right-0 md:mt-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-2xl z-[60] p-3 space-y-2">
-                    <button id="btn-integrations" type="button" class="w-full bg-indigo-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-indigo-600 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        Integrações
+                <div id="dropdown-menu" class="hidden absolute left-0 md:right-0 md:left-auto mt-2 w-64 bg-white border border-gray-100 rounded-[1.5rem] shadow-2xl z-[100] p-4 flex-col gap-4">
+                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 px-1">Atalhos Rápidos</div>
+                    <button id="btn-new-rifa" class="w-full bg-[#00a650] text-white font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-[#009647] text-xs text-left flex items-center gap-2">
+                        <span class="w-6 h-6 bg-white/20 rounded flex items-center justify-center text-lg">+</span> Criar Nova Rifa
                     </button>
-                    <button id="btn-security" type="button" class="w-full bg-red-500 text-white font-bold px-3 py-2 rounded shadow hover:bg-red-600 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        Acesso Admin
+                    <a href="rifas.php" class="w-full bg-blue-500 text-white font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-blue-600 text-xs flex items-center gap-2">
+                        <span class="w-6 h-6 bg-white/20 rounded flex items-center justify-center text-sm">🎫</span> Gerenciar Rifas
+                    </a>
+                    <button id="btn-billing" class="w-full bg-purple-600 text-white font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-purple-700 text-xs text-left flex items-center gap-2">
+                        <span class="w-6 h-6 bg-white/20 rounded flex items-center justify-center text-sm">💰</span> Financeiro
                     </button>
-                    <button id="btn-open-security-monitor" type="button" class="w-full bg-red-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-red-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                        Segurança & Logs
+                    <a href="ganhadores.php" class="w-full bg-yellow-400 text-[#2c3e50] font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-yellow-500 text-xs flex items-center gap-2">
+                        <span class="w-6 h-6 bg-black/5 rounded flex items-center justify-center text-sm">🏆</span> Ganhadores
+                    </a>
+                    <a href="../index.html" class="w-full bg-gray-100 text-gray-700 font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-gray-200 text-xs flex items-center gap-2">
+                        <span class="w-6 h-6 bg-white rounded flex items-center justify-center text-sm">🏠</span> Voltar para a Loja
+                    </a>
+
+                    <div class="h-px bg-gray-100 my-2"></div>
+                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 px-1">Configurações Avançadas</div>
+                    
+                    <button id="btn-integrations" type="button" class="w-full bg-indigo-50 text-indigo-700 font-bold px-3 py-2.5 rounded-xl hover:bg-indigo-100 text-xs text-left flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Integrações e Gateways
                     </button>
-                    <button id="btn-open-smtp" type="button" class="w-full bg-blue-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-blue-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        Acesso SMTP
+                    <button id="btn-security" type="button" class="w-full bg-red-50 text-red-600 font-bold px-3 py-2.5 rounded-xl hover:bg-red-100 text-xs text-left flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        Acesso do Administrador
                     </button>
-                    <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase">Assistente</span>
+                    <button id="btn-open-security-monitor" type="button" class="w-full bg-gray-800 text-white font-bold px-3 py-2.5 rounded-xl hover:bg-black text-xs text-left flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        Segurança e Logs de Ações
+                    </button>
+                    <button id="btn-open-smtp" type="button" class="w-full bg-blue-50 text-blue-600 font-bold px-3 py-2.5 rounded-xl hover:bg-blue-100 text-xs text-left flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Servidor de E-mail (SMTP)
+                    </button>
+                    <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
+                        <span class="text-[10px] font-black text-gray-500 uppercase">Assistente IA</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="assistant-toggle" class="sr-only peer">
                             <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
                         </label>
                     </div>
-                    <button id="btn-open-assistant" type="button" class="w-full bg-purple-600 text-white font-bold px-3 py-2 rounded shadow hover:bg-purple-700 text-[11px] md:text-xs text-center flex items-center justify-center gap-2">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                        Config. Assistente
+                    <button id="btn-open-assistant" type="button" class="w-full bg-purple-50 text-purple-600 font-bold px-3 py-2.5 rounded-xl hover:bg-purple-100 text-xs text-left flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                        Mensagem e Config. IA
                     </button>
-                    <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase">Manutenção</span>
+                    <div class="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
+                        <span class="text-[10px] font-black text-gray-500 uppercase">Modo de Manutenção</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="maintenance-toggle" class="sr-only peer">
                             <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500"></div>
@@ -100,10 +110,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </div>
                 </div>
             </div>
-            <a href="../index.html"
-                class="bg-gray-200 text-gray-700 font-bold px-2 py-1.5 rounded hover:bg-gray-300 text-[11px] md:text-xs text-center flex justify-center items-center">Site</a>
-            <a href="../backend/api/logout.php"
-                class="bg-gray-800 text-white font-bold px-2 py-1.5 rounded hover:bg-black text-[11px] md:text-xs text-center flex justify-center items-center">Sair</a>
+
+            <!-- Cronômetro e Sair (Lado de Fora) -->
+            <span id="session-timer" class="hidden text-[11px] font-black text-[#2c3e50] bg-gray-100 px-3 py-2 rounded-lg border border-gray-200 min-w-[120px] text-center">EXPIRA EM: 20:00</span>
+            <a href="../backend/api/logout.php" class="bg-[#2c3e50] text-white font-black px-4 py-2 rounded-lg shadow hover:bg-black text-[11px] uppercase tracking-widest transition-all">Sair</a>
         </div>
     </div>
 
@@ -902,7 +912,9 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         let serverTimeOffset = 0;
         let tempoPagamento = 3;
         let countdowns = [];
-        let timerInterval = null;
+        let reservationTimerInterval = null;
+        let secondsLeft = 0;
+        let sessionTimerInterval = null;
 
         async function fetchStats(page = 1) {
             currentPage = page;
@@ -910,6 +922,17 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 const ts = new Date().getTime();
                 const res = await fetch(`${API}?action=stats&page=${page}&status=${currentStatus}&_=${ts}`);
                 const data = await res.json();
+
+                if (data.error && data.expired) {
+                    showNotification('Sessão expirada', 'Sua sessão administrativa expirou por segurança. Por favor, entre novamente.', 'error', () => {
+                        window.location.href = 'login.php';
+                    });
+                    return;
+                }
+                if (data.error) {
+                    window.location.href = 'login.php';
+                    return;
+                }
 
                 // Server Time Sync
                 const sTime = new Date(data.server_time).getTime();
@@ -923,7 +946,12 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 document.getElementById('stat-reservado').textContent = data.stats['reservado'] || 0;
                 document.getElementById('stat-pago').textContent = data.stats['pago'] || 0;
                 document.getElementById('stat-faturamento').textContent = parseFloat(data.faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            document.getElementById('stat-taxas').textContent = parseFloat(data.total_repassado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                document.getElementById('stat-taxas').textContent = parseFloat(data.total_repassado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                if(data.expires_in) {
+                    secondsLeft = parseInt(data.expires_in);
+                    startTimer();
+                }
 
                 if (document.getElementById('maintenance-toggle')) {
                     document.getElementById('maintenance-toggle').checked = (data.maintenance === '1');
@@ -1042,9 +1070,32 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         }
 
         function startGlobalTimer() {
-            if (timerInterval) clearInterval(timerInterval);
+            if (reservationTimerInterval) clearInterval(reservationTimerInterval);
             updateCountdowns();
-            timerInterval = setInterval(updateCountdowns, 1000);
+            reservationTimerInterval = setInterval(updateCountdowns, 1000);
+        }
+
+        function startTimer() {
+            if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+            const display = document.getElementById('session-timer');
+            if(!display) return;
+            display.classList.remove('hidden');
+
+            sessionTimerInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    clearInterval(sessionTimerInterval);
+                    display.textContent = "EXPIRADO!";
+                    showNotification('Sessão expirada', 'Sua sessão administrativa expirou por segurança. Fazendo logout...', 'error', () => {
+                        window.location.href = 'login.php';
+                    });
+                    return;
+                }
+
+                const mins = Math.floor(secondsLeft / 60);
+                const secs = secondsLeft % 60;
+                display.textContent = `EXPIRA EM: ${mins}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
         }
 
         function updateCountdowns() {
@@ -1752,25 +1803,31 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if(mon && !mon.classList.contains('hidden')) fetchSecurityStats();
         }, 10000);
 
-        // Toggle Config Dropdown on Mobile click
-        document.getElementById('btn-config-main').addEventListener('click', (e) => {
-            if (window.innerWidth < 768) {
-                e.preventDefault();
-                const drop = document.getElementById('dropdown-config');
-                drop.classList.toggle('hidden');
-                drop.classList.toggle('block');
+        // Toggle Menu on Click (Universal)
+        document.getElementById('btn-menu').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const drop = document.getElementById('dropdown-menu');
+            drop.classList.toggle('hidden');
+            drop.classList.toggle('flex');
+        });
+
+        // Close menu when an item inside is clicked (unless it's a toggle)
+        document.getElementById('dropdown-menu').addEventListener('click', (e) => {
+            const isToggle = e.target.closest('label') || e.target.closest('input');
+            if (!isToggle) {
+                const drop = document.getElementById('dropdown-menu');
+                drop.classList.add('hidden');
+                drop.classList.remove('flex');
             }
         });
 
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
-            const btn = document.getElementById('btn-config-main');
-            const drop = document.getElementById('dropdown-config');
-            if (!btn.contains(e.target) && !drop.contains(e.target)) {
-                if (window.innerWidth < 768) {
-                    drop.classList.add('hidden');
-                    drop.classList.remove('block');
-                }
+            const btn = document.getElementById('btn-menu');
+            const drop = document.getElementById('dropdown-menu');
+            if (btn && drop && !btn.contains(e.target) && !drop.contains(e.target)) {
+                drop.classList.add('hidden');
+                drop.classList.remove('flex');
             }
         });
     </script>

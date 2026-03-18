@@ -7,6 +7,19 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     die(json_encode(['error' => 'Não autorizado']));
 }
 
+if (!isset($_SESSION['admin_login_time'])) {
+    $_SESSION['admin_login_time'] = time();
+}
+$loginTime = $_SESSION['admin_login_time'];
+$elapsed = time() - $loginTime;
+$expiresIn = 1200 - $elapsed;
+
+if ($expiresIn <= 0) {
+    unset($_SESSION['admin_logged']);
+    unset($_SESSION['admin_login_time']);
+    die(json_encode(['error' => 'Sessão expirada', 'expired' => true]));
+}
+
 $action = $_GET['action'] ?? $_POST['action'] ?? 'stats';
 
 if ($action === 'stats') {
@@ -100,7 +113,8 @@ if ($action === 'stats') {
             'welcome_message' => $configs['assistant_welcome_message'] ?? '',
             'messages' => $pdo->query("SELECT * FROM assistant_messages ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC)
         ],
-        'server_time' => date('c')
+        'server_time' => date('c'),
+        'expires_in' => $expiresIn
     ]);
 } else if ($action === 'toggle_assistant') {
     $enabled = $_POST['enabled'] == '1' ? '1' : '0';
@@ -619,7 +633,8 @@ if ($action === 'stats') {
     echo json_encode([
         'rifas' => $stmt->fetchAll(PDO::FETCH_ASSOC),
         'total_pages' => (int)$totalPages,
-        'current_page' => (int)$page
+        'current_page' => (int)$page,
+        'expires_in' => $expiresIn
     ]);
 } else if ($action === 'get_winners') {
     $rifa_id = intval($_GET['rifa_id'] ?? $_POST['rifa_id'] ?? 0);
@@ -684,7 +699,10 @@ if ($action === 'stats') {
     echo json_encode(['success' => true]);
 } else if ($action === 'get_publicacoes_admin') {
     $stmt = $pdo->query("SELECT * FROM publicacoes_ganhadores ORDER BY data_publicacao DESC");
-    echo json_encode(['data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    echo json_encode([
+        'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+        'expires_in' => $expiresIn
+    ]);
 } else if ($action === 'delete_publicacao') {
     $id = intval($_POST['id'] ?? 0);
     $pdo->prepare("DELETE FROM publicacoes_ganhadores WHERE id = ?")->execute([$id]);
