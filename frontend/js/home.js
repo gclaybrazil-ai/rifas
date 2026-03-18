@@ -86,10 +86,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const link = data.popup.link;
                     modal.classList.remove('opacity-100');
                     modal.querySelector('div').classList.add('scale-95');
-                    
+
                     // STOP VIDEO
                     pIframe.src = '';
-                    
+
                     setTimeout(() => {
                         modal.classList.add('hidden');
                         if (link) window.location.href = link;
@@ -133,13 +133,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let cardLink = isFinalized ? '#' : `rifa.php?id=${rifa.id}`;
         let pointerClass = isFinalized ? 'cursor-default opacity-80' : 'cursor-pointer active:scale-95 hover:shadow-xl';
-        
+
         // Badge Logic Simple for Active, Gray for Finalized
         let cleanTag = rifa.tag ? rifa.tag.replace(/[^\w\s]/gi, '').trim() : '';
         let isLive = !isFinalized && cleanTag.toLowerCase().includes('ao vivo');
         let badgeClass = isFinalized ? 'bg-gray-600' : (isLive ? 'bg-blue-600 animate-pulse' : 'bg-blue-600');
         let badgeIcon = isLive ? '🔥 ' : '';
-        
+
         let statusBadge = rifa.tag ? `
             <div class="absolute top-3 left-3 z-10">
                 <span class="${badgeClass} text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-full shadow tracking-wider flex items-center gap-1">
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${isFinalized ? '<div class="absolute inset-0 card-image-gradient"></div>' : ''}
                 ${statusBadge}
                 
-                <div class="absolute bottom-3 right-3 bg-[#00a650] text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-md z-10">
+                <div class="absolute bottom-3 right-3 bg-[#00a650] text-white text-[15px] font-black px-3 py-1.5 rounded-lg shadow-md z-10">
                     #${rifa.id}
                 </div>
             </div>
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         </div>
         `;
-        
+
         container.insertAdjacentHTML('beforeend', cardHTML);
     }
 });
