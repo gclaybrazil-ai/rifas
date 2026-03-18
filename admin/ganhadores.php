@@ -23,9 +23,8 @@ if(!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <h1 class="text-2xl font-black text-[#8e44ad]">Ganhadores</h1>
             <p class="text-sm text-gray-500">Publicações da Galeria de Ganhadores</p>
         </div>
-        <a href="index.php" class="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded hover:bg-gray-300 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Voltar ao Painel
+        <a href="index.php" class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full px-4 py-2 transition-colors flex items-center gap-1">
+            Voltar
         </a>
     </div>
 

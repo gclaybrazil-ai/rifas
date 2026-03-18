@@ -39,12 +39,13 @@ if ($action === 'login_register') {
         }
     } else {
         // Register flow
-        if (empty($nome) || empty($pix_key) || empty($email) || empty($senha)) {
-            die(json_encode(['error' => 'Para novo cadastro, preencha todos os campos.']));
-        }
         $valid = validatePasswordComplexity($senha);
         if ($valid !== true) {
             die(json_encode(['error' => $valid]));
+        }
+
+        if (empty($nome) || empty($pix_key) || empty($email) || empty($senha)) {
+            die(json_encode(['error' => 'Para novo cadastro, preencha todos os campos.']));
         }
         $hash = password_hash($senha, PASSWORD_DEFAULT);
         try {

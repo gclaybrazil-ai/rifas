@@ -71,7 +71,23 @@ if ($token) {
         <?php endif; ?>
     </div>
 
+    <!-- Modal Notificação -->
+    <div id="modal-notif" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative border border-gray-100">
+            <h2 id="notif-title" class="text-2xl font-black text-[#2c3e50] mb-4 uppercase tracking-tight italic">$UPER$ORTE</h2>
+            <p id="notif-message" class="text-sm text-gray-500 mb-8 font-medium leading-relaxed">Informação aqui.</p>
+            <button onclick="document.getElementById('modal-notif').classList.add('hidden')" class="w-full bg-[#8e44ad] text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs tracking-widest hover:bg-[#7d3c98] transition-all">Entendido</button>
+        </div>
+    </div>
+
+
     <script>
+    function showAlert(msg, title='$UPER$ORTE') {
+        document.getElementById('notif-title').textContent = title === 'Atenção' ? 'ATENÇÃO' : title;
+        document.getElementById('notif-message').textContent = msg;
+        document.getElementById('modal-notif').classList.remove('hidden');
+    }
+
     if (document.getElementById('reset-form')) {
         document.getElementById('reset-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -112,9 +128,7 @@ if ($token) {
                     msg.classList.remove('hidden');
                     setTimeout(() => window.location.href = 'login.php', 2000);
                 } else {
-                    msg.textContent = data.error;
-                    msg.className = 'p-3 rounded-xl text-[11px] font-bold text-center bg-red-50 text-red-600 border border-red-100';
-                    msg.classList.remove('hidden');
+                    showAlert(data.error);
                     btn.disabled = false;
                     btn.innerHTML = 'Alterar Senha';
                 }

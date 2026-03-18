@@ -19,6 +19,11 @@ try {
         die(json_encode(['error' => 'Token inválido ou expirado.']));
     }
 
+    $valid = validatePasswordComplexity($password);
+    if ($valid !== true) {
+        die(json_encode(['error' => $valid]));
+    }
+
     $hash = password_hash($password, PASSWORD_DEFAULT);
     
     // Update password and clear token

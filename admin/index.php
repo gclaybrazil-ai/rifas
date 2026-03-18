@@ -761,16 +761,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
     <!-- Modal Notificação -->
     <div id="modal-notif" class="fixed inset-0 bg-black bg-opacity-80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative">
-            <div id="notif-icon-success" class="hidden mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-            </div>
-            <div id="notif-icon-error" class="hidden mx-auto w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
-            </div>
-            <h2 id="notif-title" class="text-xl font-black text-gray-800 mb-2">Sucesso!</h2>
-            <p id="notif-message" class="text-sm text-gray-500 mb-6 font-medium">Informação atualizada com sucesso.</p>
-            <button id="btn-close-notif" class="w-full bg-[#2c3e50] text-white font-black py-4 rounded-xl shadow uppercase text-sm hover:bg-gray-800 transition-colors">Entendido</button>
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative border border-gray-100">
+            <h2 id="notif-title" class="text-2xl font-black text-[#2c3e50] mb-4 uppercase tracking-tight italic">$UPER$ORTE</h2>
+            <p id="notif-message" class="text-sm text-gray-500 mb-8 font-medium leading-relaxed">Informação aqui.</p>
+            <button id="btn-close-notif" class="w-full bg-[#8e44ad] text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs tracking-widest hover:bg-[#7d3c98] transition-all">Entendido</button>
         </div>
     </div>
 
@@ -794,20 +788,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
         function showNotification(title, message, type = 'success', callback = null) {
             const modal = document.getElementById('modal-notif');
-            document.getElementById('notif-title').textContent = title;
+            document.getElementById('notif-title').textContent = title === 'Erro' || title === 'Atenção' ? 'ATENÇÃO' : title;
             document.getElementById('notif-message').textContent = message;
             
-            const iconSuccess = document.getElementById('notif-icon-success');
-            const iconError = document.getElementById('notif-icon-error');
             const btnClose = document.getElementById('btn-close-notif');
-
-            if(type === 'success') {
-                iconSuccess.classList.remove('hidden');
-                iconError.classList.add('hidden');
-            } else {
-                iconSuccess.classList.add('hidden');
-                iconError.classList.remove('hidden');
-            }
 
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('opacity-100'), 10);
