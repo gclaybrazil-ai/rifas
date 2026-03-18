@@ -52,8 +52,8 @@
         </div>
 
         <!-- Illustration Holder -->
-        <div class="relative mb-10 floating">
-            <img src="frontend/png/maintenance_illustration_1773625003308.png" alt="Manutenção" class="mx-auto w-64 h-64 object-contain drop-shadow-[0_0_30px_rgba(99,102,241,0.4)] rounded-3xl">
+        <div class="relative mb-6 floating">
+            <img src="frontend/gif/em-manutencao.gif" alt="Manutenção" class="mx-auto w-48 object-contain drop-shadow-[0_0_30px_rgba(99,102,241,0.4)] rounded-3xl">
         </div>
 
         <!-- content -->
