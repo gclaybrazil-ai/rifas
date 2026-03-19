@@ -267,4 +267,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             navigator.serviceWorker.register('sw.js').catch(err => console.log("SW error", err));
         });
     }
+
+    // --- Cookie Consent Logic ---
+    const cookieBanner = document.getElementById('cookie-banner');
+    const btnAccept = document.getElementById('btn-accept-cookies');
+
+    if (cookieBanner && !localStorage.getItem('cookies_accepted')) {
+        setTimeout(() => {
+            cookieBanner.classList.remove('hidden');
+            setTimeout(() => {
+                cookieBanner.classList.remove('translate-y-20');
+            }, 100);
+        }, 2000);
+    }
+
+    if (btnAccept) {
+        btnAccept.onclick = () => {
+            cookieBanner.classList.add('translate-y-20');
+            localStorage.setItem('cookies_accepted', 'true');
+            setTimeout(() => {
+                cookieBanner.classList.add('hidden');
+            }, 700);
+        };
+    }
 });

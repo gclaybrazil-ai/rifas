@@ -465,3 +465,28 @@ els.btnCloseSuccess.addEventListener('click', () => {
 fetchRifa();
 // Smart polling background: every 5 seconds check grid updates
 setInterval(fetchRifa, 5000);
+
+// --- Cookie Consent Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+    const cookieBanner = document.getElementById('cookie-banner');
+    const btnAccept = document.getElementById('btn-accept-cookies');
+
+    if (cookieBanner && !localStorage.getItem('cookies_accepted')) {
+        setTimeout(() => {
+            cookieBanner.classList.remove('hidden');
+            setTimeout(() => {
+                cookieBanner.classList.remove('translate-y-20');
+            }, 100);
+        }, 2000);
+    }
+
+    if (btnAccept) {
+        btnAccept.onclick = () => {
+            cookieBanner.classList.add('translate-y-20');
+            localStorage.setItem('cookies_accepted', 'true');
+            setTimeout(() => {
+                cookieBanner.classList.add('hidden');
+            }, 700);
+        };
+    }
+});
