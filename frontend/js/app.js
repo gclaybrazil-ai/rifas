@@ -62,9 +62,14 @@ async function fetchRifa() {
 
         if (data.error) throw new Error(data.error);
 
-        // Capturar referência de afiliado se houver
+        // Capturar ou Limpar referência de afiliado se houver
         const ref = urlParams.get('ref');
-        if (ref) localStorage.setItem('rifa_ref', ref);
+        if (ref) {
+            localStorage.setItem('rifa_ref', ref);
+        } else {
+            // Se entrou na rifa sem link direto de indicação, limpa o rastro anterior
+            localStorage.removeItem('rifa_ref');
+        }
 
         if (data.rifa.id) {
             if (els.editionBadge) els.editionBadge.classList.remove('hidden');

@@ -4,6 +4,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const finalizadasSection = document.getElementById('rifas-finalizadas');
 
     try {
+        const urlParams = new URLSearchParams(window.location.search);
+        // Capturar ou Limpar referência de afiliado
+        const ref = urlParams.get('ref');
+        if (ref) {
+            localStorage.setItem('rifa_ref', ref);
+        } else {
+            // Se entrou sem link de indicação, remove a memória do afiliado anterior para compras "limpas"
+            localStorage.removeItem('rifa_ref');
+        }
+
         const res = await fetch('backend/api/get_rifas.php');
         const data = await res.json();
 
