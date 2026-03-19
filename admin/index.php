@@ -47,11 +47,14 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             <h1 class="text-2xl font-black text-[#8e44ad]">Painel Administrativo</h1>
             <p class="text-sm text-gray-500">Gestão de Rifas</p>
         </div>        <div class="w-full md:w-auto flex flex-wrap gap-2 justify-center md:justify-end items-center">
+            <!-- Cronômetro e Sair (Lado de Fora) -->
+            <span id="session-timer" class="hidden text-[11px] font-black text-[#2c3e50] bg-gray-100 px-3 py-2 rounded-lg border border-gray-200 min-w-[120px] text-center">EXPIRA EM: 20:00</span>
+            
             <!-- Menu Dropdown -->
             <div class="relative">
                 <button id="btn-menu" class="bg-[#8e44ad] text-white font-black px-4 py-2 rounded-xl shadow-lg hover:bg-[#7d3c98] text-xs flex items-center gap-2 uppercase tracking-widest transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                    Menu de Gestão
+                    Menu
                 </button>
                 <div id="dropdown-menu" class="hidden absolute left-0 md:right-0 md:left-auto mt-2 w-64 bg-white border border-gray-100 rounded-[1.5rem] shadow-2xl z-[100] p-4 flex-col gap-4">
                     <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 px-1">Atalhos Rápidos</div>
@@ -115,8 +118,6 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </div>
             </div>
 
-            <!-- Cronômetro e Sair (Lado de Fora) -->
-            <span id="session-timer" class="hidden text-[11px] font-black text-[#2c3e50] bg-gray-100 px-3 py-2 rounded-lg border border-gray-200 min-w-[120px] text-center">EXPIRA EM: 20:00</span>
             <a href="../backend/api/logout.php" class="bg-[#2c3e50] text-white font-black px-4 py-2 rounded-lg shadow hover:bg-black text-[11px] uppercase tracking-widest transition-all">Sair</a>
         </div>
     </div>
