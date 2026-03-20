@@ -168,9 +168,17 @@
         #assistant-quick-replies {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            padding: 0 15px 15px;
+            gap: 6px;
+            padding: 8px 15px 15px;
             background: #f9f9ff;
+            max-height: 155px;
+            overflow-y: auto;
+            border-top: 1px solid #f0f0f0;
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        #assistant-quick-replies::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for clean look but still scrollable */
         }
 
         .quick-reply {
@@ -178,14 +186,15 @@
             border: 1.5px solid #e0cffc;
             color: #8e44ad;
             font-weight: bold;
-            font-size: 11px;
-            padding: 8px 15px;
-            border-radius: 20px;
+            font-size: 10px;
+            padding: 6px 12px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            white-space: nowrap;
         }
 
         .quick-reply:hover {
@@ -194,11 +203,11 @@
         }
 
         #assistant-footer {
-            padding: 15px;
+            padding: 12px 15px;
             background: white;
             border-top: 1px solid #eee;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
 
@@ -206,7 +215,7 @@
             flex: 1;
             border: 1.5px solid #e0cffc;
             border-radius: 25px;
-            padding: 10px 15px;
+            padding: 8px 15px;
             font-size: 13px;
             outline: none;
             transition: border-color 0.2s;
@@ -217,8 +226,8 @@
         }
 
         #assistant-send {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: linear-gradient(135deg, #8e44ad, #d32f2f);
             color: white;
@@ -238,14 +247,14 @@
             background: #25d366;
             color: white;
             text-decoration: none;
-            padding: 12px 20px;
+            padding: 10px 18px;
             border-radius: 25px;
             font-weight: 800;
-            font-size: 13px;
+            font-size: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 10px;
+            margin-top: 5px;
             box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
             text-transform: uppercase;
             align-self: center;
@@ -277,11 +286,15 @@
 
         @media (max-width: 480px) {
             #assistant-window {
-                width: calc(100vw - 40px);
-                height: 70vh;
-                max-height: 500px;
+                width: calc(100vw - 30px);
+                height: 480px;
+                max-height: calc(100vh - 120px);
                 bottom: 85px;
+                margin-bottom: 5px;
             }
+            .chat-msg { font-size: 12px; padding: 10px 14px; }
+            #assistant-header { padding: 15px; }
+            #assistant-quick-replies { max-height: 130px; }
         }
     `;
 
@@ -435,7 +448,10 @@
                 typing.innerHTML = '<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
                 body.appendChild(typing);
                 body.scrollTop = body.scrollHeight;
-                await new Promise(r => setTimeout(r, 800));
+                
+                // Realistic typing delay: 800ms to 2.5s base on text length
+                let delay = Math.min(2500, Math.max(800, text.length * 15));
+                await new Promise(r => setTimeout(r, delay));
                 typing.remove();
             }
 
@@ -446,19 +462,56 @@
             body.scrollTop = body.scrollHeight;
         }
 
-        handleSend() {
+        async handleSend() {
             const input = document.getElementById('assistant-input');
-            const text = input.value.trim();
-            if(!text) return;
+            const userText = input.value.trim();
+            if(!userText) return;
 
             input.value = '';
-            this.addMessage(text, 'user');
+            document.getElementById('assistant-quick-replies').style.display = 'none';
+            await this.addMessage(userText, 'user');
             
-            // Basic generic response
-            setTimeout(() => {
-                this.addMessage("Legal! Para um atendimento mais rápido, recomendo escolher uma das opções abaixo ou falar diretamente com nosso atendente. 😊", 'bot');
-                document.getElementById('assistant-quick-replies').style.display = 'flex';
-            }, 1000);
+            // INTENT MATCHING (Smart Match)
+            const lowerText = userText.toLowerCase();
+            let match = null;
+
+            // Search for keywords in our registered messages
+            for (const m of this.config.messages) {
+                // If the user's text contains parts of the question or the keyword
+                const questionWords = m.pergunta.toLowerCase().replace(/[?]/g, '').split(' ');
+                // Filter small words (is, the, etc but for PT-BR)
+                const keywords = questionWords.filter(w => w.length > 3);
+                
+                const isMatch = keywords.some(k => lowerText.includes(k));
+                if(isMatch) {
+                    match = m;
+                    break;
+                }
+            }
+
+            if(match) {
+                await this.addMessage(match.resposta, 'bot');
+                if(match.pergunta.toLowerCase().includes('atendente') || match.pergunta.toLowerCase().includes('falar')) {
+                    this.showWhatsAppButton();
+                }
+            } else {
+                // Generic AI-like response if no match
+                await this.addMessage("Entendi! Ainda estou aprendendo sobre esse assunto. 😅<br><br>Mas olhe o que eu já sei responder sobre o site:", 'bot');
+            }
+
+            document.getElementById('assistant-quick-replies').style.display = 'flex';
+        }
+
+        showWhatsAppButton() {
+            const body = document.getElementById('assistant-body');
+            const link = `https://wa.me/${this.config.whatsapp}?text=Olá,%20gostaria%20de%20ajuda!`;
+            const btn = document.createElement('a');
+            btn.href = link;
+            btn.target = "_blank";
+            btn.className = "whatsapp-btn";
+            btn.innerHTML = `📲 Falar com ${this.config.attendant}`;
+            body.appendChild(btn);
+            body.scrollTop = body.scrollHeight;
         }
 
         async handleQuickReply(label, id) {
@@ -469,20 +522,10 @@
             if(!msgData) return;
 
             let response = msgData.resposta;
-            let showAttendantBtn = label.toLowerCase().includes('atendente');
-
             await this.addMessage(response, 'bot');
             
-            if(showAttendantBtn) {
-                const body = document.getElementById('assistant-body');
-                const link = `https://wa.me/${this.config.whatsapp}?text=Olá,%20gostaria%20de%20ajuda%20sobre%20o%20sorteio!`;
-                const btn = document.createElement('a');
-                btn.href = link;
-                btn.target = "_blank";
-                btn.className = "whatsapp-btn";
-                btn.innerHTML = `📲 Falar com ${this.config.attendant}`;
-                body.appendChild(btn);
-                body.scrollTop = body.scrollHeight;
+            if(label.toLowerCase().includes('atendente') || label.toLowerCase().includes('atendimento')) {
+                this.showWhatsAppButton();
             }
 
             document.getElementById('assistant-quick-replies').style.display = 'flex';

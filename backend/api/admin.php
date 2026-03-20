@@ -928,5 +928,103 @@ if ($action === 'stats') {
     } catch (Exception $e) {
         echo json_encode(['error' => 'Falha no PHPMailer: ' . $mail->ErrorInfo]);
     }
+} else if ($action === 'get_affiliates') {
+    $stmt = $pdo->query("SELECT id, nome, whatsapp, email, saldo, total_ganho, vendas_pagas, data_ultimo_saque, data_cadastro FROM afiliados ORDER BY nome ASC");
+    $affiliates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get Payout Configs
+    $stmtC = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('minimo_saque', 'ciclo_pagamento_dias')");
+    $conf = $stmtC->fetchAll(PDO::FETCH_KEY_PAIR);
+    $minSaque = (float)($conf['minimo_saque'] ?? 20.00);
+    $cicloDias = (int)($conf['ciclo_pagamento_dias'] ?? 15);
+
+    foreach ($affiliates as &$af) {
+        $lastPaid = $af['data_ultimo_saque'] ?: $af['data_cadastro'];
+        $daysSince = (int)$pdo->query("SELECT DATEDIFF(NOW(), '$lastPaid')")->fetchColumn();
+        
+        $af['can_payout'] = ($af['saldo'] >= $minSaque && $daysSince >= $cicloDias);
+        $af['days_remaining'] = max(0, $cicloDias - $daysSince);
+        $af['min_required'] = $minSaque;
+    }
+
+    echo json_encode(['success' => true, 'affiliates' => $affiliates]);
+
+} else if ($action === 'get_affiliate_sales') {
+    $afId = intval($_GET['id'] ?? 0);
+    if (!$afId) die(json_encode(['error' => 'ID inválido']));
+
+    $sql = "SELECT r.id, r.nome as comprador, r.valor_total, r.data_reserva, rf.nome as rifa_nome,
+                   (SELECT GROUP_CONCAT(numero SEPARATOR ', ') FROM numeros WHERE reserva_id = r.id) as numeros
+            FROM reservas r
+            JOIN rifas rf ON r.rifa_id = rf.id
+            WHERE r.afiliado_id = ? AND r.status = 'pago'
+            ORDER BY r.data_reserva DESC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$afId]);
+    echo json_encode(['success' => true, 'sales' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+
+} else if ($action === 'payout_affiliate') {
+    $afId = intval($_POST['id'] ?? 0);
+    if (!$afId) die(json_encode(['error' => 'ID inválido']));
+
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("SELECT id, saldo, pix_key, data_ultimo_saque, data_cadastro FROM afiliados WHERE id = ? FOR UPDATE");
+        $stmt->execute([$afId]);
+        $af = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$af) throw new Exception("Afiliado não encontrado");
+
+        // Validate again on server-side
+        $stmtC = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('minimo_saque', 'ciclo_pagamento_dias')");
+        $conf = $stmtC->fetchAll(PDO::FETCH_KEY_PAIR);
+        $minSaque = (float)($conf['minimo_saque'] ?? 20.00);
+        $cicloDias = (int)($conf['ciclo_pagamento_dias'] ?? 15);
+
+        $lastPaid = $af['data_ultimo_saque'] ?: $af['data_cadastro'];
+        $daysSince = (int)$pdo->query("SELECT DATEDIFF(NOW(), '$lastPaid')")->fetchColumn();
+
+        if ($af['saldo'] < $minSaque) throw new Exception("Saldo insuficiente (Mín R$ ".number_format($minSaque, 2,',','.').")");
+        if ($daysSince < $cicloDias) throw new Exception("Aguarde o ciclo de $cicloDias dias");
+
+        $valor = $af['saldo'];
+        
+        // Record payout request
+        $stmtInsert = $pdo->prepare("INSERT INTO saques (afiliado_id, valor, chave_pix, status, data_solicitacao) VALUES (?, ?, ?, 'pendente', NOW())");
+        $stmtInsert->execute([$afId, $valor, $af['pix_key']]);
+
+        // Clear balance
+        $stmtUpdate = $pdo->prepare("UPDATE afiliados SET saldo = 0, data_ultimo_saque = NOW() WHERE id = ?");
+        $stmtUpdate->execute([$afId]);
+
+        $pdo->commit();
+        registrarLog('acao_admin', "Processou pagamento para afiliado ID $afId: R$ " . number_format($valor, 2), null, 1);
+        echo json_encode(['success' => true, 'message' => 'Pagamento processado e registrado em saques pendentes!']);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+
+} else if ($action === 'get_pending_payouts') {
+    $sql = "SELECT s.*, a.nome as afiliado_nome 
+            FROM saques s 
+            JOIN afiliados a ON s.afiliado_id = a.id 
+            WHERE s.status = 'pendente' 
+            ORDER BY s.data_solicitacao DESC";
+    $stmt = $pdo->query($sql);
+    echo json_encode(['success' => true, 'payouts' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+
+} else if ($action === 'confirm_payout') {
+    $id = intval($_POST['id'] ?? 0);
+    if (!$id) die(json_encode(['error' => 'ID inválido']));
+
+    $stmt = $pdo->prepare("UPDATE saques SET status = 'pago' WHERE id = ?");
+    $stmt->execute([$id]);
+    
+    // Log the action
+    registrarLog('acao_admin', "Confirmou pagamento de saque ID $id");
+    
+    echo json_encode(['success' => true, 'message' => 'Saque marcado como PAGO!']);
+
 }
 ?>

@@ -58,6 +58,9 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </button>
                 <div id="dropdown-menu" class="hidden absolute left-0 md:right-0 md:left-auto mt-2 w-64 bg-white border border-gray-100 rounded-[1.5rem] shadow-2xl z-[100] p-4 flex-col gap-4">
                     <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 px-1">Atalhos Rápidos</div>
+                    <button id="btn-affiliates" class="w-full bg-orange-600 text-white font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-orange-700 text-xs text-left flex items-center gap-2">
+                        <span class="w-6 h-6 bg-white/20 rounded flex items-center justify-center text-sm">👥</span> COMISSÕES (AFILIADOS)
+                    </button>
                     <button id="btn-new-rifa" class="w-full bg-[#00a650] text-white font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-[#009647] text-xs text-left flex items-center gap-2">
                         <span class="w-6 h-6 bg-white/20 rounded flex items-center justify-center text-lg">+</span> Criar Nova Rifa
                     </button>
@@ -444,6 +447,163 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     class="w-full bg-[#00a650] text-white font-bold py-3 mt-3 rounded-xl hover:bg-[#009647] uppercase text-sm shadow">Criar
                     e Ativar Rifa</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Afiliados -->
+    <div id="modal-affiliates" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-4xl w-full shadow-2xl relative max-h-[90vh] flex flex-col">
+            <button onclick="closeModal('modal-affiliates')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 bg-pink-100 rounded-lg text-pink-600"><span class="text-2xl">👥</span></div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800">Gestão de Afiliados</h2>
+                    <p class="text-xs text-gray-500">Saldo e Comissões</p>
+                </div>
+            </div>
+
+            <div class="overflow-y-auto flex-1 scrollbar-thin">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-gray-50 text-gray-400 uppercase font-black tracking-widest sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 border-b">Afiliado</th>
+                            <th class="p-3 border-b">Vendas</th>
+                            <th class="p-3 border-b">Saldo Atual</th>
+                            <th class="p-3 border-b">Total Pago</th>
+                            <th class="p-3 border-b text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-affiliates" class="text-gray-700">
+                        <!-- Content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes de Vendas do Afiliado -->
+    <div id="modal-af-sales" class="fixed inset-0 bg-black bg-opacity-90 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-3xl w-full shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button onclick="closeModal('modal-af-sales')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="mb-4">
+                <h2 id="af-sales-title" class="text-xl font-black text-gray-800 uppercase">Vendas Detalhadas</h2>
+                <p class="text-xs text-gray-400">Somente vendas pagas atribuídas a este afiliado</p>
+            </div>
+            <div class="overflow-y-auto flex-1 scrollbar-thin rounded-xl border border-gray-100">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-gray-50 text-gray-400 font-bold uppercase sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 border-b">Data</th>
+                            <th class="p-3 border-b">Comprador</th>
+                            <th class="p-3 border-b">Rifa</th>
+                            <th class="p-3 border-b">Números</th>
+                            <th class="p-3 border-b text-right">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-af-sales-body">
+                        <!-- Content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Afiliados -->
+    <div id="modal-affiliates" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-4xl w-full shadow-2xl relative max-h-[90vh] flex flex-col">
+            <button onclick="closeModal('modal-affiliates')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 bg-pink-100 rounded-lg text-pink-600"><span class="text-2xl">👥</span></div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800">Gestão de Afiliados</h2>
+                    <p class="text-xs text-gray-500">Saldo e Comissões</p>
+                </div>
+                <button onclick="openPendingPayouts()" class="ml-auto bg-indigo-600 text-white font-black px-4 py-2 rounded-xl text-[10px] hover:bg-indigo-700 shadow-sm flex items-center gap-2">
+                    <span>📋</span> SAQUES PENDENTES
+                </button>
+            </div>
+
+            <div class="overflow-y-auto flex-1 scrollbar-thin">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-gray-50 text-gray-400 uppercase font-black tracking-widest sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 border-b">Afiliado</th>
+                            <th class="p-3 border-b">Vendas</th>
+                            <th class="p-3 border-b">Saldo Atual</th>
+                            <th class="p-3 border-b">Total Pago</th>
+                            <th class="p-3 border-b text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-affiliates" class="text-gray-700">
+                        <!-- Content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes de Vendas do Afiliado -->
+    <div id="modal-af-sales" class="fixed inset-0 bg-black bg-opacity-90 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-3xl w-full shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button onclick="closeModal('modal-af-sales')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="mb-4">
+                <h2 id="af-sales-title" class="text-xl font-black text-gray-800 uppercase">Vendas Detalhadas</h2>
+                <p class="text-xs text-gray-400">Somente vendas pagas atribuídas a este afiliado</p>
+            </div>
+            <div class="overflow-y-auto flex-1 scrollbar-thin rounded-xl border border-gray-100">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-gray-50 text-gray-400 font-bold uppercase sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 border-b">Data</th>
+                            <th class="p-3 border-b">Comprador</th>
+                            <th class="p-3 border-b">Rifa</th>
+                            <th class="p-3 border-b">Números</th>
+                            <th class="p-3 border-b text-right">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-af-sales-body">
+                        <!-- Content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Saques Pendentes -->
+    <div id="modal-pending-payouts" class="fixed inset-0 bg-black bg-opacity-90 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative max-h-[85vh] flex flex-col border-4 border-indigo-100">
+            <button onclick="closeModal('modal-pending-payouts')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="mb-6">
+                <h2 class="text-xl font-black text-gray-800 uppercase flex items-center gap-2">
+                    <span class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">📋</span>
+                    Pagamentos a Realizar
+                </h2>
+                <p class="text-xs text-gray-400">Pegue a chave Pix e após pagar, confirme no botão verde para atualizar o sistema.</p>
+            </div>
+            <div class="overflow-y-auto flex-1 scrollbar-thin">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-gray-50 text-gray-400 font-bold uppercase sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 border-b">Afiliado / Chave Pix</th>
+                            <th class="p-3 border-b">Valor</th>
+                            <th class="p-3 border-b text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-pending-payouts" class="text-gray-700">
+                        <!-- Content -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -1284,6 +1444,166 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             fetchStats();
         }
 
+
+        // Affiliates Logic
+        document.getElementById('btn-affiliates').addEventListener('click', () => {
+            const m = document.getElementById('modal-affiliates');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+            fetchAffiliates();
+        });
+
+        async function fetchAffiliates() {
+            const res = await fetch(`${API}?action=get_affiliates`);
+            const data = await res.json();
+            const tbody = document.getElementById('table-affiliates');
+            tbody.innerHTML = '';
+
+            data.affiliates.forEach(af => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                
+                let btnAttr = af.can_payout ? '' : 'disabled';
+                let btnClass = af.can_payout 
+                    ? 'bg-green-500 text-white hover:bg-green-600' 
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed';
+                
+                let cycleMsg = af.can_payout 
+                    ? '<span class="text-[10px] text-green-600 font-bold">✓ Ciclo Completo</span>' 
+                    : `<span class="text-[10px] text-red-400">Faltam ${af.days_remaining} dias</span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="font-bold">${af.nome}</div>
+                        <div class="text-[10px] text-gray-400">${af.whatsapp}</div>
+                    </td>
+                    <td class="p-3 font-bold">${af.vendas_pagas}</td>
+                    <td class="p-3 font-bold text-[#8e44ad]">R$ ${parseFloat(af.saldo).toFixed(2).replace('.', ',')}</td>
+                    <td class="p-3 text-gray-400">R$ ${parseFloat(af.total_ganho).toFixed(2).replace('.', ',')}</td>
+                    <td class="p-3 space-y-1 text-center">
+                        <div class="flex flex-col gap-1 items-center">
+                            <button onclick="viewAffiliateSales(${af.id}, '${af.nome}')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 font-bold w-32">Ver Detalhes</button>
+                            ${cycleMsg}
+                            <button onclick="payoutAffiliate(${af.id}, '${af.nome}', ${af.saldo})" ${btnAttr} class="text-[10px] font-black px-2 py-2 rounded-lg w-32 transition-all ${btnClass}">
+                                PAGAR AGORA
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function viewAffiliateSales(id, nome) {
+            document.getElementById('af-sales-title').innerText = `Vendas de ${nome}`;
+            const res = await fetch(`${API}?action=get_affiliate_sales&id=${id}`);
+            const data = await res.json();
+            
+            const tbody = document.getElementById('table-af-sales-body');
+            tbody.innerHTML = '';
+
+            data.sales.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-3 text-gray-400 text-[10px]">${new Date(s.data_reserva).toLocaleDateString()}</td>
+                    <td class="p-3 font-bold">${s.comprador}</td>
+                    <td class="p-3 text-gray-500">${s.rifa_nome}</td>
+                    <td class="p-3 font-mono text-[9px] text-indigo-600 leading-tight">${s.numeros}</td>
+                    <td class="p-3 text-right font-bold">R$ ${parseFloat(s.valor_total).toFixed(2).replace('.', ',')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const m = document.getElementById('modal-af-sales');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+        }
+
+        async function payoutAffiliate(id, nome, saldo) {
+            if (!confirm(`Confirmar fechamento de ciclo e pagamento de R$ ${parseFloat(saldo).toFixed(2).replace('.', ',')} para ${nome} via PIX?\n\nO saldo do afiliado será zerado e registrado um saque pendente.`)) return;
+            
+            const fd = new URLSearchParams();
+            fd.append('action', 'payout_affiliate');
+            fd.append('id', id);
+
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+            
+            if(data.success) {
+                showNotification('Ciclo Fechado!', data.message, 'success');
+                fetchAffiliates();
+                fetchStats();
+            } else {
+                showNotification('Erro', data.error, 'error');
+            }
+        }
+
+        async function openPendingPayouts() {
+            const res = await fetch(`${API}?action=get_pending_payouts`);
+            const data = await res.json();
+            const tbody = document.getElementById('table-pending-payouts');
+            tbody.innerHTML = '';
+
+            if (data.payouts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-10 text-center text-gray-400 font-bold">Nenhum saque pendente no momento! 🎉</td></tr>';
+            }
+
+            data.payouts.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="font-bold text-indigo-700 uppercase">${p.afiliado_nome}</div>
+                        <div class="bg-gray-50 p-2 rounded-lg mt-1 flex items-center justify-between group">
+                            <code class="text-[11px] font-black">${p.chave_pix}</code>
+                            <button onclick="navigator.clipboard.writeText('${p.chave_pix}'); showNotification('Copiado!', 'Chave Pix copiada', 'success')" class="text-[9px] bg-white border px-1.5 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity uppercase font-bold">Copiar</button>
+                        </div>
+                        <div class="text-[9px] text-gray-400 mt-1">Solicitado em: ${new Date(p.data_solicitacao).toLocaleString()}</div>
+                    </td>
+                    <td class="p-3">
+                        <div class="text-lg font-black text-green-600">R$ ${parseFloat(p.valor).toFixed(2).replace('.', ',')}</div>
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="confirmPayoutPaid(${p.id}, ${p.valor})" class="bg-[#00a650] text-white font-black px-4 py-3 rounded-2xl text-[10px] hover:bg-[#009647] shadow transition-all uppercase">
+                            Marcar como Pago
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const m = document.getElementById('modal-pending-payouts');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+        }
+
+        async function confirmPayoutPaid(id, valor) {
+            if (!confirm(`Você confirma que já realizou o PIX no valor de R$ ${parseFloat(valor).toFixed(2).replace('.', ',')} para este afiliado?\n\nEsta ação não pode ser desfeita.`)) return;
+            
+            const fd = new URLSearchParams();
+            fd.append('action', 'confirm_payout');
+            fd.append('id', id);
+
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+            
+            if(data.success) {
+                showNotification('Sucesso!', data.message, 'success');
+                openPendingPayouts(); // Refresh list
+                fetchAffiliates();    // Refresh totals
+            } else {
+                showNotification('Erro', data.error, 'error');
+            }
+        }
+
+        // Helper to close specific modal
+        window.closeModal = (id) => {
+            const m = document.getElementById(id);
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        };
+
         // Billing Logic
         document.getElementById('btn-billing').addEventListener('click', () => {
             const m = document.getElementById('modal-billing');
@@ -2039,6 +2359,107 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if(imgId) document.getElementById(imgId).src = '';
             if(contId) document.getElementById(contId).classList.add('hidden');
             if(hiddenId) document.getElementById(hiddenId).value = '';
+        };
+
+        // Affiliates Logic
+        document.getElementById('btn-affiliates').addEventListener('click', () => {
+            const m = document.getElementById('modal-affiliates');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+            fetchAffiliates();
+        });
+
+        async function fetchAffiliates() {
+            const res = await fetch(`${API}?action=get_affiliates`);
+            const data = await res.json();
+            const tbody = document.getElementById('table-affiliates');
+            tbody.innerHTML = '';
+
+            data.affiliates.forEach(af => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                
+                let btnAttr = af.can_payout ? '' : 'disabled';
+                let btnClass = af.can_payout 
+                    ? 'bg-green-500 text-white hover:bg-green-600' 
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed';
+                
+                let cycleMsg = af.can_payout 
+                    ? '<span class="text-[10px] text-green-600 font-bold">✓ Ciclo Completo</span>' 
+                    : `<span class="text-[10px] text-red-400">Faltam ${af.days_remaining} dias</span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="font-bold">${af.nome}</div>
+                        <div class="text-[10px] text-gray-400">${af.whatsapp}</div>
+                    </td>
+                    <td class="p-3 font-bold">${af.vendas_pagas}</td>
+                    <td class="p-3 font-bold text-[#8e44ad]">R$ ${af.saldo.replace('.', ',')}</td>
+                    <td class="p-3 text-gray-400">R$ ${af.total_ganho.replace('.', ',')}</td>
+                    <td class="p-3 space-y-1 text-center">
+                        <div class="flex flex-col gap-1 items-center">
+                            <button onclick="viewAffiliateSales(${af.id}, '${af.nome}')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 font-bold w-32">Ver Detalhes</button>
+                            ${cycleMsg}
+                            <button onclick="payoutAffiliate(${af.id}, '${af.nome}', ${af.saldo})" ${btnAttr} class="text-[10px] font-black px-2 py-2 rounded-lg w-32 transition-all ${btnClass}">
+                                PAGAR AGORA
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function viewAffiliateSales(id, nome) {
+            document.getElementById('af-sales-title').innerText = `Vendas de ${nome}`;
+            const res = await fetch(`${API}?action=get_affiliate_sales&id=${id}`);
+            const data = await res.json();
+            
+            const tbody = document.getElementById('table-af-sales-body');
+            tbody.innerHTML = '';
+
+            data.sales.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="p-3 text-gray-400 text-[10px]">${new Date(s.data_reserva).toLocaleDateString()}</td>
+                    <td class="p-3 font-bold">${s.comprador}</td>
+                    <td class="p-3 text-gray-500">${s.rifa_nome}</td>
+                    <td class="p-3 font-mono text-[9px] text-indigo-600 leading-tight">${s.numeros}</td>
+                    <td class="p-3 text-right font-bold">R$ ${parseFloat(s.valor_total).toFixed(2).replace('.', ',')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const m = document.getElementById('modal-af-sales');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+        }
+
+        async function payoutAffiliate(id, nome, saldo) {
+            if (!confirm(`Confirmar fechamento de ciclo e pagamento de R$ ${parseFloat(saldo).toFixed(2).replace('.', ',')} para ${nome} via PIX?\n\nO saldo do afiliado será zerado e registrado um saque pendente.`)) return;
+            
+            const fd = new URLSearchParams();
+            fd.append('action', 'payout_affiliate');
+            fd.append('id', id);
+
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+            
+            if(data.success) {
+                showNotification('Ciclo Fechado!', data.message, 'success');
+                fetchAffiliates();
+                fetchStats();
+            } else {
+                showNotification('Erro', data.error, 'error');
+            }
+        }
+
+        // Helper to close specific modal
+        window.closeModal = (id) => {
+            const m = document.getElementById(id);
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
         };
     </script>
 </body>
