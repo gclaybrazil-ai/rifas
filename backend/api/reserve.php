@@ -63,10 +63,10 @@ try {
                 $tempo_pagamento = (int)$configs['tempo_pagamento'];
             }
 
-            // Repassar Taxa Logic (Cálculo para cobrir 1.19% da Efí)
-            if (isset($configs['repassar_taxa']) && $configs['repassar_taxa'] === '1' && $gateway !== 'mercadopago') {
-                // Cálculo: Valor Final = Valor Original / (1 - 0.0119)
-                $novo_total = $valor_original / (1 - 0.0119);
+            // Repassar Taxa Logic (Efí 1.19%, Mercado Pago 1%)
+            if (isset($configs['repassar_taxa']) && $configs['repassar_taxa'] === '1') {
+                $feeRate = ($gateway === 'mercadopago') ? 0.01 : 0.0119;
+                $novo_total = $valor_original / (1 - $feeRate);
                 $total = round($novo_total, 2);
                 $valor_taxa_calculada = $total - $valor_original;
             }
@@ -248,30 +248,33 @@ try {
     }
 
     $pdo->commit();
-    
+
     // --- NOTIFICAÇÃO WHATSAPP (RESERVA) ---
     try {
-        require_once 'whatsapp_helper.php';
-        $prizes = "";
-        for($i=1; $i<=5; $i++) {
-            $prop = "premio" . $i;
-            if(!empty($rifa_data[$prop])) {
-                $prizes .= "\n- " . $i . "º Prêmio: " . $rifa_data[$prop];
+        $stmtW = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_notify_reserva'");
+        $notifyEnabled = $stmtW->fetchColumn();
+        
+        if ($notifyEnabled === '1') {
+            require_once 'whatsapp_helper.php';
+            $prizes = "";
+            for($i=1; $i<=5; $i++) {
+                $prop = "premio" . $i;
+                if(!empty($rifa_data[$prop])) {
+                    $prizes .= "\n- " . $i . "º Prêmio: " . $rifa_data[$prop];
+                }
             }
+            
+            $msgReserva = "🎫 *RESERVA REALIZADA!*\n\n";
+            $msgReserva .= "Olá *" . $nome . "*,\n";
+            $msgReserva .= "Você reservou números na rifa *#" . $rifa_id . "*\n\n";
+            $msgReserva .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
+            $msgReserva .= "🎫 *Seus números:* " . implode(', ', $numerosSelecionados) . "\n\n";
+            $msgReserva .= "💰 *Total:* R$ " . number_format($total, 2, ',', '.') . "\n\n";
+            $msgReserva .= "👇 *Pague via PIX para garantir sua participação:* \n\n" . $pix_copiacola;
+            
+            sendWhatsAppMessage($whatsapp, $msgReserva);
         }
-        
-        $msgReserva = "🎫 *RESERVA REALIZADA!*\n\n";
-        $msgReserva .= "Olá *" . $nome . "*,\n";
-        $msgReserva .= "Você reservou números na rifa *#" . $rifa_id . "*\n\n";
-        $msgReserva .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
-        $msgReserva .= "🎫 *Seus números:* " . implode(', ', $numerosSelecionados) . "\n\n";
-        $msgReserva .= "💰 *Total:* R$ " . number_format($total, 2, ',', '.') . "\n\n";
-        $msgReserva .= "👇 *Pague via PIX para garantir sua participação:* \n\n" . $pix_copiacola;
-        
-        sendWhatsAppMessage($whatsapp, $msgReserva);
-    } catch (Exception $eW) {
-        // Log ou ignore - não deve travar a resposta da reserva
-    }
+    } catch (Exception $eW) {}
     // ------------------------------------
 
     echo json_encode([

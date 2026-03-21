@@ -30,24 +30,61 @@ if ($action === 'stats') {
     $offset = ($page - 1) * $limit;
     $statusFilter = $_GET['status'] ?? '';
 
-    $stmtStats = $pdo->query("SELECT status, COUNT(*) as qtd FROM numeros GROUP BY status");
-    $stats = $stmtStats->fetchAll(PDO::FETCH_KEY_PAIR);
+    $stmtConfigDate = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'stats_start_date'");
+    $statsStartDate = $stmtConfigDate->fetchColumn() ?: '';
+
+    // Estatísticas (Cards)
+    $stats = ['disponivel' => 0, 'reservado' => 0, 'pago' => 0];
+
+    // Disponíveis agora (estoque atual total por status)
+    $stmtSall = $pdo->query("SELECT status, COUNT(*) as qtd FROM numeros GROUP BY status");
+    $statsAll = $stmtSall->fetchAll(PDO::FETCH_KEY_PAIR);
+    
+    // O estoque livre 'disponivel' no banco é sempre o real agora
+    if (isset($statsAll['disponivel'])) $stats['disponivel'] = (int) $statsAll['disponivel'];
+
+    $whereStats = " ";
+    if (!empty($statsStartDate)) {
+        $whereStats = " AND r.data_reserva >= '$statsStartDate 00:00:00' ";
+    }
+
+    // Reservados e Pagos do período (ou total se sem data)
+    $sqlStats = "SELECT n.status, COUNT(*) as qtd FROM numeros n 
+                 JOIN reservas r ON n.reserva_id = r.id 
+                 WHERE 1=1 $whereStats 
+                 GROUP BY n.status";
+    $stmtS = $pdo->query($sqlStats);
+    $resStats = $stmtS->fetchAll(PDO::FETCH_KEY_PAIR);
+    
+    if (isset($resStats['reservado'])) $stats['reservado'] = (int) $resStats['reservado'];
+    if (isset($resStats['pago'])) $stats['pago'] = (int) $resStats['pago'];
 
     $stmtConfig = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'tempo_pagamento'");
     $tempo_pagamento = (int)($stmtConfig->fetchColumn() ?: 3);
 
-    $stmtFat = $pdo->query("SELECT SUM(valor_total) FROM reservas WHERE status = 'pago'");
+    $fatWhere = " WHERE status = 'pago' ";
+    if (!empty($statsStartDate)) {
+        $fatWhere .= " AND data_reserva >= '$statsStartDate 00:00:00' ";
+    }
+
+    $stmtFat = $pdo->query("SELECT SUM(valor_total) FROM reservas $fatWhere");
     $faturamento = $stmtFat->fetchColumn() ?: 0;
     
-    $stmtTaxa = $pdo->query("SELECT SUM(valor_taxa) FROM reservas WHERE status = 'pago'");
+    $stmtTaxa = $pdo->query("SELECT SUM(valor_taxa) FROM reservas $fatWhere");
     $total_repassado = $stmtTaxa->fetchColumn() ?: 0;
 
-    $where = "";
+    $where = " WHERE 1=1 ";
     $paramsCount = [];
     $paramsData = [];
 
+    if (!empty($statsStartDate)) {
+        $where .= " AND r.data_reserva >= ? ";
+        $paramsCount[] = $statsStartDate . ' 00:00:00';
+        $paramsData[] = $statsStartDate . ' 00:00:00';
+    }
+
     if (!empty($statusFilter)) {
-        $where = " WHERE r.status = ? ";
+        $where .= " AND r.status = ? ";
         $paramsCount[] = $statusFilter;
         $paramsData[] = $statusFilter;
     }
@@ -219,14 +256,49 @@ if ($action === 'stats') {
         $params = [$start . ' 00:00:00', $end . ' 23:59:59'];
     }
 
-    $stmt = $pdo->prepare("SELECT SUM(valor_total) as total, COUNT(*) as qtd FROM reservas $where");
+    // Pegar configurações atuais para cálculo aproximado
+    $stmtC = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('comissao_padrao', 'gateway')");
+    $configs = $stmtC->fetchAll(PDO::FETCH_KEY_PAIR);
+    
+    $pctComm = (float)($configs['comissao_padrao'] ?? 10) / 100;
+    $gateway = $configs['gateway'] ?? 'mercadopago';
+    $bankRate = ($gateway === 'mercadopago') ? 0.01 : 0.0119;
+
+    // Relatório com detalhes
+    $sql = "SELECT 
+                r.id, r.nome, r.valor_total, r.valor_taxa, r.afiliado_id, r.data_reserva,
+                (CASE WHEN r.afiliado_id > 0 THEN ROUND(r.valor_total * $pctComm, 2) ELSE 0 END) as comissao,
+                ROUND(r.valor_total * $bankRate, 2) as custo_banco
+            FROM reservas r 
+            $where 
+            ORDER BY r.data_reserva DESC";
+            
+    $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $totalFaturado = 0;
+    $totalComissao = 0;
+    $totalRepasse = 0;
+    $totalBanco = 0;
+    $count = 0;
+
+    foreach ($rows as $r) {
+        $totalFaturado += (float)$r['valor_total'];
+        $totalComissao += (float)$r['comissao'];
+        $totalRepasse += (float)$r['valor_taxa'];
+        $totalBanco += (float)$r['custo_banco'];
+        $count++;
+    }
 
     echo json_encode([
         'success' => true,
-        'total' => (float) ($data['total'] ?: 0),
-        'count' => (int) $data['qtd']
+        'total' => $totalFaturado,
+        'commission' => $totalComissao,
+        'repasse' => $totalRepasse,
+        'bank' => $totalBanco,
+        'count' => $count,
+        'rows' => $rows // Enviamos as linhas para o exportador no JS
     ]);
 } else if ($action === 'mark_paid') {
     $id = intval($_POST['id'] ?? 0);
@@ -313,32 +385,35 @@ if ($action === 'stats') {
 
             // --- WHATSAPP NOTIFICATION (MANUAL MARK) ---
             try {
-                require_once 'whatsapp_helper.php';
-                $stmtD = $pdo->prepare("SELECT r.nome as comprador, r.whatsapp, r.rifa_id, ri.premio1, ri.premio2, ri.premio3, ri.premio4, ri.premio5, GROUP_CONCAT(n.numero) as nms 
-                                        FROM reservas r 
-                                        JOIN rifas ri ON r.rifa_id = ri.id 
-                                        JOIN numeros n ON r.id = n.reserva_id
-                                        WHERE r.id = ? GROUP BY r.id");
-                $stmtD->execute([$id]);
-                $details = $stmtD->fetch(PDO::FETCH_ASSOC);
+                $stmtW = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_notify_pago'");
+                if ($stmtW->fetchColumn() === '1') {
+                    require_once 'whatsapp_helper.php';
+                    $stmtD = $pdo->prepare("SELECT r.nome as comprador, r.whatsapp, r.rifa_id, ri.premio1, ri.premio2, ri.premio3, ri.premio4, ri.premio5, GROUP_CONCAT(n.numero) as nms 
+                                            FROM reservas r 
+                                            JOIN rifas ri ON r.rifa_id = ri.id 
+                                            JOIN numeros n ON r.id = n.reserva_id
+                                            WHERE r.id = ? GROUP BY r.id");
+                    $stmtD->execute([$id]);
+                    $details = $stmtD->fetch(PDO::FETCH_ASSOC);
 
-                if ($details) {
-                    $prizes = "";
-                    for($i=1; $i<=5; $i++) {
-                        $prop = "premio" . $i;
-                        if(!empty($details[$prop])) {
-                            $prizes .= "\n- " . $i . "º Prêmio: " . $details[$prop];
+                    if ($details) {
+                        $prizes = "";
+                        for($i=1; $i<=5; $i++) {
+                            $prop = "premio" . $i;
+                            if(!empty($details[$prop])) {
+                                $prizes .= "\n- " . $i . "º Prêmio: " . $details[$prop];
+                            }
                         }
+
+                        $msg = "✅ *PAGAMENTO APROVADO!*\n\n";
+                        $msg .= "Olá *" . $details['comprador'] . "*,\n";
+                        $msg .= "Seu pagamento para a rifa *#" . $details['rifa_id'] . "* foi confirmado pelo administrador!\n\n";
+                        $msg .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
+                        $msg .= "🎫 *Seus Números:* " . $details['nms'] . "\n\n";
+                        $msg .= "Boa sorte! Acompanhe o sorteio em nosso site.";
+
+                        sendWhatsAppMessage($details['whatsapp'], $msg);
                     }
-
-                    $msg = "✅ *PAGAMENTO APROVADO!*\n\n";
-                    $msg .= "Olá *" . $details['comprador'] . "*,\n";
-                    $msg .= "Seu pagamento para a rifa *#" . $details['rifa_id'] . "* foi confirmado pelo administrador!\n\n";
-                    $msg .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
-                    $msg .= "🎫 *Seus Números:* " . $details['nms'] . "\n\n";
-                    $msg .= "Boa sorte! Acompanhe o sorteio em nosso site.";
-
-                    sendWhatsAppMessage($details['whatsapp'], $msg);
                 }
             } catch (Exception $eW) {}
             // ------------------------------------------
@@ -439,12 +514,15 @@ if ($action === 'stats') {
 
         // --- WHATSAPP NOTIFICATION (WINNER) ---
         try {
-            require_once 'whatsapp_helper.php';
-            $prizeKey = "premio" . $ordem;
-            $prizeName = $prizes[$prizeKey] ?? "Prêmio " . $ordem;
-            
-            $msgWin = "🏆 *PARABÉNS, VOCÊ GANHOU!*\n\nOlá *" . $w['nome'] . "*,\nVocê acaba de ser sorteado na rifa *" . $rifaNome . "*!\n\n🎁 *Seu Prêmio:* " . $prizeName . "\n🎫 *Número Ganhador:* " . $w['numero'] . "\n\nEntre em contato conosco agora para resgatar seu prêmio! 🚀";
-            sendWhatsAppMessage($w['whatsapp'], $msgWin);
+            $stmtNW = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_notify_ganhador'");
+            if ($stmtNW->fetchColumn() === '1') {
+                require_once 'whatsapp_helper.php';
+                $prizeKey = "premio" . $ordem;
+                $prizeName = $prizes[$prizeKey] ?? "Prêmio " . $ordem;
+                
+                $msgWin = "🏆 *PARABÉNS, VOCÊ GANHOU!*\n\nOlá *" . $w['nome'] . "*,\nVocê acaba de ser sorteado na rifa *#" . $rifa_id . "*!\n\n🎁 *Seu Prêmio:* " . $prizeName . "\n🎫 *Número Ganhador:* " . $w['numero'] . "\n\nEntre em contato conosco agora para resgatar seu prêmio! 🚀";
+                sendWhatsAppMessage($w['whatsapp'], $msgWin);
+            }
         } catch (Exception $eW) {}
         // --------------------------------------
     }
@@ -533,6 +611,9 @@ if ($action === 'stats') {
     $ev_url = $_POST['evolution_api_url'] ?? '';
     $ev_key = $_POST['evolution_api_key'] ?? '';
     $ev_instance = $_POST['evolution_instance'] ?? '';
+    $ev_notify_reserva = $_POST['whatsapp_notify_reserva'] ?? '0';
+    $ev_notify_pago = $_POST['whatsapp_notify_pago'] ?? '1';
+    $ev_notify_ganhador = $_POST['whatsapp_notify_ganhador'] ?? '1';
 
     $stmtEvol1 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('evolution_api_url', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmtEvol1->execute([$ev_url, $ev_url]);
@@ -540,7 +621,18 @@ if ($action === 'stats') {
     $stmtEvol2->execute([$ev_key, $ev_key]);
     $stmtEvol3 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('evolution_instance', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmtEvol3->execute([$ev_instance, $ev_instance]);
+    $stmtEvol4 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('whatsapp_notify_reserva', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmtEvol4->execute([$ev_notify_reserva, $ev_notify_reserva]);
+    $stmtEvol5 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('whatsapp_notify_pago', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmtEvol5->execute([$ev_notify_pago, $ev_notify_pago]);
+    $stmtEvol6 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('whatsapp_notify_ganhador', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmtEvol6->execute([$ev_notify_ganhador, $ev_notify_ganhador]);
 
+    echo json_encode(['success' => true]);
+} else if ($action === 'save_stats_start_date') {
+    $stats_start_date = $_POST['stats_start_date'] ?? '';
+    $stmtStats = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('stats_start_date', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmtStats->execute([$stats_start_date, $stats_start_date]);
     echo json_encode(['success' => true]);
 } else if ($action === 'test_whatsapp') {
     require_once 'whatsapp_helper.php';
@@ -559,9 +651,8 @@ if ($action === 'stats') {
     }
 } else if ($action === 'get_integration') {
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa', 'whatsapp_share_template', 'password_complexity', 'evolution_api_url', 'evolution_api_key', 'evolution_instance')");
-    $conf = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-    echo json_encode($conf ?: []);
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa', 'whatsapp_share_template', 'password_complexity', 'evolution_api_url', 'evolution_api_key', 'evolution_instance', 'whatsapp_notify_reserva', 'whatsapp_notify_pago', 'whatsapp_notify_ganhador', 'stats_start_date')");
+    echo json_encode($stmt->fetchAll(PDO::FETCH_KEY_PAIR));
 } else if ($action === 'create_rifa') {
     $nome = $_POST['nome'] ?? 'Rifa Nova';
     $preco = $_POST['preco'] ?? 10.00;

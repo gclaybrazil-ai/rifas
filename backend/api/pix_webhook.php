@@ -92,33 +92,36 @@ try {
 
         // --- WHATSAPP NOTIFICATION ---
         try {
-            require_once 'whatsapp_helper.php';
-            
-            $stmtD = $pdo->prepare("SELECT r.nome as comprador, r.whatsapp, r.rifa_id, ri.premio1, ri.premio2, ri.premio3, ri.premio4, ri.premio5, GROUP_CONCAT(n.numero) as nms 
-                                    FROM reservas r 
-                                    JOIN rifas ri ON r.rifa_id = ri.id 
-                                    JOIN numeros n ON r.id = n.reserva_id
-                                    WHERE r.id = ? GROUP BY r.id");
-            $stmtD->execute([$reserva['id']]);
-            $details = $stmtD->fetch(PDO::FETCH_ASSOC);
-
-            if ($details) {
-                $prizes = "";
-                for($i=1; $i<=5; $i++) {
-                    $prop = "premio" . $i;
-                    if(!empty($details[$prop])) {
-                        $prizes .= "\n- " . $i . "º Prêmio: " . $details[$prop];
-                    }
-                }
-
-                $msg = "✅ *PAGAMENTO CONFIRMADO!*\n\n";
-                $msg .= "Olá *" . $details['comprador'] . "*,\n";
-                $msg .= "Seu pagamento para a rifa *#" . $details['rifa_id'] . "* foi recebido com sucesso!\n\n";
-                $msg .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
-                $msg .= "🎫 *Seus Números:* " . $details['nms'] . "\n\n";
-                $msg .= "Boa sorte! Acompanhe o sorteio em nosso site.";
+            $stmtW = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_notify_pago'");
+            if ($stmtW->fetchColumn() === '1') {
+                require_once 'whatsapp_helper.php';
                 
-                sendWhatsAppMessage($details['whatsapp'], $msg);
+                $stmtD = $pdo->prepare("SELECT r.nome as comprador, r.whatsapp, r.rifa_id, ri.premio1, ri.premio2, ri.premio3, ri.premio4, ri.premio5, GROUP_CONCAT(n.numero) as nms 
+                                        FROM reservas r 
+                                        JOIN rifas ri ON r.rifa_id = ri.id 
+                                        JOIN numeros n ON r.id = n.reserva_id
+                                        WHERE r.id = ? GROUP BY r.id");
+                $stmtD->execute([$reserva['id']]);
+                $details = $stmtD->fetch(PDO::FETCH_ASSOC);
+
+                if ($details) {
+                    $prizes = "";
+                    for($i=1; $i<=5; $i++) {
+                        $prop = "premio" . $i;
+                        if(!empty($details[$prop])) {
+                            $prizes .= "\n- " . $i . "º Prêmio: " . $details[$prop];
+                        }
+                    }
+
+                    $msg = "✅ *PAGAMENTO CONFIRMADO!*\n\n";
+                    $msg .= "Olá *" . $details['comprador'] . "*,\n";
+                    $msg .= "Seu pagamento para a rifa *#" . $details['rifa_id'] . "* foi recebido com sucesso!\n\n";
+                    $msg .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
+                    $msg .= "🎫 *Seus Números:* " . $details['nms'] . "\n\n";
+                    $msg .= "Boa sorte! Acompanhe o sorteio em nosso site.";
+                    
+                    sendWhatsAppMessage($details['whatsapp'], $msg);
+                }
             }
         } catch (Exception $eW) {
              file_put_contents(__DIR__ . '/webhook_debug.txt', "ERRO WHATSAPP: " . $eW->getMessage() . PHP_EOL, FILE_APPEND);

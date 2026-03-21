@@ -15,7 +15,18 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="../frontend/png/cifrao.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #8e44ad, #2c3e50);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
         /* Custom Scrollbar for Desktop */
         @media (min-width: 768px) {
             .scrollbar-thin::-webkit-scrollbar {
@@ -42,21 +53,23 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 <body class="bg-gray-50 text-gray-800 font-sans p-6">
 
     <div
-        class="max-w-4xl mx-auto mb-6 bg-white p-6 rounded-lg shadow border border-gray-100 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
+        class="max-w-4xl mx-auto mb-6 bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
         <div>
-            <h1 class="text-2xl font-black text-[#8e44ad]">Painel Administrativo</h1>
-            <p class="text-sm text-gray-500">Gestão de Rifas</p>
-        </div>        <div class="w-full md:w-auto flex flex-wrap gap-2 justify-center md:justify-end items-center">
+            <h1 class="text-2xl font-black gradient-text uppercase tracking-tighter">Painel Administrativo</h1>
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Gestão de Rifas Online</p>
+        </div>
+        <div class="w-full md:w-auto flex flex-wrap gap-2 justify-center md:justify-end items-center">
             <!-- Cronômetro e Sair (Lado de Fora) -->
             <span id="session-timer" class="hidden text-[11px] font-black text-[#2c3e50] bg-gray-100 px-3 py-2 rounded-lg border border-gray-200 min-w-[120px] text-center">EXPIRA EM: 20:00</span>
             
             <!-- Menu Dropdown -->
             <div class="relative">
-                <button id="btn-menu" class="bg-[#8e44ad] text-white font-black px-4 py-2 rounded-xl shadow-lg hover:bg-[#7d3c98] text-xs flex items-center gap-2 uppercase tracking-widest transition-all">
+                <button id="btn-menu" class="bg-[#8e44ad] text-white font-black px-4 py-3 rounded-2xl shadow-lg hover:bg-[#7d3c98] text-xs flex items-center gap-2 uppercase tracking-widest transition-all transform active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                     Menu
                 </button>
-                <div id="dropdown-menu" class="hidden absolute left-0 md:right-0 md:left-auto mt-2 w-64 bg-white border border-gray-100 rounded-[1.5rem] shadow-2xl z-[100] p-4 flex-col gap-4">
+                <div id="dropdown-menu" class="hidden absolute top-full mt-2 w-64 max-w-[90vw] bg-white border border-gray-100 rounded-[2rem] shadow-2xl z-[100] p-4 flex flex-col gap-4 max-h-[75vh] overflow-y-auto scrollbar-thin 
+                    left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 origin-top">
                     <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 px-1">Atalhos Rápidos</div>
                     <button id="btn-affiliates" class="w-full bg-orange-600 text-white font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-orange-700 text-xs text-left flex items-center gap-2">
                         <span class="w-6 h-6 bg-white/20 rounded flex items-center justify-center text-sm">👥</span> COMISSÕES (AFILIADOS)
@@ -141,11 +154,11 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
         <div class="bg-white p-4 rounded-xl shadow-sm text-center border-l-4 border-blue-500 overflow-hidden">
             <h3 class="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-wider text-center">Faturamento</h3>
-            <p class="text-2xl font-black text-blue-600 truncate" id="stat-faturamento">R$ 0,00</p>
+            <p class="text-2xl font-black text-blue-600 transition-all duration-300" id="stat-faturamento">R$ 0,00</p>
         </div>
         <div class="bg-white p-4 rounded-xl shadow-sm text-center border-l-4 border-red-500 overflow-hidden">
             <h3 class="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-wider text-center">Taxas (1.19%)</h3>
-            <p class="text-2xl font-black text-red-600 truncate" id="stat-taxas">R$ 0,00</p>
+            <p class="text-2xl font-black text-red-600 transition-all duration-300" id="stat-taxas">R$ 0,00</p>
         </div>
     </div>
 
@@ -234,7 +247,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     <div class="text-sm">
                         <label for="repassar_taxa" class="font-bold text-gray-700 cursor-pointer">REPASSAR TAXA PARA O COLABORADOR</label>
                         <p class="text-gray-500 text-[10px] leading-tight mt-1">
-                            Se optar por não repassar, uma taxa mínima ainda será cobrada caso o valor da reserva não seja maior do que a taxa cobrada pelo método de pagamento.
+                            Repassa taxas (1% no Mercado Pago ou 1,19% na Efí) para o comprador. Caso desabilitado, você arca com os custos.
                         </p>
                     </div>
                 </div>
@@ -305,6 +318,40 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                             </button>
                         </div>
                         <p class="text-[9px] text-green-600/70 mt-1 leading-tight">Configurações devem ser salvas antes de testar.</p>
+                    </div>
+
+                    <!-- Notificações Individuais -->
+                    <div class="mt-2 space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <div>
+                                <span class="text-[10px] font-black text-gray-700 uppercase block">Notificar na Reserva</span>
+                                <span class="text-[9px] text-gray-400">Envia PIX ao reservar números</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="whatsapp_notify_reserva" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <div>
+                                <span class="text-[10px] font-black text-gray-700 uppercase block">Notificar Pagamento</span>
+                                <span class="text-[9px] text-gray-400">Envia confirmação após o pagamento</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="whatsapp_notify_pago" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <div>
+                                <span class="text-[10px] font-black text-gray-700 uppercase block">Notificar Ganhador</span>
+                                <span class="text-[9px] text-gray-400">Envia alerta exclusivo para o ganhador</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="whatsapp_notify_ganhador" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -702,12 +749,46 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     Relatório</button>
             </div>
 
-            <div id="billing-result"
-                class="hidden bg-blue-50 p-5 rounded-[2rem] border border-blue-100 text-center flex flex-col gap-1">
-                <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest" id="bill-label">
-                    Faturamento Total</p>
-                <h3 class="text-3xl font-black text-blue-700" id="bill-total">R$ 0,00</h3>
-                <p class="text-[10px] font-bold text-blue-400" id="bill-count">0 Reservas Pagas</p>
+            <div class="h-px bg-gray-100 my-6"></div>
+            
+            <div class="bg-indigo-50 p-5 rounded-2xl border border-indigo-100">
+                <label class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block mb-1">DATA DE INÍCIO GLOBAL (DASHBOARD)</label>
+                <div class="flex gap-2">
+                    <input type="date" id="stats-start-date-cfg" class="flex-1 bg-white border border-indigo-200 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="saveStatsStartDate()" class="bg-indigo-600 text-white px-4 rounded-xl text-[9px] font-black uppercase hover:bg-indigo-700 transition-all">Definir</button>
+                </div>
+                <p class="text-[9px] text-indigo-400 mt-2 font-medium">Define a partir de quando os cards do painel (Faturamento, Números, etc) começam a somar.</p>
+            </div>
+
+            <div id="billing-result" class="hidden flex flex-col gap-3">
+                <div class="bg-blue-50 p-5 rounded-[2rem] border border-blue-100 text-center flex flex-col gap-1">
+                    <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest" id="bill-label">Faturamento Total</p>
+                    <h3 class="text-3xl font-black text-blue-700" id="bill-total">R$ 0,00</h3>
+                    <p class="text-[10px] font-bold text-blue-400" id="bill-count">0 Reservas Pagas</p>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-2">
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center text-xs">
+                        <span class="text-gray-500 font-bold uppercase text-[9px]">Comissões Pagas</span>
+                        <span class="font-black text-purple-600" id="bill-commission">R$ 0,00</span>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center text-xs">
+                        <span class="text-gray-500 font-bold uppercase text-[9px]">Taxas Repassadas</span>
+                        <span class="font-black text-green-600" id="bill-repasse">R$ 0,00</span>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center text-xs">
+                        <span class="text-gray-500 font-bold uppercase text-[9px]">Custo Gateway (Banco)</span>
+                        <span class="font-black text-red-600" id="bill-bank">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <button id="btn-export-excel" onclick="exportToExcel()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow uppercase text-[10px] hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Exportar Relatório Detalhado (Excel)
+                    </button>
+                    <p class="text-[9px] text-gray-400 text-center uppercase font-bold">* Cálculos baseados nas taxas atuais</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1316,8 +1397,25 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 document.getElementById('stat-livre').textContent = data.stats['disponivel'] || 0;
                 document.getElementById('stat-reservado').textContent = data.stats['reservado'] || 0;
                 document.getElementById('stat-pago').textContent = data.stats['pago'] || 0;
-                document.getElementById('stat-faturamento').textContent = parseFloat(data.faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                document.getElementById('stat-taxas').textContent = parseFloat(data.total_repassado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const faturamentoText = parseFloat(data.faturamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const faturamentoEl = document.getElementById('stat-faturamento');
+                faturamentoEl.textContent = faturamentoText;
+                faturamentoEl.classList.remove('text-2xl', 'text-xl', 'text-lg', 'text-base', 'text-sm', 'text-xs');
+                if (faturamentoText.length > 17) faturamentoEl.classList.add('text-xs');
+                else if (faturamentoText.length > 15) faturamentoEl.classList.add('text-sm');
+                else if (faturamentoText.length > 13) faturamentoEl.classList.add('text-base');
+                else if (faturamentoText.length > 11) faturamentoEl.classList.add('text-lg');
+                else faturamentoEl.classList.add('text-2xl');
+
+                const taxasText = parseFloat(data.total_repassado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const taxasEl = document.getElementById('stat-taxas');
+                taxasEl.textContent = taxasText;
+                taxasEl.classList.remove('text-2xl', 'text-xl', 'text-lg', 'text-base', 'text-sm', 'text-xs');
+                if (taxasText.length > 17) taxasEl.classList.add('text-xs');
+                else if (taxasText.length > 15) taxasEl.classList.add('text-sm');
+                else if (taxasText.length > 13) taxasEl.classList.add('text-base');
+                else if (taxasText.length > 11) taxasEl.classList.add('text-lg');
+                else taxasEl.classList.add('text-2xl');
 
                 if(data.expires_in) {
                     secondsLeft = parseInt(data.expires_in);
@@ -1959,13 +2057,15 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             cr.classList.toggle('hidden');
         }
 
+        let currentBillingRows = [];
+
         async function fetchBilling(period) {
             let url = `${API}?action=billing_report&period=${period}`;
 
             if (period === 'custom') {
                 const s = document.getElementById('bill-start').value;
                 const e = document.getElementById('bill-end').value;
-                if (!s || !e) return alert('Selecione as datas!');
+                if (!s || !e) return showNotification('Atenção', 'Selecione as datas!', 'error');
                 url = `${API}?action=billing_report&start=${s}&end=${e}`;
             }
 
@@ -1973,9 +2073,13 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             const data = await res.json();
 
             if (data.success) {
+                currentBillingRows = data.rows || [];
                 const resDiv = document.getElementById('billing-result');
                 resDiv.classList.remove('hidden');
                 document.getElementById('bill-total').textContent = data.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                document.getElementById('bill-commission').textContent = data.commission.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                document.getElementById('bill-repasse').textContent = data.repasse.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                document.getElementById('bill-bank').textContent = data.bank.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 document.getElementById('bill-count').textContent = `${data.count} Reservas Pagas`;
 
                 let label = 'Faturamento';
@@ -1983,6 +2087,40 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 if (period === '7') label = 'Faturamento (7 dias)';
                 if (period === '30') label = 'Faturamento (30 dias)';
                 document.getElementById('bill-label').textContent = label;
+            }
+        }
+
+        function exportToExcel() {
+            if (!currentBillingRows.length) return showNotification('Relatório', 'Não há dados para exportar!', 'error');
+
+            let csv = "ID;Nome;Data;Faturado;Taxa Repassada;Comissao;Custo Banco\n";
+            currentBillingRows.forEach(row => {
+                csv += `${row.id};${row.nome};${row.data_reserva};${row.valor_total.replace('.', ',')};${row.valor_taxa.replace('.', ',')};${row.comissao.toString().replace('.', ',')};${row.custo_banco.toString().replace('.', ',')}\n`;
+            });
+
+            // Add BOM for Excel UTF-8
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Relatorio_Faturamento_${new Date().toLocaleDateString()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function saveStatsStartDate() {
+            const date = document.getElementById('stats-start-date-cfg').value;
+            const fd = new FormData();
+            fd.append('action', 'save_stats_start_date'); 
+            fd.append('stats_start_date', date);
+
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) {
+                showNotification('$UPER$ORTE', 'Data de início das estatísticas atualizada!');
+                fetchStats(); 
             }
         }
 
@@ -2017,12 +2155,14 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if (data.password_complexity) document.getElementById('password-complexity').value = data.password_complexity;
             
             // Evolution API
-            if (data.evolution_api_url) document.getElementById('evolution_api_url').value = data.evolution_api_url;
-            if (data.evolution_api_key) document.getElementById('evolution_api_key').value = data.evolution_api_key;
-            if (data.evolution_instance) document.getElementById('evolution_instance').value = data.evolution_instance;
+            document.getElementById('evolution_api_url').value = data.evolution_api_url || '';
+            document.getElementById('evolution_api_key').value = data.evolution_api_key || '';
+            document.getElementById('evolution_instance').value = data.evolution_instance || '';
+            document.getElementById('whatsapp_notify_reserva').checked = data.whatsapp_notify_reserva === '1';
+            document.getElementById('whatsapp_notify_pago').checked = data.whatsapp_notify_pago === '1';
+            document.getElementById('whatsapp_notify_ganhador').checked = data.whatsapp_notify_ganhador === '1';
+            if (data.stats_start_date) document.getElementById('stats-start-date-cfg').value = data.stats_start_date;
             
-            document.getElementById('repassar_taxa').checked = data.repassar_taxa === '1';
-
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
         });
@@ -2036,11 +2176,11 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if (gateway === 'mercadopago') {
                 mpFields.classList.remove('hidden');
                 efiFields.classList.add('hidden');
-                feeContainer.classList.add('hidden'); // Oculta repasse para Mercado Pago
+                feeContainer.classList.remove('hidden'); 
             } else if (gateway === 'efi') {
                 mpFields.classList.add('hidden');
                 efiFields.classList.remove('hidden');
-                feeContainer.classList.remove('hidden'); // Mostra repasse para Efí
+                feeContainer.classList.remove('hidden'); 
             }
         }
 
@@ -2098,6 +2238,9 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 fd.append('evolution_api_url', document.getElementById('evolution_api_url').value);
                 fd.append('evolution_api_key', document.getElementById('evolution_api_key').value);
                 fd.append('evolution_instance', document.getElementById('evolution_instance').value);
+                fd.append('whatsapp_notify_reserva', document.getElementById('whatsapp_notify_reserva').checked ? '1' : '0');
+                fd.append('whatsapp_notify_pago', document.getElementById('whatsapp_notify_pago').checked ? '1' : '0');
+                fd.append('whatsapp_notify_ganhador', document.getElementById('whatsapp_notify_ganhador').checked ? '1' : '0');
 
                 const res = await fetch(API, { method: 'POST', body: fd });
                 const result = await res.json();
@@ -2163,15 +2306,16 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 const res = await req.json();
 
                 if (res.success) {
-                    alert('Rifa criada com sucesso!');
-                    window.location.reload();
+                    showNotification('$UPER$ORTE', 'Rifa criada com sucesso!', 'success', () => {
+                        window.location.reload();
+                    });
                 } else {
-                    alert(res.error || 'Erro ao criar rifa');
+                    showNotification('Erro', res.error || 'Erro ao criar rifa', 'error');
                     btn.disabled = false;
                     btn.innerHTML = 'Criar e Ativar Rifa';
                 }
             } catch (err) {
-                alert('Erro ao criar rifa');
+                showNotification('Erro', 'Erro ao criar rifa', 'error');
                 btn.disabled = false;
                 btn.innerHTML = 'Criar e Ativar';
             }
@@ -2355,7 +2499,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         document.getElementById('btn-test-whatsapp').addEventListener('click', async () => {
             const btn = document.getElementById('btn-test-whatsapp');
             const num = document.getElementById('test-whatsapp-number').value;
-            if(!num) return alert('Informe o número de teste!');
+            if(!num) return showNotification('Atenção', 'Informe o número de teste!', 'error');
             
             btn.innerHTML = 'Enviando...';
             btn.disabled = true;

@@ -5,6 +5,12 @@ require_once '../config.php';
 // session_start and PHPMailer already in config.php
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+// Check Maintenance
+$stmtM = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'modo_manutencao'");
+if ($stmtM->fetchColumn() === '1') {
+    die(json_encode(['error' => 'O sistema está em manutenção. Por favor, tente novamente mais tarde.', 'maintenance' => true]));
+}
+
 if ($action === 'login_register') {
     $whatsapp = preg_replace('/\D/', '', $_POST['whatsapp'] ?? '');
     $nome = trim($_POST['nome'] ?? '');

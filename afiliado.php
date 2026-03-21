@@ -1,3 +1,13 @@
+<?php
+require_once 'backend/config.php';
+try {
+    $stmtM = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'modo_manutencao'");
+    if ($stmtM->fetchColumn() === '1') {
+        header('Location: manutencao.php');
+        exit;
+    }
+} catch (Exception $e) {}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
