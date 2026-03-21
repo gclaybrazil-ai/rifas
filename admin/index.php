@@ -127,25 +127,25 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
     <!-- Stats -->
     <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-4 mb-6" id="stats-grid">
-        <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-green-500">
-            <h3 class="text-gray-500 text-xs font-bold uppercase mb-1">Livres</h3>
-            <p class="text-3xl font-black text-[#2c3e50]" id="stat-livre">0</p>
+        <div class="bg-white p-4 rounded-xl shadow-sm text-center border-l-4 border-green-500 overflow-hidden">
+            <h3 class="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-wider text-center">Livres</h3>
+            <p class="text-2xl font-black text-[#2c3e50] truncate" id="stat-livre">0</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-yellow-500">
-            <h3 class="text-gray-500 text-xs font-bold uppercase mb-1">Reservados</h3>
-            <p class="text-3xl font-black text-[#2c3e50]" id="stat-reservado">0</p>
+        <div class="bg-white p-4 rounded-xl shadow-sm text-center border-l-4 border-yellow-500 overflow-hidden">
+            <h3 class="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-wider text-center">Reservados</h3>
+            <p class="text-2xl font-black text-[#2c3e50] truncate" id="stat-reservado">0</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-purple-500">
-            <h3 class="text-gray-500 text-xs font-bold uppercase mb-1">Pagos</h3>
-            <p class="text-3xl font-black text-[#9b59b6]" id="stat-pago">0</p>
+        <div class="bg-white p-4 rounded-xl shadow-sm text-center border-l-4 border-purple-500 overflow-hidden">
+            <h3 class="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-wider text-center">Pagos</h3>
+            <p class="text-2xl font-black text-[#9b59b6] truncate" id="stat-pago">0</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-blue-500">
-            <h3 class="text-gray-500 text-xs font-bold uppercase mb-1">Faturamento</h3>
-            <p class="text-3xl font-black text-blue-600" id="stat-faturamento">R$ 0,00</p>
+        <div class="bg-white p-4 rounded-xl shadow-sm text-center border-l-4 border-blue-500 overflow-hidden">
+            <h3 class="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-wider text-center">Faturamento</h3>
+            <p class="text-2xl font-black text-blue-600 truncate" id="stat-faturamento">R$ 0,00</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow text-center border-l-4 border-red-500">
-            <h3 class="text-gray-500 text-xs font-bold uppercase mb-1">Repassado (1.19%)</h3>
-            <p class="text-3xl font-black text-red-600" id="stat-taxas">R$ 0,00</p>
+        <div class="bg-white p-4 rounded-xl shadow-sm text-center border-l-4 border-red-500 overflow-hidden">
+            <h3 class="text-gray-500 text-[10px] font-bold uppercase mb-1 tracking-wider text-center">Taxas (1.19%)</h3>
+            <p class="text-2xl font-black text-red-600 truncate" id="stat-taxas">R$ 0,00</p>
         </div>
     </div>
 
@@ -266,6 +266,50 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <p id="cert-status" class="text-[9px] text-gray-400 mt-1 ml-1"></p>
                     </div>
                 </div>
+
+                <!-- WhatsApp Notifications (Evolution API) -->
+                <div class="h-px bg-gray-100 my-4"></div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-3 bg-green-100 rounded-lg text-green-600">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.29-4.143c1.589.943 3.143 1.416 4.703 1.417 5.432.001 9.853-4.42 9.856-9.853.002-2.633-1.025-5.109-2.892-6.977-1.867-1.868-4.341-2.896-6.976-2.898-5.432 0-9.854 4.421-9.857 9.855-.001 1.737.457 3.432 1.326 4.906l-.527 1.922 2.019-.53zm10.744-7.404c-.232-.117-1.371-.677-1.583-.754-.212-.077-.366-.117-.52.117-.154.234-.597.754-.732.909-.136.155-.271.174-.503.057-.232-.117-.98-.362-1.868-1.152-.69-.615-1.156-1.376-1.291-1.61-.136-.234-.015-.361.102-.477.105-.104.232-.271.348-.407.116-.136.155-.234.232-.39s.039-.291-.019-.407c-.058-.117-.52-1.255-.712-1.714-.187-.449-.377-.388-.52-.395-.135-.007-.29-.008-.444-.008-.154 0-.405.058-.617.291-.212.234-.81.792-.81 1.932 0 1.14.83 2.242.946 2.399.116.156 1.632 2.492 3.954 3.493.552.238.983.38 1.32.487.554.174 1.057.149 1.456.09.444-.066 1.371-.56 1.563-1.103.193-.544.193-1.01.136-1.103-.058-.095-.212-.154-.445-.271z"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-gray-800 tracking-tighter uppercase italic">Notificações WhatsApp</h2>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-tight">API Evolution (Confirm. Compra & Ganhadores)</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 flex items-center gap-2">
+                            Evolution API URL
+                            <button type="button" id="btn-help-evolution" class="w-4 h-4 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-[9px] font-bold hover:bg-green-200 transition-colors shadow-sm" title="Como configurar a Evolution API?">?</button>
+                        </label>
+                        <input type="url" id="evolution_api_url" placeholder="https://api.seusite.com" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">API Key (Chave Global/Instance)</label>
+                        <input type="password" id="evolution_api_key" placeholder="Sua Chave API" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Nome da Instância</label>
+                        <input type="text" id="evolution_instance" placeholder="MinhaRifa" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                    </div>
+                    <!-- Botão de Teste -->
+                    <div class="bg-green-50 p-4 rounded-xl border border-green-100 mt-2">
+                        <label class="text-[10px] font-bold text-green-700 uppercase mb-2 block">Número p/ Teste (WhatsApp)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="test-whatsapp-number" placeholder="5511999999999" class="flex-1 bg-white border border-green-200 rounded-lg p-2 text-xs outline-none">
+                            <button type="button" id="btn-test-whatsapp" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg text-[10px] hover:bg-green-700 shadow-sm uppercase transition-all whitespace-nowrap">
+                                Testar Agora
+                            </button>
+                        </div>
+                        <p class="text-[9px] text-green-600/70 mt-1 leading-tight">Configurações devem ser salvas antes de testar.</p>
+                    </div>
+                </div>
+
+                <div class="h-px bg-gray-100 my-4"></div>
+
                 <div>
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Tempo
                         Padrão P/ Pagamento (Minutos)</label>
@@ -762,6 +806,56 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
+    <!-- Modal Ajuda Evolution -->
+    <div id="modal-help-evolution" class="fixed inset-0 bg-black bg-opacity-80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 max-w-lg w-full text-left shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-thin">
+            <button onclick="closeHelpEvolution()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-2xl font-black text-gray-800 mb-6 uppercase tracking-tighter">Guia de Integração Evolution API</h2>
+            
+            <div class="space-y-6">
+                <div class="border-b pb-4">
+                    <h3 class="font-bold text-green-600 mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-green-100 rounded flex items-center justify-center text-[10px]">1</span>
+                        Preparar o Servidor
+                    </h3>
+                    <p class="text-[11px] text-gray-600 leading-relaxed">Você precisa ter a Evolution API instalada (via Docker ou serviço contratado). Certifique-se de criar uma <b>Instância</b> e ler o QR Code com o WhatsApp que fará os envios.</p>
+                </div>
+
+                <div class="border-b pb-4">
+                    <h3 class="font-bold text-green-600 mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-green-100 rounded flex items-center justify-center text-[10px]">2</span>
+                        Pegar Credenciais
+                    </h3>
+                    <ul class="text-[11px] text-gray-600 space-y-2 ml-4 list-disc">
+                        <li><b>API URL:</b> O endereço do seu servidor (ex: <code>https://api.seusite.com</code>).</li>
+                        <li><b>API Key:</b> Sua chave de acesso global ou da instância.</li>
+                        <li><b>Nome da Instância:</b> O nome exato que você deu na Evolution.</li>
+                    </ul>
+                </div>
+
+                <div class="border-b pb-4">
+                    <h3 class="font-bold text-green-600 mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 bg-green-100 rounded flex items-center justify-center text-[10px]">3</span>
+                        Testar Conexão
+                    </h3>
+                    <p class="text-[11px] text-gray-600 leading-relaxed">Após salvar os dados no painel, use o campo <b>"Número p/ Teste"</b> para enviar uma mensagem real ao seu celular e verificar se está tudo ok.</p>
+                </div>
+
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-700">
+                    <h4 class="font-bold text-xs uppercase mb-1">O que é automatizado?</h4>
+                    <ul class="text-[10px] space-y-1 list-disc ml-4">
+                        <li>Envio de PIX Copia e Cola na hora da reserva.</li>
+                        <li>Confirmação de recebimento após o pagamento.</li>
+                        <li>Notificação automática para o ganhador do sorteio.</li>
+                    </ul>
+                </div>
+            </div>
+            <button onclick="closeHelpEvolution()" class="w-full bg-gray-800 text-white font-bold py-3 rounded-xl mt-6 hover:bg-black transition-colors uppercase text-xs tracking-widest">Entendi</button>
+        </div>
+    </div>
+
     <!-- Modal Ajuda SMTP -->
     <div id="modal-help-smtp" class="fixed inset-0 bg-black bg-opacity-80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-2xl p-8 max-w-lg w-full text-left shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -924,6 +1018,24 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                             <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">WhatsApp Atendente (Cód + DDD + Num)</label>
                             <input type="text" name="assistant_whatsapp" id="assistant_whatsapp" value="5511999999999" placeholder="5511999999999" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none shadow-sm">
                             <p class="text-[10px] text-green-600/70 mt-2 ml-1 font-bold">Importante: Use apenas números, incluindo o código do país (55).</p>
+                        </div>
+                    </div>
+
+                    <!-- Gemini AI Section -->
+                    <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <h3 class="font-bold text-blue-700 text-[11px] uppercase mb-4 tracking-widest">Inteligência Artificial (Google Gemini)</h3>
+                        <div>
+                            <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">Crie sua Chave Gemini API</label>
+                            <div class="flex gap-2">
+                                <input type="password" name="gemini_api_key" id="gemini_api_key" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm" placeholder="Cole sua chave aqui...">
+                                <button type="button" onclick="toggleVisibility('gemini_api_key')" class="bg-white border border-gray-200 px-3 rounded-xl hover:bg-gray-50">
+                                    <svg class="w-4 h-4 text-gray-400 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                </button>
+                            </div>
+                            <p class="text-[9px] text-blue-500 mt-2 ml-1 font-bold italic">
+                                💡 Chave Grátis (IA Conversacional): 
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline decoration-dotted">Clique aqui para gerar sua chave</a>
+                            </p>
                         </div>
                     </div>
 
@@ -1227,6 +1339,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     if(document.getElementById('assistant_attendant')) document.getElementById('assistant_attendant').value = data.assistant.attendant || '';
                     if(document.getElementById('assistant_whatsapp')) document.getElementById('assistant_whatsapp').value = data.assistant.whatsapp || '';
                     if(document.getElementById('assistant_welcome_message')) document.getElementById('assistant_welcome_message').value = data.assistant.welcome_message || '';
+                    if(document.getElementById('gemini_api_key')) document.getElementById('gemini_api_key').value = data.assistant.gemini_api_key || '';
                     
                     const msgList = document.getElementById('assistant-messages-list');
                     if(msgList) {
@@ -1703,6 +1816,19 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             setTimeout(() => m.classList.add('opacity-100'), 10);
         });
 
+        // Evolution Help Modal
+        document.getElementById('btn-help-evolution').addEventListener('click', () => {
+            const m = document.getElementById('modal-help-evolution');
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.add('opacity-100'), 10);
+        });
+
+        window.closeHelpEvolution = () => {
+            const m = document.getElementById('modal-help-evolution');
+            m.classList.remove('opacity-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        };
+
         // Template Help Modal
         document.getElementById('btn-help-template').addEventListener('click', () => {
             const m = document.getElementById('modal-help-template');
@@ -1890,6 +2016,11 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             if (data.whatsapp_share_template) document.getElementById('whatsapp-share-template').value = data.whatsapp_share_template;
             if (data.password_complexity) document.getElementById('password-complexity').value = data.password_complexity;
             
+            // Evolution API
+            if (data.evolution_api_url) document.getElementById('evolution_api_url').value = data.evolution_api_url;
+            if (data.evolution_api_key) document.getElementById('evolution_api_key').value = data.evolution_api_key;
+            if (data.evolution_instance) document.getElementById('evolution_instance').value = data.evolution_instance;
+            
             document.getElementById('repassar_taxa').checked = data.repassar_taxa === '1';
 
             modal.classList.remove('hidden');
@@ -1962,6 +2093,11 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 fd.append('repassar_taxa', document.getElementById('repassar_taxa').checked ? '1' : '0');
                 fd.append('whatsapp_share_template', document.getElementById('whatsapp-share-template').value);
                 fd.append('password_complexity', document.getElementById('password-complexity').value);
+
+                // Evolution API
+                fd.append('evolution_api_url', document.getElementById('evolution_api_url').value);
+                fd.append('evolution_api_key', document.getElementById('evolution_api_key').value);
+                fd.append('evolution_instance', document.getElementById('evolution_instance').value);
 
                 const res = await fetch(API, { method: 'POST', body: fd });
                 const result = await res.json();
@@ -2211,6 +2347,35 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 alert('Erro na comunicação com o servidor.');
             } finally {
                 btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+        
+        // Test WhatsApp
+        document.getElementById('btn-test-whatsapp').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-test-whatsapp');
+            const num = document.getElementById('test-whatsapp-number').value;
+            if(!num) return alert('Informe o número de teste!');
+            
+            btn.innerHTML = 'Enviando...';
+            btn.disabled = true;
+
+            const fd = new URLSearchParams();
+            fd.append('action', 'test_whatsapp');
+            fd.append('test_number', num);
+
+            try {
+                const res = await fetch(API, { method: 'POST', body: fd });
+                const data = await res.json();
+                if(data.success) {
+                    showNotification('Sucesso!', 'A mensagem de teste foi enviada 🚀', 'success');
+                } else {
+                    showNotification('Erro na API', data.error || 'Verifique se a URL e a API Key estão corretas.', 'error');
+                }
+            } catch(e) {
+                showNotification('Erro Fatal', 'Erro de conexão com o servidor', 'error');
+            } finally {
+                btn.innerHTML = 'Testar Agora';
                 btn.disabled = false;
             }
         });

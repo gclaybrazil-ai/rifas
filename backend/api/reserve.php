@@ -40,9 +40,10 @@ try {
     }
 
     // Calcular valor
-    $stmt = $pdo->prepare("SELECT preco_numero FROM rifas WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT preco_numero, premio1, premio2, premio3, premio4, premio5 FROM rifas WHERE id = ?");
     $stmt->execute([$rifa_id]);
-    $preco = $stmt->fetchColumn();
+    $rifa_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    $preco = $rifa_data['preco_numero'];
     $valor_original = count($numerosSelecionados) * $preco;
     $total = $valor_original;
     $valor_taxa_calculada = 0;
@@ -247,6 +248,31 @@ try {
     }
 
     $pdo->commit();
+    
+    // --- NOTIFICAÇÃO WHATSAPP (RESERVA) ---
+    try {
+        require_once 'whatsapp_helper.php';
+        $prizes = "";
+        for($i=1; $i<=5; $i++) {
+            $prop = "premio" . $i;
+            if(!empty($rifa_data[$prop])) {
+                $prizes .= "\n- " . $i . "º Prêmio: " . $rifa_data[$prop];
+            }
+        }
+        
+        $msgReserva = "🎫 *RESERVA REALIZADA!*\n\n";
+        $msgReserva .= "Olá *" . $nome . "*,\n";
+        $msgReserva .= "Você reservou números na rifa *#" . $rifa_id . "*\n\n";
+        $msgReserva .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
+        $msgReserva .= "🎫 *Seus números:* " . implode(', ', $numerosSelecionados) . "\n\n";
+        $msgReserva .= "💰 *Total:* R$ " . number_format($total, 2, ',', '.') . "\n\n";
+        $msgReserva .= "👇 *Pague via PIX para garantir sua participação:* \n\n" . $pix_copiacola;
+        
+        sendWhatsAppMessage($whatsapp, $msgReserva);
+    } catch (Exception $eW) {
+        // Log ou ignore - não deve travar a resposta da reserva
+    }
+    // ------------------------------------
 
     echo json_encode([
         'success' => true, 

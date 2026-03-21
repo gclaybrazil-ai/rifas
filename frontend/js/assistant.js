@@ -459,7 +459,11 @@
             msg.className = `chat-msg ${side}`;
             msg.innerHTML = text;
             body.appendChild(msg);
-            body.scrollTop = body.scrollHeight;
+            
+            // Re-scroll with small delay to ensure rendering finished
+            setTimeout(() => {
+                body.scrollTop = body.scrollHeight;
+            }, 100);
         }
 
         async handleSend() {
@@ -471,17 +475,41 @@
             document.getElementById('assistant-quick-replies').style.display = 'none';
             await this.addMessage(userText, 'user');
             
-            // INTENT MATCHING (Smart Match)
-            const lowerText = userText.toLowerCase();
+            // 1. TRY AI CHAT (Gemini)
+            try {
+                const fd = new FormData();
+                fd.append('message', userText);
+                
+                const res = await fetch(api_path.replace('public.php', 'ai_chat.php'), { 
+                    method: 'POST', 
+                    body: fd 
+                });
+                const data = await res.json();
+                
+                if(data.success && data.response) {
+                    await this.addMessage(data.response, 'bot');
+                    // Ensure buttons are hidden when AI takes over
+                    document.getElementById('assistant-quick-replies').style.display = 'none';
+                    
+                    const lowerResp = data.response.toLowerCase();
+                    if(lowerResp.includes('atendente') || lowerResp.includes('whatsapp') || lowerResp.includes('suporte')) {
+                        this.showWhatsAppButton();
+                    }
+                    return; // EXIT - AI HANDLED IT
+                }
+            } catch(e) {
+                console.warn("AI Chat failed, falling back to keywords...", e);
+            }
+
+            // 2. FALLBACK: INTENT MATCHING (Smart Match)
+            // If we are here, AI failed or was not set - SHOW BUTTONS AS FALLBACK
+            document.getElementById('assistant-quick-replies').style.display = 'flex';
             let match = null;
 
             // Search for keywords in our registered messages
             for (const m of this.config.messages) {
-                // If the user's text contains parts of the question or the keyword
                 const questionWords = m.pergunta.toLowerCase().replace(/[?]/g, '').split(' ');
-                // Filter small words (is, the, etc but for PT-BR)
                 const keywords = questionWords.filter(w => w.length > 3);
-                
                 const isMatch = keywords.some(k => lowerText.includes(k));
                 if(isMatch) {
                     match = m;
@@ -496,7 +524,7 @@
                 }
             } else {
                 // Generic AI-like response if no match
-                await this.addMessage("Entendi! Ainda estou aprendendo sobre esse assunto. 😅<br><br>Mas olhe o que eu já sei responder sobre o site:", 'bot');
+                await this.addMessage("Legal! Ainda estou aprendendo sobre esse assunto específico. 😅<br><br>Gostaria de falar com um atendente humano ou prefere ver esses tópicos:", 'bot');
             }
 
             document.getElementById('assistant-quick-replies').style.display = 'flex';

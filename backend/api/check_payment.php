@@ -41,6 +41,24 @@ if ($status === 'pendente') {
                     $pdo->prepare("UPDATE reservas SET status = 'pago' WHERE id = ?")->execute([$reserva_id]);
                     $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$reserva_id]);
                     $status = 'pago';
+
+                    // --- WHATSAPP NOTIFICATION ---
+                    try {
+                        require_once 'whatsapp_helper.php';
+                        $stmtD = $pdo->prepare("SELECT r.nome as comprador, r.whatsapp, r.rifa_id, ri.nome as rifa_nome, GROUP_CONCAT(n.numero) as nms 
+                                                FROM reservas r 
+                                                JOIN rifas ri ON r.rifa_id = ri.id 
+                                                JOIN numeros n ON r.id = n.reserva_id
+                                                WHERE r.id = ? GROUP BY r.id");
+                        $stmtD->execute([$reserva_id]);
+                        $details = $stmtD->fetch(PDO::FETCH_ASSOC);
+
+                        if ($details) {
+                            $msg = "✅ *PAGAMENTO CONFIRMADO!*\n\nOlá *" . $details['comprador'] . "*,\nSeu pagamento para a rifa *" . $details['rifa_nome'] . "* foi recebido com sucesso!\n\n🎫 *Seus Números:* " . $details['nms'] . "\n\nBoa sorte! Acompanhe o sorteio em nosso site.";
+                            sendWhatsAppMessage($details['whatsapp'], $msg);
+                        }
+                    } catch (Exception $eW) {}
+                    // -----------------------------
                 }
             } else if($gateway === 'efi' && !empty($clientId) && !empty($clientSecret) && file_exists($certificate)) {
                 // 1. Auth Efí
@@ -78,6 +96,24 @@ if ($status === 'pendente') {
                         $pdo->prepare("UPDATE reservas SET status = 'pago' WHERE id = ?")->execute([$reserva_id]);
                         $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$reserva_id]);
                         $status = 'pago';
+
+                        // --- WHATSAPP NOTIFICATION ---
+                        try {
+                            require_once 'whatsapp_helper.php';
+                            $stmtD = $pdo->prepare("SELECT r.nome as comprador, r.whatsapp, r.rifa_id, ri.nome as rifa_nome, GROUP_CONCAT(n.numero) as nms 
+                                                    FROM reservas r 
+                                                    JOIN rifas ri ON r.rifa_id = ri.id 
+                                                    JOIN numeros n ON r.id = n.reserva_id
+                                                    WHERE r.id = ? GROUP BY r.id");
+                            $stmtD->execute([$reserva_id]);
+                            $details = $stmtD->fetch(PDO::FETCH_ASSOC);
+
+                            if ($details) {
+                                $msg = "✅ *PAGAMENTO CONFIRMADO!*\n\nOlá *" . $details['comprador'] . "*,\nSeu pagamento para a rifa *" . $details['rifa_nome'] . "* foi recebido com sucesso!\n\n🎫 *Seus Números:* " . $details['nms'] . "\n\nBoa sorte! Acompanhe o sorteio em nosso site.";
+                                sendWhatsAppMessage($details['whatsapp'], $msg);
+                            }
+                        } catch (Exception $eW) {}
+                        // -----------------------------
                     }
                 }
             }

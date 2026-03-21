@@ -82,7 +82,7 @@ if ($action === 'stats') {
     }
 
     // Get configs
-    $stmtM = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('modo_manutencao', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email', 'assistant_enabled', 'assistant_name', 'assistant_attendant', 'assistant_whatsapp', 'assistant_welcome_message')");
+    $stmtM = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('modo_manutencao', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email', 'assistant_enabled', 'assistant_name', 'assistant_attendant', 'assistant_whatsapp', 'assistant_welcome_message', 'gemini_api_key')");
     $configs = $stmtM ? $stmtM->fetchAll(PDO::FETCH_KEY_PAIR) : [];
     
     $stmtUser = $pdo->query("SELECT email, username FROM usuarios WHERE id = 1");
@@ -111,6 +111,7 @@ if ($action === 'stats') {
             'attendant' => $configs['assistant_attendant'] ?? 'David',
             'whatsapp' => $configs['assistant_whatsapp'] ?? '5511999999999',
             'welcome_message' => $configs['assistant_welcome_message'] ?? '',
+            'gemini_api_key' => $configs['gemini_api_key'] ?? '',
             'messages' => $pdo->query("SELECT * FROM assistant_messages ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC)
         ],
         'server_time' => date('c'),
@@ -131,7 +132,8 @@ if ($action === 'stats') {
         'assistant_name' => $name,
         'assistant_attendant' => $attendant,
         'assistant_whatsapp' => $whatsapp,
-        'assistant_welcome_message' => $welcome
+        'assistant_welcome_message' => $welcome,
+        'gemini_api_key' => $_POST['gemini_api_key'] ?? ''
     ];
 
     foreach ($params as $key => $val) {
@@ -309,6 +311,38 @@ if ($action === 'stats') {
                 }
             }
 
+            // --- WHATSAPP NOTIFICATION (MANUAL MARK) ---
+            try {
+                require_once 'whatsapp_helper.php';
+                $stmtD = $pdo->prepare("SELECT r.nome as comprador, r.whatsapp, r.rifa_id, ri.premio1, ri.premio2, ri.premio3, ri.premio4, ri.premio5, GROUP_CONCAT(n.numero) as nms 
+                                        FROM reservas r 
+                                        JOIN rifas ri ON r.rifa_id = ri.id 
+                                        JOIN numeros n ON r.id = n.reserva_id
+                                        WHERE r.id = ? GROUP BY r.id");
+                $stmtD->execute([$id]);
+                $details = $stmtD->fetch(PDO::FETCH_ASSOC);
+
+                if ($details) {
+                    $prizes = "";
+                    for($i=1; $i<=5; $i++) {
+                        $prop = "premio" . $i;
+                        if(!empty($details[$prop])) {
+                            $prizes .= "\n- " . $i . "º Prêmio: " . $details[$prop];
+                        }
+                    }
+
+                    $msg = "✅ *PAGAMENTO APROVADO!*\n\n";
+                    $msg .= "Olá *" . $details['comprador'] . "*,\n";
+                    $msg .= "Seu pagamento para a rifa *#" . $details['rifa_id'] . "* foi confirmado pelo administrador!\n\n";
+                    $msg .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
+                    $msg .= "🎫 *Seus Números:* " . $details['nms'] . "\n\n";
+                    $msg .= "Boa sorte! Acompanhe o sorteio em nosso site.";
+
+                    sendWhatsAppMessage($details['whatsapp'], $msg);
+                }
+            } catch (Exception $eW) {}
+            // ------------------------------------------
+
             echo json_encode(['success' => true]);
         } else {
             $pdo->rollBack();
@@ -402,6 +436,17 @@ if ($action === 'stats') {
     foreach ($winners as $index => $w) {
         $ordem = $index + 1;
         $stmtWin->execute([$rifa_id, $w['numero'], $w['nome'], $w['whatsapp'], $ordem]);
+
+        // --- WHATSAPP NOTIFICATION (WINNER) ---
+        try {
+            require_once 'whatsapp_helper.php';
+            $prizeKey = "premio" . $ordem;
+            $prizeName = $prizes[$prizeKey] ?? "Prêmio " . $ordem;
+            
+            $msgWin = "🏆 *PARABÉNS, VOCÊ GANHOU!*\n\nOlá *" . $w['nome'] . "*,\nVocê acaba de ser sorteado na rifa *" . $rifaNome . "*!\n\n🎁 *Seu Prêmio:* " . $prizeName . "\n🎫 *Número Ganhador:* " . $w['numero'] . "\n\nEntre em contato conosco agora para resgatar seu prêmio! 🚀";
+            sendWhatsAppMessage($w['whatsapp'], $msgWin);
+        } catch (Exception $eW) {}
+        // --------------------------------------
     }
 
     // Pegar prêmios para o feedback visual
@@ -484,10 +529,37 @@ if ($action === 'stats') {
     $stmt10 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('password_complexity', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt10->execute([$password_complexity, $password_complexity]);
 
+    // Evolution API
+    $ev_url = $_POST['evolution_api_url'] ?? '';
+    $ev_key = $_POST['evolution_api_key'] ?? '';
+    $ev_instance = $_POST['evolution_instance'] ?? '';
+
+    $stmtEvol1 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('evolution_api_url', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmtEvol1->execute([$ev_url, $ev_url]);
+    $stmtEvol2 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('evolution_api_key', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmtEvol2->execute([$ev_key, $ev_key]);
+    $stmtEvol3 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('evolution_instance', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmtEvol3->execute([$ev_instance, $ev_instance]);
+
     echo json_encode(['success' => true]);
+} else if ($action === 'test_whatsapp') {
+    require_once 'whatsapp_helper.php';
+    $to = $_POST['test_number'] ?? '';
+    if (empty($to)) {
+        die(json_encode(['error' => 'Informe um número para teste (ex: 5511999999999)']));
+    }
+    
+    $msg = "🔔 *TESTE DE CONEXÃO*\n\nSeu sistema de rifas está conectado com sucesso à Evolution API! 🚀";
+    $res = sendWhatsAppMessage($to, $msg);
+    
+    if ($res['success']) {
+        echo json_encode(['success' => true, 'message' => 'Mensagem de teste enviada com sucesso!']);
+    } else {
+        echo json_encode(['success' => false, 'error' => $res['error'], 'raw' => $res['raw'] ?? '']);
+    }
 } else if ($action === 'get_integration') {
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa', 'whatsapp_share_template', 'password_complexity')");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa', 'whatsapp_share_template', 'password_complexity', 'evolution_api_url', 'evolution_api_key', 'evolution_instance')");
     $conf = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     echo json_encode($conf ?: []);
 } else if ($action === 'create_rifa') {
