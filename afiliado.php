@@ -153,19 +153,31 @@ try {
         <div id="section-dash" class="hidden space-y-6">
 
             <div class="grid grid-cols-2 gap-4">
-                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center">
                     <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Saldo Atual</p>
-                    <h3 class="text-2xl font-black text-purple-600" id="dash-saldo">R$ 0,00</h3>
-                    <div class="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
-                        <div id="payout-progress" class="bg-purple-600 h-full transition-all duration-1000"
-                            style="width: 0%"></div>
+                    <h3 class="text-2xl font-black text-purple-600 mb-2" id="dash-saldo">R$ 0,00</h3>
+                    
+                    <div class="w-full bg-gray-100 h-1.5 rounded-full mb-3 overflow-hidden">
+                        <div id="payout-progress" class="bg-purple-600 h-full transition-all duration-1000" style="width: 0%"></div>
                     </div>
-                    <p class="text-[9px] text-gray-400 font-bold mt-2" id="dash-proximo-pgto">VERIFICANDO CICLO...</p>
+                    
+                    <button id="btn-request-payout" onclick="requestPayout()" 
+                        class="w-full bg-purple-600 text-white text-[10px] font-black py-2.5 rounded-xl uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-purple-700">
+                        Solicitar Saque
+                    </button>
+                    
+                    <p class="text-[8px] text-gray-400 font-bold mt-2 uppercase text-center" id="dash-proximo-pgto">VERIFICANDO CICLO...</p>
                 </div>
-                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
-                    <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Total Ganho</p>
-                    <h3 class="text-2xl font-black text-green-600" id="dash-total">R$ 0,00</h3>
-                    <p class="text-[9px] text-gray-400 font-bold mt-2" id="dash-vendas">0 VENDAS PAGAS</p>
+                
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center">
+                    <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Ganhos do Ciclo</p>
+                    <h3 class="text-2xl font-black text-green-600 mb-2" id="dash-total">R$ 0,00</h3>
+                    <p class="text-[9px] text-gray-400 font-bold mb-3 uppercase" id="dash-vendas">0 VENDAS PAGAS</p>
+                    
+                    <button onclick="showPayouts()" 
+                        class="w-full bg-gray-100 text-gray-600 text-[10px] font-black py-2.5 rounded-xl uppercase tracking-widest hover:bg-gray-200 transition-all border border-gray-200">
+                        Ver Extrato
+                    </button>
                 </div>
             </div>
 
@@ -212,6 +224,21 @@ try {
         </div>
 
     </main>
+
+    <!-- Modal Extrato de Pagamentos -->
+    <div id="modal-payouts" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl relative border border-gray-100 max-h-[85vh] flex flex-col">
+            <h2 class="text-xl font-black text-[#2c3e50] mb-6 uppercase tracking-tight italic text-center">EXTRATO DE PAGAMENTOS</h2>
+            
+            <div id="payouts-list" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                <!-- Populado via JS -->
+                <p class="text-center text-xs text-gray-400 py-10">Carregando histórico...</p>
+            </div>
+
+            <button onclick="document.getElementById('modal-payouts').classList.add('hidden')"
+                class="w-full bg-gray-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs tracking-widest hover:bg-black transition-all mt-6">Fechar</button>
+        </div>
+    </div>
 
     <!-- Modal Notificação -->
     <div id="modal-notif"
@@ -424,33 +451,49 @@ try {
             document.getElementById('dash-vendas').textContent = `${af.vendas_pagas} VENDAS PAGAS`;
             document.getElementById('dash-pix-key').value = af.pix_key;
             document.getElementById('dash-email').value = af.email;
+            
+            // Botão de Saque Logic
+            const btnPay = document.getElementById('btn-request-payout');
+            const ultimaData = af.data_ultimo_saque ? new Date(af.data_ultimo_saque) : null;
+            const hoje = new Date();
+            let diasParaProximo = 0;
+            
+            if (ultimaData) {
+                ultimaData.setHours(0,0,0,0);
+                const proximoSaque = new Date(ultimaData);
+                proximoSaque.setDate(proximoSaque.getDate() + 15);
+                diasParaProximo = Math.ceil((proximoSaque - hoje) / (1000 * 60 * 60 * 24));
+            }
 
-            // Calcular Próximo Pagamento (15 dias após o último)
-            if (af.data_ultimo_saque) {
-                const ultimaData = new Date(af.data_ultimo_saque);
-                ultimaData.setDate(ultimaData.getDate() + 15);
-                const hoje = new Date();
-                const dif = Math.ceil((ultimaData - hoje) / (1000 * 60 * 60 * 24));
-
-                let msg = `PRÓXIMA DISPONIBILIDADE: ${ultimaData.toLocaleDateString('pt-BR')}`;
-                if (dif > 0) msg += ` (${dif} DIAS)`;
-                else msg = "PAGAMENTO DISPONÍVEL NO PRÓXIMO CICLO";
-
-                document.getElementById('dash-proximo-pgto').textContent = msg;
+            if (saldo < 20) {
+                btnPay.disabled = true;
+                btnPay.textContent = 'Mínimo R$ 20';
+                document.getElementById('dash-proximo-pgto').textContent = "CUMPRIR META PARA SACAR";
+            } else if (diasParaProximo > 0) {
+                btnPay.disabled = true;
+                btnPay.textContent = 'Aguardar Ciclo';
+                document.getElementById('dash-proximo-pgto').textContent = `PRÓXIMO CICLO EM ${diasParaProximo} DIAS`;
+            } else {
+                btnPay.disabled = false;
+                btnPay.textContent = 'Solicitar Saque';
+                document.getElementById('dash-proximo-pgto').textContent = "PAGAMENTO DISPONÍVEL! 🚀";
             }
 
             const cont = document.getElementById('links-container');
             cont.innerHTML = '';
+            rifasData = {};
 
             data.rifas.forEach(r => {
+                rifasData[r.id] = r;
                 const link = `${data.site_url}/rifa.php?id=${r.id}&ref=${af.id}`;
+                
                 const item = `
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                         <p class="text-[10px] font-black text-purple-600 uppercase mb-1">${r.nome}</p>
                         <div class="flex gap-2">
                             <input type="text" readonly value="${link}" class="flex-1 bg-white border border-gray-200 rounded-lg p-2 text-xs font-mono outline-none">
                             <button onclick="copyToClipboard('${link}')" class="bg-gray-800 text-white text-[10px] font-black px-4 rounded-lg uppercase tracking-widest hover:bg-black transition-all">Copiar</button>
-                            <button onclick="shareWA('${link}', '${r.nome}', '${r.preco_numero}', ['${r.premio1 || ""}', '${r.premio2 || ""}', '${r.premio3 || ""}', '${r.premio4 || ""}', '${r.premio5 || ""}'])" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-all flex items-center justify-center">
+                            <button onclick="shareWAById(${r.id}, '${link}')" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-all flex items-center justify-center">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                             </button>
                         </div>
@@ -460,19 +503,35 @@ try {
             });
         }
 
+        function shareWAById(id, link) {
+            const r = rifasData[id];
+            if(!r) return;
+            const premios = [r.premio1 || "", r.premio2 || "", r.premio3 || "", r.premio4 || "", r.premio5 || ""];
+            shareWA(link, r.nome, r.preco_numero, premios);
+        }
+
         function shareWA(link, rifaNome, preco, premios) {
             let template = whatsappTemplate || "🎉 Participe da Rifa: {rifa_nome}\n\nConcorra agora: {link}";
 
-            // Replace placeholders
+            // Replace basic info
             let finalMsg = template
                 .replace(/{rifa_nome}/g, rifaNome)
                 .replace(/{link}/g, link)
-                .replace(/{preco}/g, parseFloat(preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
-                .replace(/{premio1}/g, premios[0] || "---")
-                .replace(/{premio2}/g, premios[1] || "---")
-                .replace(/{premio3}/g, premios[2] || "---")
-                .replace(/{premio4}/g, premios[3] || "---")
-                .replace(/{premio5}/g, premios[4] || "---");
+                .replace(/{preco}/g, parseFloat(preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+
+            // Replace prizes (and remove entire lines if prize is empty)
+            for (let i = 1; i <= 5; i++) {
+                const val = premios[i - 1];
+                const placeholder = `{premio${i}}`;
+                
+                if (val && val.trim() !== '') {
+                    finalMsg = finalMsg.replace(new RegExp(placeholder, 'g'), val.trim());
+                } else {
+                    // Remove line containing the placeholder
+                    const regex = new RegExp(`^.*${placeholder}.*(\r?\n)?`, 'gm');
+                    finalMsg = finalMsg.replace(regex, '');
+                }
+            }
 
             const msg = encodeURIComponent(finalMsg);
             window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
@@ -491,6 +550,7 @@ try {
             else showAlert(data.error);
         }
 
+        let rifasData = {};
         document.getElementById('btn-logout').onclick = async () => {
             await fetch(`${API}?action=logout`);
             location.reload();

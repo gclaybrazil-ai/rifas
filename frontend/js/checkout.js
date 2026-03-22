@@ -54,7 +54,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <h4 class="font-black text-[#2c3e50] text-sm">${data.nome}</h4>
                         <p class="text-xs text-gray-500 font-bold mb-1">Rifa #${data.rifa_id}</p>
                         <p class="text-xs text-[#00a650] font-black underline mb-2 tracking-wide">${val}</p>
-                        <p class="text-[10px] sm:text-xs font-bold bg-white text-gray-500 border border-gray-200 px-2 py-1 rounded inline-block">Nros: ${data.numeros}</p>
+                        <p class="text-[10px] sm:text-xs font-bold bg-white text-gray-500 border border-gray-200 px-2 py-1 rounded inline-block mb-1">Nros: ${data.numeros}</p>
+                        <p class="text-[10px] text-gray-400 italic block leading-tight">Dica: Se você não preencheu os dados do seu cartão a tempo, pague o Pix gerado abaixo para não perder sua reserva!</p>
                     </div>
                 `;
 
@@ -130,6 +131,70 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                         });
                 }, 3000);
+
+                // --- CARD INITIALIZATION ---
+                if (data.card_active === '1' && data.gateway === 'mercadopago' && data.mp_public_key) {
+                    const tabs = document.getElementById('payment-tabs');
+                    const tabPix = document.getElementById('tab-pix');
+                    const tabCard = document.getElementById('tab-card');
+                    const contentPix = document.getElementById('content-pix');
+                    const contentCard = document.getElementById('content-card');
+
+                    tabs.classList.remove('hidden');
+
+                    const setTab = (type) => {
+                        if (type === 'pix') {
+                            tabPix.className = 'flex-1 bg-[#00a650] text-white py-2 rounded-lg font-bold text-xs shadow-sm uppercase transition-all';
+                            tabCard.className = 'flex-1 bg-gray-100 text-gray-400 py-2 rounded-lg font-bold text-xs border border-gray-200 uppercase transition-all hover:bg-gray-200';
+                            contentPix.classList.remove('hidden');
+                            contentCard.classList.add('hidden');
+                        } else {
+                            tabCard.className = 'flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold text-xs shadow-sm uppercase transition-all';
+                            tabPix.className = 'flex-1 bg-gray-100 text-gray-400 py-2 rounded-lg font-bold text-xs border border-gray-200 uppercase transition-all hover:bg-gray-200';
+                            contentCard.classList.remove('hidden');
+                            contentPix.classList.add('hidden');
+                        }
+                    };
+
+                    tabPix.addEventListener('click', () => setTab('pix'));
+                    tabCard.addEventListener('click', () => setTab('card'));
+
+                    const preferMethod = localStorage.getItem(`checkout_method_${id}`) || 'pix';
+                    setTab(preferMethod);
+
+                    // Initialize MP
+                    const mp = new MercadoPago(data.mp_public_key);
+                    const bricksBuilder = mp.bricks();
+                    
+                    const renderCardBrick = async () => {
+                        const settings = {
+                            initialization: { amount: Number(data.valor_total) },
+                            customization: { visual: { style: { theme: 'default' } } },
+                            callbacks: {
+                                onReady: () => console.log('Checkout Card Ready'),
+                                onSubmit: (formData) => {
+                                    return new Promise((resolve, reject) => {
+                                        fetch('backend/api/pay_card.php', {
+                                            method: 'POST',
+                                            body: JSON.stringify({ reserva_id: id, card_data: formData }),
+                                            headers: { 'Content-Type': 'application/json' }
+                                        }).then(r => r.json()).then(result => {
+                                            if (result.error) {
+                                                showAlert(result.error);
+                                                reject();
+                                            } else {
+                                                resolve();
+                                            }
+                                        }).catch(() => reject());
+                                    });
+                                },
+                                onError: (e) => console.error(e)
+                            }
+                        };
+                        window.cardBrickController = await bricksBuilder.create('cardPayment', 'paymentCardBrick_container', settings);
+                    };
+                    renderCardBrick();
+                }
             }
         } else {
             alert(json.error || "Reserva não encontrada");
@@ -157,5 +222,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }, 2000);
             });
         });
+    }
+
+    function showAlert(message, title = 'Atenção', type = 'error') {
+        const modal = document.getElementById('modal-alert');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMsg = document.getElementById('alert-message');
+        const iconError = document.getElementById('alert-icon-error');
+        const iconInfo = document.getElementById('alert-icon-info');
+
+        if (!modal) {
+            alert(message);
+            return;
+        }
+
+        alertTitle.textContent = title;
+        alertMsg.textContent = message;
+
+        if (type === 'error') {
+            iconError.classList.remove('hidden');
+            iconInfo.classList.add('hidden');
+        } else {
+            iconError.classList.add('hidden');
+            iconInfo.classList.remove('hidden');
+        }
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+        }, 10);
     }
 });

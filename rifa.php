@@ -41,6 +41,9 @@ $image = ($rifa && !empty($rifa['imagem_url'])) ? $baseUrl . "/" . $rifa['imagem
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="frontend/css/style.css">
     <link rel="icon" type="image/png" href="frontend/png/cifrao.png">
+
+    <!-- Mercado Pago SDK -->
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
 </head>
 
 <body class="bg-gray-100 text-gray-800 font-sans pb-32">
@@ -158,6 +161,59 @@ $image = ($rifa && !empty($rifa['imagem_url'])) ? $baseUrl . "/" . $rifa['imagem
             Desistir e Liberar Números
         </button>
     </div>
+    <!-- Modal Escolha Pagamento -->
+    <div id="modal-payment-method"
+        class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm rounded-[1.5rem] p-6 text-center z-50 flex-col gap-4 hidden shadow-2xl">
+        <h3 class="font-bold text-lg text-[#2c3e50] uppercase mb-1">Como deseja pagar?</h3>
+        <p class="text-[10px] text-gray-400 font-bold uppercase mb-4">Escolha a melhor opção para você</p>
+
+        <div class="flex flex-col gap-3">
+            <button id="btn-pay-pix" class="flex items-center gap-4 bg-gray-50 hover:bg-green-50 p-4 rounded-2xl border border-gray-100 hover:border-green-200 transition-all text-left group">
+                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor"><path d="M22.25 12l-10-10-10 10 10 10 10-10zm-10-8.5l8.5 8.5-8.5 8.5-8.5-8.5 8.5-8.5z"/></svg>
+                </div>
+                <div>
+                    <span class="block font-black text-gray-800 uppercase text-sm">Pix</span>
+                    <span class="block text-[10px] text-gray-500 font-bold">Aprovação Imediata</span>
+                </div>
+            </button>
+
+            <button id="btn-pay-card" class="flex items-center gap-4 bg-gray-50 hover:bg-indigo-50 p-4 rounded-2xl border border-gray-100 hover:border-indigo-200 transition-all text-left group">
+                <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                </div>
+                <div>
+                    <span class="block font-black text-gray-800 uppercase text-sm">Cartão de Crédito</span>
+                    <span class="block text-[10px] text-gray-500 font-bold italic">Em até 12x</span>
+                </div>
+            </button>
+        </div>
+
+        <button onclick="hideModals()" class="text-xs text-gray-400 font-bold mt-4 underline uppercase">Voltar</button>
+    </div>
+
+    <!-- Modal Cartão de Crédito (Formulário) -->
+    <div id="modal-card" class="modal-box bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md rounded-[2rem] p-6 z-50 flex-col gap-4 hidden overflow-hidden shadow-2xl">
+        <h3 class="font-bold text-lg text-indigo-700 uppercase w-full text-center mb-2">Dados do Cartão</h3>
+        
+        <div class="bg-red-50 text-red-600 font-bold p-2 text-sm rounded-lg border border-red-100 flex items-center justify-center gap-2 mb-2">
+            <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span id="countdown-card">00:00</span>
+        </div>
+
+        <p class="text-[10px] font-bold text-gray-500 mb-2 px-2 tracking-wide uppercase text-center">
+            Seus números estão reservados! Conclua o pagamento antes do tempo acabar.
+        </p>
+
+        <!-- MP Brick Container or Custom Form -->
+        <div id="paymentCardBrick_container"></div>
+
+        <button onclick="hideModals()" class="w-full text-gray-400 font-semibold py-2 uppercase text-[10px] mt-2 underline hover:text-gray-600 transition-colors">
+            Cancelar e Voltar
+        </button>
+    </div>
 
     <!-- Modal PIX -->
     <div id="modal-pix"
@@ -266,7 +322,7 @@ $image = ($rifa && !empty($rifa['imagem_url'])) ? $baseUrl . "/" . $rifa['imagem
         </button>
     </div>
 
-    <script src="frontend/js/app.js?v=2.5"></script>
+    <script src="frontend/js/app.js?v=<?= time() ?>"></script>
 </body>
 
 </html>

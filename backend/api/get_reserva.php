@@ -35,11 +35,25 @@ try {
 
     if($res) {
         $group_vip = '';
+        $gateway = '';
+        $card_active = '0';
+        $mp_public_key = '';
+
         try {
-            $stmtG = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'group_vip'");
-            if($stmtG) $group_vip = $stmtG->fetchColumn() ?: '';
+            $stmtConf = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('group_vip', 'gateway', 'card_active', 'mp_public_key')");
+            if($stmtConf) {
+                $configs = $stmtConf->fetchAll(PDO::FETCH_KEY_PAIR);
+                $group_vip = $configs['group_vip'] ?? '';
+                $gateway = $configs['gateway'] ?? '';
+                $card_active = $configs['card_active'] ?? '0';
+                $mp_public_key = $configs['mp_public_key'] ?? '';
+            }
         } catch(PDOException $e) {}
+
         $res['group_vip'] = $group_vip;
+        $res['gateway'] = $gateway;
+        $res['card_active'] = $card_active;
+        $res['mp_public_key'] = $mp_public_key;
         
         echo json_encode(['success' => true, 'data' => $res]);
     } else {

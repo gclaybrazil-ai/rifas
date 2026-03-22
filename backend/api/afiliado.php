@@ -198,6 +198,57 @@ if ($action === 'login_register') {
         echo json_encode(['error' => 'Falha ao enviar email. ' . (in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1']) ? "Simulação (Local): $link" : "")]);
     }
 
+} else if ($action === 'request_payout') {
+    if (!isset($_SESSION['afiliado_id'])) die(json_encode(['error' => 'Não logado']));
+    
+    $stmt = $pdo->prepare("SELECT id, saldo, pix_key, data_ultimo_saque FROM afiliados WHERE id = ?");
+    $stmt->execute([$_SESSION['afiliado_id']]);
+    $af = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Validação de saldo mínimo
+    $minPayout = 20.00;
+    if ($af['saldo'] < $minPayout) {
+        die(json_encode(['error' => 'Saldo insuficiente para saque. Valor mínimo: '.number_format($minPayout, 2, ',', '.')]));
+    }
+
+    // Validação de intervalo de 15 dias (Ciclo de Pagamento)
+    if ($af['data_ultimo_saque']) {
+        $ultimaData = new DateTime($af['data_ultimo_saque']);
+        $hoje = new DateTime();
+        $diff = $ultimaData->diff($hoje)->days;
+        if ($diff < 15) {
+            $prox = $ultimaData->modify('+15 days')->format('d/m/Y');
+            die(json_encode(['error' => "Próximo saque disponível apenas em: $prox (Ciclo de 15 dias)"]));
+        }
+    }
+
+    try {
+        $pdo->beginTransaction();
+        
+        // Registrar Saque
+        $stmtS = $pdo->prepare("INSERT INTO saques (afiliado_id, valor, chave_pix, status) VALUES (?, ?, ?, 'pendente')");
+        $stmtS->execute([$af['id'], $af['saldo'], $af['pix_key']]);
+
+        // Zerar saldo e ganhos do ciclo, e atualizar data do último saque
+        $stmtU = $pdo->prepare("UPDATE afiliados SET saldo = 0, total_ganho = 0, data_ultimo_saque = NOW() WHERE id = ?");
+        $stmtU->execute([$af['id']]);
+
+        $pdo->commit();
+        echo json_encode(['success' => true, 'message' => 'Solicitação de saque enviada com sucesso!']);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['error' => 'Erro ao processar saque: ' . $e->getMessage()]);
+    }
+
+} else if ($action === 'get_payouts') {
+    if (!isset($_SESSION['afiliado_id'])) die(json_encode(['error' => 'Não logado']));
+    
+    $stmt = $pdo->prepare("SELECT * FROM saques WHERE afiliado_id = ? ORDER BY data_solicitacao DESC");
+    $stmt->execute([$_SESSION['afiliado_id']]);
+    $payouts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo json_encode($payouts);
+
 } else if ($action === 'logout') {
     unset($_SESSION['afiliado_id']);
     echo json_encode(['success' => true]);

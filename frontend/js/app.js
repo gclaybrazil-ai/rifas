@@ -9,7 +9,10 @@ let state = {
     paymentPollingTimer: null,
     countdownTimer: null,
     groupVip: '',
-    repassarTaxa: false
+    repassarTaxa: false,
+    cardActive: false,
+    gateway: '',
+    mpPublicKey: ''
 };
 
 // DOM Elements
@@ -88,6 +91,9 @@ async function fetchRifa() {
         }
 
         state.repassarTaxa = data.repassar_taxa === '1';
+        state.cardActive = data.card_active === '1';
+        state.gateway = data.gateway || '';
+        state.mpPublicKey = data.mp_public_key || '';
 
         updateGrid(data.numeros);
         updateBottomBar();
@@ -332,6 +338,96 @@ els.btnSubmitReservation.addEventListener('click', async () => {
     els.btnSubmitReservation.disabled = true;
 
     try {
+        if (state.cardActive) {
+            // Se cartão estiver ativo, primeiro precisamos escolher o método
+            // Mas primeiro validamos os dados básicos (Nome/Whats)
+            els.btnSubmitReservation.innerHTML = 'Prosseguir para Pagamento';
+            els.btnSubmitReservation.disabled = false;
+            hideModals();
+            setTimeout(() => openModal(document.getElementById('modal-payment-method')), 350);
+            return;
+        }
+
+        // Se NÃO tem cartão, segue direto pro PIX normal
+        processPixPayment(nome, whatsapp, arr);
+
+    } catch (err) {
+        console.error(err);
+        showAlert('Erro ao comunicar com o servidor.');
+        els.btnSubmitReservation.innerHTML = 'Prosseguir para Pagamento';
+        els.btnSubmitReservation.disabled = false;
+    }
+});
+
+// Listener para escolha de pagamento
+document.getElementById('btn-pay-pix')?.addEventListener('click', () => {
+    const nome = els.inputName.value.trim();
+    const whatsapp = els.inputWhatsapp.value.trim();
+    const arr = Array.from(state.selecionados);
+    hideModals();
+    processPixPayment(nome, whatsapp, arr);
+});
+
+document.getElementById('btn-pay-card')?.addEventListener('click', async () => {
+    hideModals();
+    els.btnSubmitReservation.innerHTML = 'Aguarde...';
+    els.btnSubmitReservation.disabled = true;
+
+    const nome = els.inputName.value.trim();
+    const whatsapp = els.inputWhatsapp.value.trim();
+    const arr = Array.from(state.selecionados);
+
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const rifaId = urlParams.get('id') || '';
+
+        const res = await fetch(`${API_URL}/reserve.php`, {
+            method: 'POST',
+            body: JSON.stringify({
+                rifa_id: rifaId,
+                nome,
+                whatsapp,
+                numeros: arr,
+                afiliado_id: localStorage.getItem('rifa_ref') || '',
+                payment_method: 'credit_card_init'
+            }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await res.json();
+        if (data.error) {
+            showAlert(data.error);
+            els.btnSubmitReservation.innerHTML = 'Prosseguir para Pagamento';
+            els.btnSubmitReservation.disabled = false;
+            fetchRifa();
+            return;
+        }
+
+        state.reservaId = data.reserva_id;
+        state.reserva = data;
+        state.selecionados.clear();
+        localStorage.setItem(`checkout_method_${data.reserva_id}`, 'card');
+        updateBottomBar();
+        
+        startCountdown(data.expire_in);
+        // Start polling check just in case it expires
+        startPaymentPolling(data.reserva_id);
+
+        setTimeout(() => showCardForm(), 350);
+
+    } catch (err) {
+        console.error(err);
+        showAlert('Erro ao iniciar pagamento com cartão.');
+        els.btnSubmitReservation.innerHTML = 'Prosseguir para Pagamento';
+        els.btnSubmitReservation.disabled = false;
+    }
+});
+
+async function processPixPayment(nome, whatsapp, arr) {
+    els.btnSubmitReservation.innerHTML = 'Aguarde...';
+    els.btnSubmitReservation.disabled = true;
+
+    try {
         const urlParams = new URLSearchParams(window.location.search);
         const rifaId = urlParams.get('id') || '';
 
@@ -352,37 +448,116 @@ els.btnSubmitReservation.addEventListener('click', async () => {
             showAlert(data.error);
             els.btnSubmitReservation.innerHTML = 'Prosseguir para Pagamento';
             els.btnSubmitReservation.disabled = false;
-            fetchRifa(); // Refresh to see taken numbers
-            hideModals();
+            fetchRifa();
             return;
         }
 
-        // Sucesso
         state.reserva = data;
-
-        // Limpa grid e botões (pois agora viraram 'reservado' do server)
         state.selecionados.clear();
+        localStorage.setItem(`checkout_method_${data.reserva_id}`, 'pix');
         updateBottomBar();
 
-        // Setup PIX
         els.pixQr.src = data.pix_qrcode;
         els.pixCopiaCola.value = data.pix_copiacola;
 
-        hideModals();
         setTimeout(() => openModal(els.modalPix), 350);
-
-        // Iniciar timer
         startCountdown(data.expire_in);
-        // Iniciar Polling PIX
         startPaymentPolling(data.reserva_id);
 
     } catch (err) {
         console.error(err);
-        showAlert('Erro ao comunicar com o servidor.');
+        showAlert('Erro ao processar pagamento PIX.');
         els.btnSubmitReservation.innerHTML = 'Prosseguir para Pagamento';
         els.btnSubmitReservation.disabled = false;
     }
-});
+}
+
+function showCardForm() {
+    const container = document.getElementById('paymentCardBrick_container');
+    container.innerHTML = ''; // Clear
+    openModal(document.getElementById('modal-card'));
+
+    if (state.gateway === 'mercadopago' && state.mpPublicKey) {
+        const mp = new MercadoPago(state.mpPublicKey);
+        const bricksBuilder = mp.bricks();
+        
+        const renderCardBrick = async (bricksBuilder) => {
+            // Utilizamos o valor total retornado pelo backend na Pré-Reserva
+            let finalAmount = state.reserva && state.reserva.total ? Number(state.reserva.total) : 0;
+
+            const settings = {
+                initialization: {
+                    amount: finalAmount,
+                },
+                customization: {
+                    visual: {
+                        style: {
+                            theme: 'default'
+                        }
+                    }
+                },
+                callbacks: {
+                    onReady: () => {
+                        console.log("Card Brick Ready");
+                    },
+                    onSubmit: (formData) => {
+                        return new Promise((resolve, reject) => {
+                            // formData contains the token and other data
+                            processCardPayment(formData)
+                                .then(() => resolve())
+                                .catch(() => reject());
+                        });
+                    },
+                    onError: (error) => {
+                        console.error("Card Brick Error:", error);
+                        showAlert("Erro ao exibir formulário do cartão.");
+                    },
+                },
+            };
+            window.cardBrickController = await bricksBuilder.create('cardPayment', 'paymentCardBrick_container', settings);
+        };
+        renderCardBrick(bricksBuilder);
+    } else {
+        container.innerHTML = `<div class="p-8 text-center text-gray-500 font-bold">A integração configurada (${state.gateway.toUpperCase()}) ainda não suporta checkout transparente via cartão neste painel.</div>`;
+    }
+}
+
+async function processCardPayment(formData) {
+    els.btnSubmitReservation.innerHTML = 'Aguarde...';
+    els.btnSubmitReservation.disabled = true;
+
+    try {
+        const response = await fetch(`${API_URL}/pay_card.php`, {
+            method: 'POST',
+            body: JSON.stringify({
+                reserva_id: state.reservaId,
+                card_data: formData
+            }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const result = await response.json();
+        if (result.error) {
+            showAlert(result.error);
+            els.btnSubmitReservation.innerHTML = 'Prosseguir para Pagamento';
+            els.btnSubmitReservation.disabled = false;
+            return;
+        }
+
+        if (result.status === 'pago' || result.status === 'approved') {
+            hideModals();
+            setTimeout(() => openModal(els.modalSuccess), 350);
+            state.selecionados.clear();
+            updateBottomBar();
+            fetchRifa();
+        } else {
+             showAlert("Pagamento não aprovado. Verifique os dados do cartão ou use outro método.");
+        }
+    } catch (err) {
+        console.error(err);
+        showAlert("Erro ao processar pagamento com cartão.");
+    }
+}
 
 
 els.btnCopyPix.addEventListener('click', () => {
@@ -401,7 +576,10 @@ function startCountdown(seconds) {
     if (state.countdownTimer) clearInterval(state.countdownTimer);
 
     let time = seconds;
-    els.countdown.textContent = formatTime(time);
+    const format = formatTime(time);
+    els.countdown.textContent = format;
+    const cardCountdown = document.getElementById('countdown-card');
+    if(cardCountdown) cardCountdown.textContent = format;
 
     state.countdownTimer = setInterval(() => {
         time--;
@@ -409,11 +587,14 @@ function startCountdown(seconds) {
             clearInterval(state.countdownTimer);
             clearInterval(state.paymentPollingTimer);
             els.countdown.textContent = '00:00';
+            if(cardCountdown) cardCountdown.textContent = '00:00';
             hideModals();
             setTimeout(() => openModal(document.getElementById('modal-expired')), 350);
             fetchRifa(); // update grid immediately
         } else {
-            els.countdown.textContent = formatTime(time);
+            const formatted = formatTime(time);
+            els.countdown.textContent = formatted;
+            if(cardCountdown) cardCountdown.textContent = formatted;
         }
     }, 1000);
 }

@@ -77,11 +77,13 @@ try {
 $repassar_taxa = '0';
 $gateway = '';
 try {
-    $stmtC = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('repassar_taxa', 'gateway')");
+    $stmtC = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('repassar_taxa', 'gateway', 'card_active', 'mp_public_key')");
     if($stmtC) {
         $confs = $stmtC->fetchAll(PDO::FETCH_KEY_PAIR);
         $gateway = $confs['gateway'] ?? '';
         $repassar_taxa = $confs['repassar_taxa'] ?? '0';
+        $card_active = $confs['card_active'] ?? '0';
+        $mp_public_key = $confs['mp_public_key'] ?? '';
         
         // Se for Mercado Pago, forçamos o repasse para 0 independente da config
         if($gateway === 'mercadopago') {
@@ -96,6 +98,8 @@ echo json_encode([
     'group_vip' => $group_vip,
     'repassar_taxa' => $repassar_taxa,
     'gateway' => $gateway,
+    'card_active' => $card_active,
+    'mp_public_key' => $mp_public_key,
     'valor_taxa' => '0.00' 
 ]);
 ?>

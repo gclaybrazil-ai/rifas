@@ -9,6 +9,7 @@ $nome = $data['nome'] ?? '';
 $whatsapp = $data['whatsapp'] ?? '';
 $numerosSelecionados = $data['numeros'] ?? [];
 $afiliado_id = isset($data['afiliado_id']) && is_numeric($data['afiliado_id']) ? intval($data['afiliado_id']) : null;
+$pay_method = $data['payment_method'] ?? 'pix';
 
 if(empty($nome) || empty($whatsapp) || empty($numerosSelecionados)) {
     die(json_encode(['error' => 'Por favor, preencha todos os dados.']));
@@ -63,9 +64,13 @@ try {
                 $tempo_pagamento = (int)$configs['tempo_pagamento'];
             }
 
-            // Repassar Taxa Logic (Efí 1.19%, Mercado Pago 1%)
+            // Repassar Taxa Logic (Efí 1.19%, Mercado Pago 1%, Cartão 2.4%)
             if (isset($configs['repassar_taxa']) && $configs['repassar_taxa'] === '1') {
-                $feeRate = ($gateway === 'mercadopago') ? 0.01 : 0.0119;
+                if ($pay_method === 'credit_card' || $pay_method === 'credit_card_init') {
+                    $feeRate = 0.024; // 2.4%
+                } else {
+                    $feeRate = ($gateway === 'mercadopago') ? 0.01 : 0.0119;
+                }
                 $novo_total = $valor_original / (1 - $feeRate);
                 $total = round($novo_total, 2);
                 $valor_taxa_calculada = $total - $valor_original;
@@ -80,14 +85,25 @@ try {
 
     // INTEGRAÇÃO REAL MARCADO PAGO
     if($gateway === 'mercadopago' && !empty($token)) {
-        $mp_data = [
-            "transaction_amount" => (float)$total,
-            "payment_method_id" => "pix",
-            "payer" => [
-                "email" => preg_replace('/\D/', '', $whatsapp) . "@supersorte.com.br",
-                "first_name" => substr($nome, 0, 20)
-            ]
-        ];
+        if ($pay_method === 'pix' || $pay_method === 'credit_card_init') {
+            $mp_data = [
+                "transaction_amount" => (float)$total,
+                "payment_method_id" => "pix",
+                "payer" => [
+                    "email" => preg_replace('/\D/', '', $whatsapp) . "@supersorte.com.br",
+                    "first_name" => substr($nome, 0, 20)
+                ]
+            ];
+        } else if ($pay_method === 'credit_card' && isset($data['card_data'])) {
+            $mp_data = $data['card_data'];
+            $mp_data['transaction_amount'] = (float)$total;
+            // Garantir que o email seja o do comprador
+            if(!isset($mp_data['payer']['email'])) {
+                 $mp_data['payer']['email'] = preg_replace('/\D/', '', $whatsapp) . "@supersorte.com.br";
+            }
+        } else {
+             throw new Exception("Método de pagamento não suportado ou dados incompletos.");
+        }
 
         $ch = curl_init('https://api.mercadopago.com/v1/payments');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -104,16 +120,28 @@ try {
         
         $mp_result = json_decode($response, true);
         
-        if(isset($mp_result['point_of_interaction']['transaction_data']['qr_code'])) {
-            $pix_copiacola = $mp_result['point_of_interaction']['transaction_data']['qr_code'];
-            $pix_qrcode = "data:image/jpeg;base64," . $mp_result['point_of_interaction']['transaction_data']['qr_code_base64'];
-            $txid = $mp_result['id']; 
+        if($pay_method === 'pix' || $pay_method === 'credit_card_init') {
+            if(isset($mp_result['point_of_interaction']['transaction_data']['qr_code'])) {
+                $pix_copiacola = $mp_result['point_of_interaction']['transaction_data']['qr_code'];
+                $pix_qrcode = "data:image/jpeg;base64," . $mp_result['point_of_interaction']['transaction_data']['qr_code_base64'];
+                $txid = $mp_result['id']; 
+            } else {
+                throw new Exception("Erro API Mercado Pago (PIX): " . ($mp_result['message'] ?? 'Verifique se seu Access Token Production é válido.'));
+            }
         } else {
-            throw new Exception("Erro API Mercado Pago: " . ($mp_result['message'] ?? 'Verifique se seu Access Token Production é válido.'));
+            // Credit Card Check
+            if (isset($mp_result['status']) && ($mp_result['status'] === 'approved' || $mp_result['status'] === 'authorized')) {
+                // Pagamento aprovado na hora!
+                $txid = $mp_result['id'];
+                // Definiremos o status como pago logo abaixo se aprovado
+            } else {
+                $err_msg = $mp_result['status_detail'] ?? $mp_result['message'] ?? 'Pagamento recusado pelo cartão.';
+                throw new Exception("Erro Cartão: " . $err_msg);
+            }
         }
     } 
     // INTEGRAÇÃO REAL EFÍ BANK (GERENCIANET)
-    else if($gateway === 'efi') {
+    else if($gateway === 'efi' && ($pay_method === 'pix' || $pay_method === 'credit_card_init')) {
         $stmtConfEfi = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('efi_client_id', 'efi_client_secret')");
         $efi_conf = $stmtConfEfi->fetchAll(PDO::FETCH_KEY_PAIR);
         
@@ -237,48 +265,77 @@ try {
     }
 
     // Inserir reserva
-    $stmt = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, valor_total, data_reserva, status, pix_txid, pix_qrcode, pix_copiacola, valor_taxa, afiliado_id) VALUES (?, ?, ?, ?, NOW(), 'pendente', ?, ?, ?, ?, ?)");
-    $stmt->execute([$rifa_id, $nome, $whatsapp, $total, $txid, $pix_qrcode, $pix_copiacola, $valor_taxa_calculada, $afiliado_id]);
+    $finalStatus = ($pay_method === 'credit_card' && isset($txid)) ? 'pago' : 'pendente';
+    $stmt = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, valor_total, data_reserva, status, pix_txid, pix_qrcode, pix_copiacola, valor_taxa, afiliado_id) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$rifa_id, $nome, $whatsapp, $total, $finalStatus, $txid, $pix_qrcode, $pix_copiacola, $valor_taxa_calculada, $afiliado_id]);
     $reserva_id = $pdo->lastInsertId();
 
     // Atualizar números
-    $updateStmt = $pdo->prepare("UPDATE numeros SET status = 'reservado', reserva_id = ? WHERE rifa_id = ? AND numero = ? AND status = 'disponivel'");
+    $numStatus = ($finalStatus === 'pago') ? 'pago' : 'reservado';
+    $updateStmt = $pdo->prepare("UPDATE numeros SET status = ?, reserva_id = ? WHERE rifa_id = ? AND numero = ? AND status = 'disponivel'");
     foreach($numerosSelecionados as $num) {
-        $updateStmt->execute([$reserva_id, $rifa_id, $num]);
+        $updateStmt->execute([$numStatus, $reserva_id, $rifa_id, $num]);
     }
 
     $pdo->commit();
 
-    // --- NOTIFICAÇÃO WHATSAPP (RESERVA) ---
+    // --- NOTIFICAÇÃO WHATSAPP (RESERVA E PAGAMENTO) ---
     try {
-        $stmtW = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_notify_reserva'");
-        $notifyEnabled = $stmtW->fetchColumn();
+        require_once 'whatsapp_helper.php';
         
-        if ($notifyEnabled === '1') {
-            require_once 'whatsapp_helper.php';
-            $prizes = "";
-            for($i=1; $i<=5; $i++) {
-                $prop = "premio" . $i;
-                if(!empty($rifa_data[$prop])) {
-                    $prizes .= "\n- " . $i . "º Prêmio: " . $rifa_data[$prop];
+        if ($finalStatus === 'pago') {
+            $stmtW = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_notify_pago'");
+            $notifyPagoEnabled = $stmtW->fetchColumn();
+            
+            if ($notifyPagoEnabled === '1') {
+                $prizes = "";
+                for($i=1; $i<=5; $i++) {
+                    $prop = "premio" . $i;
+                    if(!empty($rifa_data[$prop])) {
+                        $prizes .= "\n- " . $i . "º Prêmio: " . $rifa_data[$prop];
+                    }
                 }
+                
+                $msgPago = "✅ *PAGAMENTO CONFIRMADO!*\n\n";
+                $msgPago .= "Olá *" . $nome . "*,\n";
+                $msgPago .= "Seu pagamento via Cartão de Crédito na Rifa *#" . $rifa_id . "* foi aprovado com sucesso!\n\n";
+                $msgPago .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
+                $msgPago .= "🎫 *Reserva #{$reserva_id}*\n";
+                $msgPago .= "🎫 *Seus números:* " . implode(', ', $numerosSelecionados) . "\n\n";
+                $msgPago .= "Obrigado e Boa Sorte! 🍀 Acompanhe o sorteio no site.";
+                sendWhatsAppMessage($whatsapp, $msgPago);
             }
+        } else {
+            $stmtW = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'whatsapp_notify_reserva'");
+            $notifyReservaEnabled = $stmtW->fetchColumn();
             
-            $msgReserva = "🎫 *RESERVA REALIZADA!*\n\n";
-            $msgReserva .= "Olá *" . $nome . "*,\n";
-            $msgReserva .= "Você reservou números na rifa *#" . $rifa_id . "*\n\n";
-            $msgReserva .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
-            $msgReserva .= "🎫 *Seus números:* " . implode(', ', $numerosSelecionados) . "\n\n";
-            $msgReserva .= "💰 *Total:* R$ " . number_format($total, 2, ',', '.') . "\n\n";
-            $msgReserva .= "👇 *Pague via PIX para garantir sua participação:* \n\n" . $pix_copiacola;
-            
-            sendWhatsAppMessage($whatsapp, $msgReserva);
+            if ($notifyReservaEnabled === '1') {
+                $prizes = "";
+                for($i=1; $i<=5; $i++) {
+                    $prop = "premio" . $i;
+                    if(!empty($rifa_data[$prop])) {
+                        $prizes .= "\n- " . $i . "º Prêmio: " . $rifa_data[$prop];
+                    }
+                }
+
+                $msgReserva = "🎫 *RESERVA REALIZADA!*\n\n";
+                $msgReserva .= "Olá *" . $nome . "*,\n";
+                $msgReserva .= "Você reservou números na rifa *#" . $rifa_id . "*\n\n";
+                $msgReserva .= "🎁 *Prêmios em jogo:*" . $prizes . "\n\n";
+                $msgReserva .= "🎫 *Seus números:* " . implode(', ', $numerosSelecionados) . "\n\n";
+                $msgReserva .= "💰 *Total:* R$ " . number_format($total, 2, ',', '.') . "\n\n";
+                $msgReserva .= "👇 *Pague via PIX para garantir sua participação:* \n\n" . $pix_copiacola;
+                sendWhatsAppMessage($whatsapp, $msgReserva);
+            }
         }
-    } catch (Exception $eW) {}
+    } catch (Exception $eW) {
+        file_put_contents(__DIR__ . '/whatsapp_errors.log', "Erro Env: " . $eW->getMessage() . "\n", FILE_APPEND);
+    }
     // ------------------------------------
 
     echo json_encode([
         'success' => true, 
+        'status' => $finalStatus,
         'reserva_id' => $reserva_id, 
         'pix_qrcode' => $pix_qrcode, 
         'pix_copiacola' => $pix_copiacola, 

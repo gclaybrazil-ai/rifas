@@ -543,6 +543,7 @@ if ($action === 'stats') {
     $token = trim($_POST['token'] ?? '');
     $efi_client_id = trim($_POST['efi_client_id'] ?? '');
     $efi_client_secret = trim($_POST['efi_client_secret'] ?? '');
+    $mp_public_key = trim($_POST['mp_public_key'] ?? '');
 
     $tempo_pagamento = $_POST['tempo_pagamento'] ?? '3';
     $group_vip = $_POST['group_vip'] ?? '';
@@ -551,6 +552,7 @@ if ($action === 'stats') {
     $repassar_taxa = $_POST['repassar_taxa'] ?? '0';
     $valor_taxa = $_POST['valor_taxa'] ?? '0.00';
     $whatsapp_share_template = $_POST['whatsapp_share_template'] ?? '';
+    $card_active = $_POST['card_active'] ?? '0';
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
     
@@ -607,6 +609,12 @@ if ($action === 'stats') {
     $stmt10 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('password_complexity', ?) ON DUPLICATE KEY UPDATE valor = ?");
     $stmt10->execute([$password_complexity, $password_complexity]);
 
+    $stmt11 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('card_active', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt11->execute([$card_active, $card_active]);
+
+    $stmt12 = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('mp_public_key', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt12->execute([$mp_public_key, $mp_public_key]);
+
     // Evolution API
     $ev_url = $_POST['evolution_api_url'] ?? '';
     $ev_key = $_POST['evolution_api_key'] ?? '';
@@ -651,7 +659,7 @@ if ($action === 'stats') {
     }
 } else if ($action === 'get_integration') {
     $pdo->exec("CREATE TABLE IF NOT EXISTS configuracoes (chave VARCHAR(50) PRIMARY KEY, valor TEXT)");
-    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa', 'whatsapp_share_template', 'password_complexity', 'evolution_api_url', 'evolution_api_key', 'evolution_instance', 'whatsapp_notify_reserva', 'whatsapp_notify_pago', 'whatsapp_notify_ganhador', 'stats_start_date')");
+    $stmt = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('gateway', 'gateway_token', 'tempo_pagamento', 'group_vip', 'whatsapp_suporte', 'mensagem_suporte', 'efi_client_id', 'efi_client_secret', 'efi_cert_name', 'repassar_taxa', 'valor_taxa', 'whatsapp_share_template', 'password_complexity', 'evolution_api_url', 'evolution_api_key', 'evolution_instance', 'whatsapp_notify_reserva', 'whatsapp_notify_pago', 'whatsapp_notify_ganhador', 'stats_start_date', 'card_active', 'mp_public_key')");
     echo json_encode($stmt->fetchAll(PDO::FETCH_KEY_PAIR));
 } else if ($action === 'create_rifa') {
     $nome = $_POST['nome'] ?? 'Rifa Nova';
@@ -1092,7 +1100,10 @@ if ($action === 'stats') {
         echo json_encode(['error' => 'Falha no PHPMailer: ' . $mail->ErrorInfo]);
     }
 } else if ($action === 'get_affiliates') {
-    $stmt = $pdo->query("SELECT id, nome, whatsapp, email, saldo, total_ganho, vendas_pagas, data_ultimo_saque, data_cadastro FROM afiliados ORDER BY nome ASC");
+    $stmt = $pdo->query("SELECT a.id, a.nome, a.whatsapp, a.email, a.saldo, a.total_ganho, a.vendas_pagas, a.data_ultimo_saque, a.data_cadastro,
+                               (SELECT COALESCE(SUM(valor), 0) FROM saques WHERE afiliado_id = a.id AND status = 'pago') as total_pago,
+                               (SELECT COALESCE(SUM(valor), 0) FROM saques WHERE afiliado_id = a.id AND status = 'pendente') as total_pendente
+                        FROM afiliados a ORDER BY a.nome ASC");
     $affiliates = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Get Payout Configs
@@ -1156,8 +1167,8 @@ if ($action === 'stats') {
         $stmtInsert = $pdo->prepare("INSERT INTO saques (afiliado_id, valor, chave_pix, status, data_solicitacao) VALUES (?, ?, ?, 'pendente', NOW())");
         $stmtInsert->execute([$afId, $valor, $af['pix_key']]);
 
-        // Clear balance
-        $stmtUpdate = $pdo->prepare("UPDATE afiliados SET saldo = 0, data_ultimo_saque = NOW() WHERE id = ?");
+        // Clear balance and cycle earnings
+        $stmtUpdate = $pdo->prepare("UPDATE afiliados SET saldo = 0, total_ganho = 0, data_ultimo_saque = NOW() WHERE id = ?");
         $stmtUpdate->execute([$afId]);
 
         $pdo->commit();
@@ -1189,5 +1200,72 @@ if ($action === 'stats') {
     
     echo json_encode(['success' => true, 'message' => 'Saque marcado como PAGO!']);
 
+} else if ($action === 'pay_via_pix_efi') {
+    $id = intval($_POST['id'] ?? 0);
+    if (!$id) die(json_encode(['error' => 'ID inválido']));
+
+    // 1. Get Payout and Configs
+    $stmtS = $pdo->prepare("SELECT s.* FROM saques s WHERE s.id = ?");
+    $stmtS->execute([$id]);
+    $saque = $stmtS->fetch(PDO::FETCH_ASSOC);
+    if (!$saque) die(json_encode(['error' => 'Saque não encontrado']));
+    if ($saque['status'] !== 'pendente') die(json_encode(['error' => 'Saque já processado']));
+
+    $stmtC = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('efi_client_id', 'efi_client_secret', 'efi_cert_name')");
+    $conf = $stmtC->fetchAll(PDO::FETCH_KEY_PAIR);
+    
+    $clientId = $conf['efi_client_id'] ?? '';
+    $clientSecret = $conf['efi_client_secret'] ?? '';
+    $certName = $conf['efi_cert_name'] ?? '';
+    $certificate = __DIR__ . '/../certs/' . $certName;
+
+    if (!$clientId || !$clientSecret || !$certName || !file_exists($certificate)) {
+        die(json_encode(['error' => 'Configurações da Efí incompletas ou certificado não encontrado.']));
+    }
+
+    try {
+        // Auth Efí
+        $ch = curl_init("https://pix.api.efipay.com.br/oauth/token");
+        $base64 = base64_encode("$clientId:$clientSecret");
+        curl_setopt($ch, CURLOPT_SSLCERT, $certificate);
+        curl_setopt($ch, CURLOPT_SSLCERTTYPE, "P12");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, '{"grant_type": "client_credentials"}');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Basic $base64", "Content-Type: application/json"]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        $res = curl_exec($ch);
+        $tokenData = json_decode($res, true);
+        $accessToken = $tokenData['access_token'] ?? '';
+        if (!$accessToken) throw new Exception("Erro Auth Efí: " . ($tokenData['error_description'] ?? 'Falha na autenticação'));
+
+        // Pix Transfer
+        $ch = curl_init("https://pix.api.efipay.com.br/v2/gn/pix/transferencia/" . $saque['id']);
+        $body = ["valor" => number_format($saque['valor'], 2, '.', ''), "favorecido" => ["chave" => $saque['chave_pix']]];
+        curl_setopt($ch, CURLOPT_SSLCERT, $certificate);
+        curl_setopt($ch, CURLOPT_SSLCERTTYPE, "P12");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $accessToken", "Content-Type: application/json"]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        
+        $resTransfer = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $transferData = json_decode($resTransfer, true);
+
+        if ($httpCode === 200 || $httpCode === 201) {
+            $pdo->prepare("UPDATE saques SET status = 'pago', pix_id = ? WHERE id = ?")->execute([$transferData['idEnvio'] ?? 'EFI_AUTO', $id]);
+            registrarLog('acao_admin', "PIX EFI OK Id: $id / R$ " . $saque['valor']);
+            echo json_encode(['success' => true, 'message' => 'Pagamento PIX realizado com sucesso via Efí!']);
+        } else {
+            $msg = $transferData['violacoes'][0]['razao'] ?? $transferData['mensagem'] ?? 'Erro na transferência';
+            throw new Exception("Erro Efí ($httpCode): $msg");
+        }
+    } catch (Exception $e) { echo json_encode(['error' => $e->getMessage()]); }
 }
+
 ?>
