@@ -1214,13 +1214,12 @@ if ($action === 'stats') {
     $stmtC = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('efi_client_id', 'efi_client_secret', 'efi_cert_name')");
     $conf = $stmtC->fetchAll(PDO::FETCH_KEY_PAIR);
     
-    $clientId = $conf['efi_client_id'] ?? '';
-    $clientSecret = $conf['efi_client_secret'] ?? '';
-    $certName = $conf['efi_cert_name'] ?? '';
-    $certificate = __DIR__ . '/../certs/' . $certName;
+    $clientId = trim($conf['efi_client_id'] ?? '');
+    $clientSecret = trim($conf['efi_client_secret'] ?? '');
+    $certificate = realpath(__DIR__ . '/../certs/certificado_producao.p12');
 
-    if (!$clientId || !$clientSecret || !$certName || !file_exists($certificate)) {
-        die(json_encode(['error' => 'Configurações da Efí incompletas ou certificado não encontrado.']));
+    if (!$clientId || !$clientSecret || !$certificate || !file_exists($certificate)) {
+        die(json_encode(['error' => 'A API da Efí Bank não está conectada. Se você usa Mercado Pago ou prefere pagar os afiliados pelo app do seu banco, feche e clique no botão verde "Marcar como Pago" após transferir.']));
     }
 
     try {
@@ -1240,9 +1239,71 @@ if ($action === 'stats') {
         $accessToken = $tokenData['access_token'] ?? '';
         if (!$accessToken) throw new Exception("Erro Auth Efí: " . ($tokenData['error_description'] ?? 'Falha na autenticação'));
 
+        // Fetch Payer key (EVP)
+        $chKeys = curl_init("https://pix.api.efipay.com.br/v2/gn/evp");
+        curl_setopt($chKeys, CURLOPT_SSLCERT, $certificate);
+        curl_setopt($chKeys, CURLOPT_SSLCERTTYPE, "P12");
+        curl_setopt($chKeys, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($chKeys, CURLOPT_HTTPHEADER, ["Authorization: Bearer $accessToken"]);
+        curl_setopt($chKeys, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($chKeys, CURLOPT_SSL_VERIFYHOST, 0);
+        $resKeys = curl_exec($chKeys);
+        curl_close($chKeys);
+        $keysData = json_decode($resKeys, true);
+
+        $payerKey = '';
+        if(isset($keysData['chaves']) && count($keysData['chaves']) > 0) {
+            $payerKey = $keysData['chaves'][0];
+        } else {
+            throw new Exception("Erro Efí: Conta não configurada para enviar pagamentos (Crie uma Chave Aleatória EVP no seu app).");
+        }
+
+        // Helper para normalizar Chave Pix que clientes digitam
+        $formatPixKey = function($key) {
+            $key = trim($key);
+            if (empty($key)) return '';
+            
+            // Email ou Chave Aleatória (UUID) - Manter como está
+            if (strpos($key, '@') !== false) return $key;
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $key)) return $key;
+            
+            $clean = preg_replace('/[^0-9+]/', '', $key); // Manter o + se existir
+            
+            // Se já tem +, mandamos como está
+            if (strpos($clean, '+') === 0) return $clean;
+            
+            // Se for apenas números
+            $digits = preg_replace('/[^0-9]/', '', $clean);
+            if (strlen($digits) === 11) {
+                // Check CPF modulo - Se for CPF, mandamos só os números
+                $isValidCpf = function($cpf) {
+                    if (preg_match('/(\d)\1{10}/', $cpf)) return false;
+                    for ($t = 9; $t < 11; $t++) {
+                        for ($d = 0, $c = 0; $c < $t; $c++) $d += $cpf[$c] * (($t + 1) - $c);
+                        $d = ((10 * $d) % 11) % 10;
+                        if ($cpf[$c] != $d) return false;
+                    }
+                    return true;
+                };
+                if ($isValidCpf($digits)) return $digits;
+                
+                // Se não é CPF, é telefone. Vamos tentar mandar os 11 dígitos puro (DDD+NÚMERO)
+                // como sugerido em alguns manuais da Efí que não usam o +55.
+                return $digits; 
+            }
+            
+            return $digits; // Caso CNPJ (14) ou outros formatos numéricos
+        };
+        $chaveFormatada = $formatPixKey($saque['chave_pix']);
+
         // Pix Transfer
-        $ch = curl_init("https://pix.api.efipay.com.br/v2/gn/pix/transferencia/" . $saque['id']);
-        $body = ["valor" => number_format($saque['valor'], 2, '.', ''), "favorecido" => ["chave" => $saque['chave_pix']]];
+        $idEnvio = "SAQUE" . $saque['id'] . time();
+        $ch = curl_init("https://pix.api.efipay.com.br/v2/gn/pix/" . $idEnvio);
+        $body = [
+            "valor" => number_format($saque['valor'], 2, '.', ''), 
+            "pagador" => ["chave" => $payerKey],
+            "favorecido" => ["chave" => $chaveFormatada]
+        ];
         curl_setopt($ch, CURLOPT_SSLCERT, $certificate);
         curl_setopt($ch, CURLOPT_SSLCERTTYPE, "P12");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1258,11 +1319,124 @@ if ($action === 'stats') {
         $transferData = json_decode($resTransfer, true);
 
         if ($httpCode === 200 || $httpCode === 201) {
+            $statusPix = $transferData['status'] ?? '';
+            
+            // Se estiver em processamento ou aguardando, avisamos que foi recebido pelo banco
+            if ($statusPix === 'NAO_REALIZADO') {
+                $erroPix = "A chave PIX do afiliado (CPF/E-mail/Telefone) não foi aceita ou não existe no Banco Central.";
+                throw new Exception("Transferência Negada: " . $erroPix);
+            }
+
+            // Se for realizado ou estiver em processamento, damos baixa como "Pago" no sistema
+            // para evitar que o admin clique duas vezes, mas avisamos o status real
             $pdo->prepare("UPDATE saques SET status = 'pago', pix_id = ? WHERE id = ?")->execute([$transferData['idEnvio'] ?? 'EFI_AUTO', $id]);
-            registrarLog('acao_admin', "PIX EFI OK Id: $id / R$ " . $saque['valor']);
-            echo json_encode(['success' => true, 'message' => 'Pagamento PIX realizado com sucesso via Efí!']);
+            registrarLog('acao_admin', "PIX EFI OK Id: $id / R$ " . $saque['valor'] . " / Status: $statusPix");
+            
+            $msgFinal = 'Pagamento PIX registrado no banco com sucesso!';
+            if ($statusPix === 'EM_PROCESSAMENTO' || $statusPix === 'AGUARDANDO_PROCESSAMENTO') {
+                $msgFinal = 'Pagamento enviado para a fila da Efí! O dinheiro sairá em instantes (Status: Em Processamento).';
+            } else if ($statusPix === 'REALIZADO') {
+                $msgFinal = 'Pagamento PIX REALIZADO com sucesso! O dinheiro já caiu na conta do afiliado.';
+            }
+
+            echo json_encode(['success' => true, 'message' => $msgFinal]);
         } else {
-            $msg = $transferData['violacoes'][0]['razao'] ?? $transferData['mensagem'] ?? 'Erro na transferência';
+            $detalhado = '';
+            if (isset($transferData['violacoes']) && is_array($transferData['violacoes'])) {
+                foreach($transferData['violacoes'] as $v) {
+                    $detalhado .= ($v['propriedade'] ?? '') . ': ' . ($v['razao'] ?? '') . ' | ';
+                }
+            }
+            $msg = $transferData['mensagem'] ?? 'Erro na transferência';
+            if ($detalhado) $msg .= ' -> Detalhes: ' . $detalhado;
+            throw new Exception("Erro Efí ($httpCode): $msg");
+        }
+    } catch (Exception $e) { echo json_encode(['error' => $e->getMessage()]); }
+} else if ($action === 'test_pix_efi') {
+    try {
+        $valor = $_POST['valor'] ?? '';
+        $chave_pix = $_POST['chave_pix'] ?? '';
+
+        if (!$valor || !$chave_pix) throw new Exception("Valor e Chave são obrigatórios para o teste.");
+
+        $stmtC = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave IN ('efi_client_id', 'efi_client_secret', 'efi_cert_name')");
+        $conf = $stmtC->fetchAll(PDO::FETCH_KEY_PAIR);
+        $clientId = trim($conf['efi_client_id'] ?? '');
+        $clientSecret = trim($conf['efi_client_secret'] ?? '');
+        $certificate = realpath(__DIR__ . '/../certs/certificado_producao.p12');
+        if (!$clientId || !$clientSecret || !file_exists($certificate)) throw new Exception("Configurações da Efí incompletas.");
+
+        // 1. Auth Efí
+        $ch = curl_init("https://pix.api.efipay.com.br/oauth/token");
+        $base64 = base64_encode("$clientId:$clientSecret");
+        curl_setopt($ch, CURLOPT_SSLCERT, $certificate);
+        curl_setopt($ch, CURLOPT_SSLCERTTYPE, "P12");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, '{"grant_type": "client_credentials"}');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Basic $base64", "Content-Type: application/json"]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        $res = curl_exec($ch);
+        $tokenData = json_decode($res, true);
+        $accessToken = $tokenData['access_token'] ?? '';
+        if (!$accessToken) throw new Exception("Erro Auth Efí: " . ($tokenData['error_description'] ?? 'Falha na autenticação'));
+
+        // 2. Fetch Payer key (EVP)
+        $chKeys = curl_init("https://pix.api.efipay.com.br/v2/gn/evp");
+        curl_setopt($chKeys, CURLOPT_SSLCERT, $certificate);
+        curl_setopt($chKeys, CURLOPT_SSLCERTTYPE, "P12");
+        curl_setopt($chKeys, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($chKeys, CURLOPT_HTTPHEADER, ["Authorization: Bearer $accessToken"]);
+        curl_setopt($chKeys, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($chKeys, CURLOPT_SSL_VERIFYHOST, 0);
+        $resKeys = curl_exec($chKeys);
+        curl_close($chKeys);
+        $keysData = json_decode($resKeys, true);
+        $payerKey = $keysData['chaves'][0] ?? '';
+        if (!$payerKey) throw new Exception("Nenhuma chave EVP encontrada na conta Efí.");
+
+        // 3. Format Target Key
+        $formatPixKey = function($key) {
+            $key = trim($key);
+            if (empty($key)) return '';
+            if (strpos($key, '@') !== false) return $key;
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $key)) return $key;
+            $clean = preg_replace('/[^0-9+]/', '', $key);
+            if (strpos($clean, '+') === 0) return $clean;
+            $digits = preg_replace('/[^0-9]/', '', $clean);
+            return $digits; 
+        };
+        $chaveFormatada = $formatPixKey($chave_pix);
+
+        // 4. Pix Transfer (Test)
+        $idEnvio = "TESTE" . time();
+        $ch = curl_init("https://pix.api.efipay.com.br/v2/gn/pix/" . $idEnvio);
+        $body = [
+            "valor" => number_format($valor, 2, '.', ''), 
+            "pagador" => ["chave" => $payerKey],
+            "favorecido" => ["chave" => $chaveFormatada]
+        ];
+        curl_setopt($ch, CURLOPT_SSLCERT, $certificate);
+        curl_setopt($ch, CURLOPT_SSLCERTTYPE, "P12");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $accessToken", "Content-Type: application/json"]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        
+        $resTransfer = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $transferData = json_decode($resTransfer, true);
+
+        if ($httpCode === 200 || $httpCode === 201) {
+            $status = $transferData['status'] ?? 'OK';
+            registrarLog('acao_admin', "Teste PIX Efí: R$ $valor para $chaveFormatada - Status: $status");
+            echo json_encode(['success' => true, 'message' => "Teste enviado! Status Banco: $status. Verifique seu app."]);
+        } else {
+            $msg = $transferData['mensagem'] ?? 'Erro no teste';
             throw new Exception("Erro Efí ($httpCode): $msg");
         }
     } catch (Exception $e) { echo json_encode(['error' => $e->getMessage()]); }

@@ -296,6 +296,29 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                             class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                         <p id="cert-status" class="text-[9px] text-gray-400 mt-1 ml-1"></p>
                     </div>
+
+                    <!-- Botão de Teste Efí -->
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mt-2">
+                        <label class="text-[10px] font-bold text-indigo-700 uppercase mb-2 block flex items-center gap-2">
+                            🧪 Teste de Pagamento (PIX)
+                        </label>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-[9px] font-bold text-indigo-400 uppercase ml-1 block">Valor (R$)</label>
+                                <input type="number" id="test-pix-value" step="0.01" placeholder="0.01" class="w-full bg-white border border-indigo-200 rounded-lg p-2 text-xs outline-none">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-indigo-400 uppercase ml-1 block">Chave Pix Destino</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="test-pix-key" placeholder="CPF, Celular, Email ou EVP" class="flex-1 bg-white border border-indigo-200 rounded-lg p-2 text-xs outline-none">
+                                    <button type="button" onclick="testPixEfi()" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg text-[10px] hover:bg-indigo-700 shadow-sm uppercase transition-all">
+                                        Testar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[9px] text-indigo-600/70 mt-2 leading-tight italic">O valor será DEBITADO da sua conta Efí real se as chaves estiverem em modo Produção.</p>
+                    </div>
                 </div>
 
                 <!-- WhatsApp Notifications (Evolution API) -->
@@ -622,6 +645,25 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <!-- Content -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirm Custom -->
+    <div id="modal-confirm" class="fixed inset-0 bg-black bg-opacity-90 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative text-center border-t-8 border-indigo-500 transform scale-95 transition-transform duration-300" id="modal-confirm-box">
+            <div id="confirm-icon" class="w-20 h-20 bg-indigo-50 text-indigo-500 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h2 id="confirm-title" class="text-2xl font-black text-gray-800 mb-3 tracking-tight">Confirmação</h2>
+            <p id="confirm-message" class="text-sm font-medium text-gray-500 mb-8 leading-relaxed">Mensagem de confirmação.</p>
+            <div class="flex gap-3">
+                <button id="btn-confirm-cancel" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 rounded-xl shadow-sm uppercase text-xs transition-colors">
+                    Cancelar
+                </button>
+                <button id="btn-confirm-ok" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs transition-colors shadow-indigo-500/30">
+                    Confirmar
+                </button>
             </div>
         </div>
     </div>
@@ -1752,35 +1794,46 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             setTimeout(() => m.classList.add('opacity-100'), 10);
         }
 
-        async function confirmPayoutPaid(id, valor) {
-            if (!confirm(`Você confirma que já realizou o PIX no valor de R$ ${parseFloat(valor).toFixed(2).replace('.', ',')} para este afiliado?\n\nEsta ação não pode ser desfeita.`)) return;
+        function showConfirmModal(title, msg, onConfirm) {
+            const m = document.getElementById('modal-confirm');
+            const box = document.getElementById('modal-confirm-box');
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').innerHTML = msg;
             
-            const fd = new URLSearchParams();
-            fd.append('action', 'confirm_payout');
-            fd.append('id', id);
+            m.classList.remove('hidden');
+            setTimeout(() => {
+                m.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
 
-            const res = await fetch(API, { method: 'POST', body: fd });
-            const data = await res.json();
-            
-            if(data.success) {
-                showNotification('Sucesso!', data.message, 'success');
-                openPendingPayouts(); // Refresh list
-                fetchAffiliates();    // Refresh totals
-            } else {
-                showNotification('Erro', data.error, 'error');
-            }
+            const btnCancel = document.getElementById('btn-confirm-cancel');
+            const btnOk = document.getElementById('btn-confirm-ok');
+
+            const closeModal = () => {
+                m.classList.add('opacity-0');
+                box.classList.remove('scale-100');
+                box.classList.add('scale-95');
+                setTimeout(() => m.classList.add('hidden'), 300);
+            };
+
+            btnCancel.onclick = () => {
+                closeModal();
+            };
+
+            btnOk.onclick = () => {
+                closeModal();
+                onConfirm();
+            };
         }
 
-        async function payViaPixEfi(id, valor) {
-            if (!confirm(`Você quer realizar o PAGAMENTO AUTOMÁTICO de R$ ${parseFloat(valor).toFixed(2).replace('.', ',')} via Pix Efí agora?\n\nO dinheiro sairá da sua conta Efí imediatamente.`)) return;
+        async function confirmPayoutPaid(id, valor) {
+            const valFmt = parseFloat(valor).toFixed(2).replace('.', ',');
+            showConfirmModal('Pagamento Manual', `Você confirma que já realizou o PIX no valor de <b class="text-green-600">R$ ${valFmt}</b> para este afiliado?<br><br>Esta ação não pode ser desfeita.`, async () => {
+                const fd = new URLSearchParams();
+                fd.append('action', 'confirm_payout');
+                fd.append('id', id);
 
-            showNotification('Processando...', 'Enviando comando para a Efí...', 'warning');
-            
-            const fd = new URLSearchParams();
-            fd.append('action', 'pay_via_pix_efi');
-            fd.append('id', id);
-
-            try {
                 const res = await fetch(API, { method: 'POST', body: fd });
                 const data = await res.json();
                 
@@ -1789,12 +1842,71 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     openPendingPayouts(); // Refresh list
                     fetchAffiliates();    // Refresh totals
                 } else {
-                    showNotification('Erro na Transferência', data.error || 'Erro desconhecido', 'error');
+                    showNotification('Erro', data.error, 'error');
                 }
-            } catch(e) {
-                showNotification('Erro Fatal', 'Erro de conexão com o servidor', 'error');
-            }
+            });
         }
+
+        async function payViaPixEfi(id, valor) {
+            const valFmt = parseFloat(valor).toFixed(2).replace('.', ',');
+            showConfirmModal('Pagamento Automático via Efí', `Você quer realizar o PAGAMENTO AUTOMÁTICO de <b class="text-indigo-600">R$ ${valFmt}</b> via Pix Efí agora?<br><br>O dinheiro sairá da sua conta Efí imediatamente.`, async () => {
+                showNotification('Processando...', 'Enviando comando para a Efí...', 'warning');
+                
+                const fd = new URLSearchParams();
+                fd.append('action', 'pay_via_pix_efi');
+                fd.append('id', id);
+
+                try {
+                    const res = await fetch(API, { method: 'POST', body: fd });
+                    const data = await res.json();
+                    
+                    if(data.success) {
+                        showNotification('Sucesso!', data.message, 'success');
+                        openPendingPayouts(); // Refresh list
+                        fetchAffiliates();    // Refresh totals
+                    } else {
+                        showNotification('Atenção', data.error, 'error');
+                    }
+                } catch(e) {
+                    showNotification('Erro Fatal', 'Erro de conexão com o servidor', 'error');
+                }
+            });
+        }
+
+        async function testPixEfi() {
+            const valor = document.getElementById('test-pix-value').value;
+            const chave = document.getElementById('test-pix-key').value;
+
+            if(!valor || !chave) {
+                showNotification('Atenção', 'Informe valor e chave para o teste.', 'error');
+                return;
+            }
+
+            showConfirmModal('Teste de Pagamento Efí', `Você confirma o envio de <b class="text-indigo-600">R$ ${valor}</b> para a chave <b class="text-indigo-600">${chave}</b>?<br><br>Este é um pagamento REAL se você estiver em modo produção.`, async () => {
+                showNotification('Processando Teste...', 'Comunicando com a Efí Bank...', 'warning');
+                
+                const fd = new URLSearchParams();
+                fd.append('action', 'test_pix_efi');
+                fd.append('valor', valor);
+                fd.append('chave_pix', chave);
+
+                try {
+                    const res = await fetch(API, { method: 'POST', body: fd });
+                    const text = await res.text();
+                    let data;
+                    try { data = JSON.parse(text); } catch(e) { throw new Error(text); }
+                    
+                    if(data.success) {
+                        showNotification('Teste OK!', data.message, 'success');
+                    } else {
+                        showNotification('Falha no Teste', data.error, 'error');
+                    }
+                } catch(e) {
+                    showNotification('Erro Fatal', 'Resposta inválida do servidor: ' + e.message, 'error');
+                }
+            });
+        }
+
 
         // Helper to close specific modal
         window.closeModal = (id) => {

@@ -247,7 +247,7 @@ if ($action === 'login_register') {
     $stmt->execute([$_SESSION['afiliado_id']]);
     $payouts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    echo json_encode($payouts);
+    echo json_encode(['success' => true, 'payouts' => $payouts]);
 
 } else if ($action === 'logout') {
     unset($_SESSION['afiliado_id']);

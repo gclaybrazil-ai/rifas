@@ -113,8 +113,10 @@ try {
                             class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-semibold focus:ring-2 focus:ring-purple-500 outline-none transition-all">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">Chave PIX (Para
-                            receber)</label>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1 flex items-center gap-1 mb-1">
+                            Chave PIX (Para receber)
+                            <span onclick="showPixHelp()" class="inline-flex items-center justify-center w-3 h-3 bg-gray-200 text-gray-500 rounded-full text-[8px] cursor-help hover:bg-purple-100 hover:text-purple-600 transition-all font-bold">?</span>
+                        </label>
                         <input type="text" id="auth-pix" placeholder="CPF, Email, Celular ou Aleatória"
                             class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-semibold focus:ring-2 focus:ring-purple-500 outline-none transition-all">
                     </div>
@@ -195,8 +197,10 @@ try {
                     <h3 class="text-sm font-black uppercase mb-4 opacity-50">Configurações de Segurança</h3>
                     <div class="space-y-4">
                         <div>
-                            <label class="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Chave
-                                PIX</label>
+                            <label class="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1 flex items-center gap-1">
+                                Chave PIX
+                                <span onclick="showPixHelp()" class="inline-flex items-center justify-center w-3 h-3 bg-white/20 text-white rounded-full text-[8px] cursor-help hover:bg-purple-500 transition-all font-bold">?</span>
+                            </label>
                             <div class="flex gap-2">
                                 <input type="text" id="dash-pix-key"
                                     class="flex-1 bg-white/10 rounded-xl p-4 text-xs font-mono outline-none border border-white/5">
@@ -559,6 +563,65 @@ try {
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text);
             showAlert('Link copiado para a área de transferência!');
+        }
+
+        async function requestPayout() {
+            const btn = document.getElementById('btn-request-payout');
+            btn.disabled = true;
+            btn.textContent = 'SOLICITANDO...';
+            
+            const fd = new FormData();
+            fd.append('action', 'request_payout');
+            
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+            
+            if (data.success) {
+                showAlert(data.message, 'Sucesso');
+                checkSession(); // Refresh dash
+            } else {
+                showAlert(data.error);
+                btn.disabled = false;
+                btn.textContent = 'Solicitar Saque';
+            }
+        }
+
+        async function showPayouts() {
+            const list = document.getElementById('payouts-list');
+            list.innerHTML = '<p class="text-center text-xs text-gray-400 py-10">Carregando histórico...</p>';
+            document.getElementById('modal-payouts').classList.remove('hidden');
+            
+            const res = await fetch(`${API}?action=get_payouts`);
+            const data = await res.json();
+            
+            list.innerHTML = '';
+            if (!data.success || data.payouts.length === 0) {
+                list.innerHTML = '<p class="text-center text-xs text-gray-400 py-10">Você ainda não possui saques solicitados.</p>';
+                return;
+            }
+            
+            data.payouts.forEach(p => {
+                const isPaid = p.status === 'pago';
+                const statusColor = isPaid ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+                const statusIcon = isPaid ? '✓' : '⌛';
+                const statusText = isPaid ? 'PAGO' : 'PENDENTE';
+                
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-black text-gray-800">R$ ${parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                            <p class="text-[10px] text-gray-400 tracking-widest uppercase mt-1">${new Date(p.data_solicitacao).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                        <div class="${statusColor} text-[9px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest flex items-center gap-1 shadow-sm">
+                            ${statusIcon} ${statusText}
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        function showPixHelp() {
+            showAlert('Para chaves de telefone, use o formato internacional: +55 seguidos do DDD e o número (Ex: +5527999881122). Para CPF ou E-mail, basta digitar normalmente.', 'Instrução do PIX');
         }
 
         function showAlert(msg, title = '$UPER$ORTE') {
