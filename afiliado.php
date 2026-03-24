@@ -192,6 +192,45 @@ try {
                 </div>
             </div>
 
+            <!-- Seção Rifa Grátis -->
+            <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
+                
+                <h3 class="text-sm font-black text-gray-800 uppercase mb-4 flex items-center gap-2 relative z-10">
+                    <span class="w-5 h-5 bg-purple-100 text-purple-600 rounded flex items-center justify-center">🎁</span>
+                    Meta: Rifa Grátis
+                </h3>
+
+                <div class="space-y-4 relative z-10">
+                    <div class="flex justify-between items-end mb-1">
+                        <div>
+                            <p class="text-[9px] font-black text-gray-400 uppercase">Seu Progresso</p>
+                            <h4 class="text-xs font-bold text-gray-700" id="bonus-counter-text">0 de 7 vendas para o bônus</h4>
+                        </div>
+                        <div class="text-right">
+                            <span id="bonus-status-badge" class="text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest bg-gray-100 text-gray-400">DISPONÍVEL EM BREVE</span>
+                        </div>
+                    </div>
+
+                    <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden border border-gray-50 p-0.5">
+                        <div id="bonus-progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-600 h-full rounded-full transition-all duration-1000 shadow-sm" style="width: 0%"></div>
+                    </div>
+
+                    <div id="bonus-cycle-info" class="hidden bg-blue-50 border border-blue-100 rounded-2xl p-4">
+                        <p class="text-[10px] text-blue-600 font-bold uppercase tracking-tight flex items-center gap-2">
+                             ⏳ Ciclo Ativo: Bônus resgatado! Reinício em: <span id="bonus-timer" class="font-black">...</span>
+                        </p>
+                    </div>
+
+                    <button id="btn-redeem-bonus" onclick="openRedeemModal()" disabled 
+                        class="w-full bg-[#00a650] text-white font-black py-4 rounded-2xl shadow-xl shadow-green-100 hover:bg-[#009647] transition-all uppercase tracking-widest text-xs disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed">
+                        RESGATAR RIFA GRÁTIS
+                    </button>
+                    
+                    <p id="bonus-block-info" class="hidden text-center text-[9px] font-black text-red-500 uppercase tracking-widest">⚠️ Resgates bloqueados por inatividade</p>
+                </div>
+            </div>
+
             <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                 <h3 class="text-sm font-black text-gray-800 uppercase mb-4 flex items-center gap-2">
                     <span
@@ -234,6 +273,28 @@ try {
                 </div>
             </div>
 
+            <!-- Seção Regras -->
+            <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+                <h3 class="text-sm font-black text-gray-800 uppercase mb-6 flex items-center gap-2">
+                    <span class="w-5 h-5 bg-orange-100 text-orange-600 rounded flex items-center justify-center">📜</span>
+                    Regras de Bonificação
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <div class="w-6 h-6 bg-purple-50 text-purple-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">01</div>
+                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">Venda 7 rifas pagas e ganhe o direito de escolher 1 número grátis na rifa ativa.</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-6 h-6 bg-purple-50 text-purple-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">02</div>
+                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">Após o resgate, inicia-se um ciclo de 30 dias. Durante esse período, as vendas não acumulam novo bônus.</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">03</div>
+                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">INATIVIDADE: Caso fique 2 concursos consecutivos sem vendas, será aplicado um bloqueio de 15 dias após o ciclo atual.</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -272,6 +333,42 @@ try {
         </div>
     </div>
 
+    <!-- Modal Resgate Bônus -->
+    <div id="modal-redeem" class="fixed inset-0 bg-black/80 z-[150] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative border-t-8 border-green-500">
+            <h2 class="text-2xl font-black text-gray-800 mb-6 uppercase tracking-tight italic">Resgatar Número</h2>
+            
+            <form id="form-redeem" onsubmit="event.preventDefault(); redeemBonus();" class="space-y-6 text-left">
+                <div>
+                   <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Rifa para Resgate</label>
+                   <select id="redeem-rifa" name="rifa_id" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold outline-none"></select>
+                </div>
+                <div>
+                   <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Escolha seu Número</label>
+                   <input type="number" id="redeem-numero" name="numero" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold outline-none" placeholder="Ex: 00">
+                </div>
+                
+                <button type="submit" id="btn-confirm-redeem"
+                    class="w-full bg-[#00a650] text-white font-black py-5 rounded-2xl shadow-xl shadow-green-100 uppercase text-xs tracking-widest hover:bg-[#009647] transition-all">CONCLUIR RESGATE</button>
+                <button type="button" onclick="document.getElementById('modal-redeem').classList.add('hidden')"
+                    class="w-full text-xs font-bold text-gray-400 uppercase tracking-widest py-2 hover:text-gray-600">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Alerta Bloqueio -->
+    <div id="modal-bloqueio" class="fixed inset-0 bg-black/80 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300">
+        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative border-t-8 border-red-500 transform scale-100">
+            <div class="w-20 h-20 bg-red-50 text-red-600 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-black text-gray-800 mb-2 uppercase tracking-tight italic">BLOQUEIO ADICIONAL</h2>
+            <p class="text-[11px] font-bold text-gray-400 uppercase mb-8 leading-relaxed px-4">Você ficou 2 concursos sem realizar vendas. Por isso, após o término do seu ciclo atual, será aplicado um bloqueio adicional de 15 dias.</p>
+            <button onclick="confirmBloqueioNotif()"
+                class="w-full bg-red-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-red-200 uppercase text-xs tracking-widest hover:bg-red-700 transition-all">ENTENDIDO</button>
+        </div>
+    </div>
+
     <script>
         const API = 'backend/api/afiliado.php';
         let currentToken = '';
@@ -300,6 +397,10 @@ try {
                 secondsLeft = parseInt(data.expires_in) || 300;
                 startTimer();
                 showDash(data);
+                
+                if (data.afiliado.bonus_notificado_bloqueio == 1) {
+                    document.getElementById('modal-bloqueio').classList.remove('hidden');
+                }
             } else {
                 // Not logged or expired
                 document.getElementById('section-auth').classList.remove('hidden');
@@ -521,6 +622,107 @@ try {
                 `;
                 cont.insertAdjacentHTML('beforeend', item);
             });
+
+            // --- Lógica de Bônus Rifa Grátis ---
+            const btnRedeem = document.getElementById('btn-redeem-bonus');
+            const bonusVendas = parseInt(af.bonus_vendas) || 0;
+            const resgateData = af.bonus_data_resgate ? new Date(af.bonus_data_resgate) : null;
+            const bloqueioAte = af.bonus_bloqueio_ate ? new Date(af.bonus_bloqueio_ate) : null;
+            const agora = new Date();
+
+            const isBlocked = bloqueioAte && bloqueioAte > agora;
+            const isInCycle = resgateData && new Date(resgateData.getTime() + (30 * 24 * 60 * 60 * 1000)) > agora;
+
+            // Update Progress
+            const bonusPerc = Math.min(100, (bonusVendas / 7) * 100);
+            document.getElementById('bonus-progress-bar').style.width = bonusPerc + '%';
+            document.getElementById('bonus-counter-text').textContent = `${bonusVendas} de 7 vendas para o bônus`;
+
+            const badge = document.getElementById('bonus-status-badge');
+            const cycleInfo = document.getElementById('bonus-cycle-info');
+            const blockInfo = document.getElementById('bonus-block-info');
+
+            badge.className = 'text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest ';
+            cycleInfo.classList.add('hidden');
+            blockInfo.classList.add('hidden');
+
+            if (isBlocked) {
+                btnRedeem.disabled = true;
+                btnRedeem.textContent = 'BÔNUS BLOQUEADO';
+                badge.innerText = 'BLOQUEADO';
+                badge.classList.add('bg-red-100', 'text-red-500');
+                blockInfo.classList.remove('hidden');
+            } else if (isInCycle) {
+                btnRedeem.disabled = true;
+                btnRedeem.textContent = 'RESGATE REALIZADO';
+                badge.innerText = 'CICLO ATIVO';
+                badge.classList.add('bg-blue-100', 'text-blue-500');
+                cycleInfo.classList.remove('hidden');
+                
+                // Timer Ciclo
+                const end = new Date(resgateData.getTime() + (30 * 24 * 60 * 60 * 1000));
+                const diff = Math.ceil((end - agora) / (1000 * 60 * 60 * 24));
+                document.getElementById('bonus-timer').textContent = `${diff} DIAS`;
+            } else if (bonusVendas >= 7) {
+                btnRedeem.disabled = false;
+                btnRedeem.textContent = 'RESGATAR AGORA! 🎁';
+                badge.innerText = 'DISPONÍVEL';
+                badge.classList.add('bg-green-100', 'text-green-500');
+            } else {
+                btnRedeem.disabled = true;
+                btnRedeem.textContent = 'CONTINUE VENDENDO';
+                badge.innerText = 'EM PROGRESSO';
+                badge.classList.add('bg-gray-100', 'text-gray-400');
+            }
+        }
+
+        async function openRedeemModal() {
+            const select = document.getElementById('redeem-rifa');
+            select.innerHTML = '';
+            
+            // Popula com as rifas que vieram no get_stats (rifasData)
+            Object.values(rifasData).forEach(r => {
+                select.innerHTML += `<option value="${r.id}">${r.nome}</option>`;
+            });
+
+            if(select.options.length === 0) {
+                showAlert('Não há rifas abertas disponíveis no momento.', 'Atenção');
+                return;
+            }
+
+            document.getElementById('modal-redeem').classList.remove('hidden');
+        }
+
+        async function redeemBonus() {
+            const btn = document.getElementById('btn-confirm-redeem');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = 'RESERVANDO...';
+
+            const fd = new FormData(document.getElementById('form-redeem'));
+            fd.append('action', 'redeem_bonus');
+
+            try {
+                const res = await fetch(API, { method: 'POST', body: fd });
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('modal-redeem').classList.add('hidden');
+                    showAlert(data.message, 'Sucesso');
+                    setTimeout(() => location.reload(), 3000);
+                } else {
+                    showAlert(data.error);
+                }
+            } catch(e) {
+                showAlert('Erro ao processar resgate. Tente novamente.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        async function confirmBloqueioNotif() {
+            await fetch(`${API}?action=confirm_notif_bloqueio`);
+            document.getElementById('modal-bloqueio').classList.add('hidden');
         }
 
         function shareWAById(id, link) {

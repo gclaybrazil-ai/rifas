@@ -986,6 +986,47 @@ if ($action === 'stats') {
     }
 
     $pdo->prepare("UPDATE rifas SET status = ? WHERE id = ?")->execute([$status, $id]);
+
+    // Lógica de Inatividade de Afiliados ao fechar rifa
+    if ($status === 'fechada') {
+        $stmtAfs = $pdo->query("SELECT id, bonus_data_resgate, bonus_bloqueio_ate FROM afiliados");
+        $allAfs = $stmtAfs->fetchAll(PDO::FETCH_ASSOC);
+        
+        foreach($allAfs as $af) {
+            $stmtSales = $pdo->prepare("SELECT COUNT(*) FROM reservas WHERE rifa_id = ? AND afiliado_id = ? AND status = 'pago'");
+            $stmtSales->execute([$id, $af['id']]);
+            $numSales = (int)$stmtSales->fetchColumn();
+            
+            if ($numSales === 0) {
+                // Afiliado não vendeu nada nesta rifa
+                $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = bonus_concursos_inativos + 1 WHERE id = ?")->execute([$af['id']]);
+                
+                $stmtCheck = $pdo->prepare("SELECT bonus_concursos_inativos, bonus_data_resgate, bonus_bloqueio_ate FROM afiliados WHERE id = ?");
+                $stmtCheck->execute([$af['id']]);
+                $afCheck = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+                
+                if ($afCheck['bonus_concursos_inativos'] >= 2) {
+                    $now = new DateTime();
+                    $blockStart = clone $now;
+                    
+                    if ($afCheck['bonus_data_resgate']) {
+                        $cycleEnd = (new DateTime($afCheck['bonus_data_resgate']))->modify('+30 days');
+                        if ($cycleEnd > $now) $blockStart = $cycleEnd;
+                    }
+                    
+                    if ($afCheck['bonus_bloqueio_ate'] && new DateTime($afCheck['bonus_bloqueio_ate']) > $blockStart) {
+                         $blockStart = new DateTime($afCheck['bonus_bloqueio_ate']);
+                    }
+                    
+                    $blockEnd = $blockStart->modify('+15 days');
+                    $pdo->prepare("UPDATE afiliados SET bonus_bloqueio_ate = ?, bonus_notificado_bloqueio = 1 WHERE id = ?")
+                        ->execute([$blockEnd->format('Y-m-d H:i:s'), $af['id']]);
+                }
+            } else {
+                $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = 0, last_raffle_id_with_sale = ? WHERE id = ?")->execute([$id, $af['id']]);
+            }
+        }
+    }
     echo json_encode(['success' => true]);
 } else if ($action === 'save_publicacao') {
     $id = intval($_POST['id'] ?? 0);

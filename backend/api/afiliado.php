@@ -150,9 +150,24 @@ if ($action === 'login_register') {
 } else if ($action === 'get_stats') {
     if (!isset($_SESSION['afiliado_id'])) die(json_encode(['error' => 'Não logado']));
 
-    $stmt = $pdo->prepare("SELECT id, nome, whatsapp, email, pix_key, saldo, total_ganho, vendas_pagas, data_ultimo_saque FROM afiliados WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, nome, whatsapp, email, pix_key, saldo, total_ganho, vendas_pagas, data_ultimo_saque, 
+                                 bonus_vendas, bonus_data_resgate, bonus_bloqueio_ate, bonus_concursos_inativos, bonus_notificado_bloqueio 
+                          FROM afiliados WHERE id = ?");
     $stmt->execute([$_SESSION['afiliado_id']]);
     $af = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Lógica de reset do Ciclo de Bônus (30 dias)
+    if ($af['bonus_data_resgate']) {
+        $now = new DateTime();
+        $cycleEnd = (new DateTime($af['bonus_data_resgate']))->modify('+30 days');
+        
+        if ($now > $cycleEnd) {
+            // Ciclo terminou! Reseta contador e data de resgate
+            $pdo->prepare("UPDATE afiliados SET bonus_vendas = 0, bonus_data_resgate = NULL WHERE id = ?")->execute([$af['id']]);
+            $af['bonus_vendas'] = 0;
+            $af['bonus_data_resgate'] = null;
+        }
+    }
 
     $stmtR = $pdo->query("SELECT id, nome, preco_numero, premio1, premio2, premio3, premio4, premio5 FROM rifas WHERE status = 'aberta' ORDER BY id DESC");
     $rifas = $stmtR->fetchAll(PDO::FETCH_ASSOC);
@@ -265,4 +280,65 @@ if ($action === 'login_register') {
 } else if ($action === 'logout') {
     unset($_SESSION['afiliado_id']);
     echo json_encode(['success' => true]);
+
+} else if ($action === 'confirm_notif_bloqueio') {
+    if (!isset($_SESSION['afiliado_id'])) die(json_encode(['error' => 'Não logado']));
+    $pdo->prepare("UPDATE afiliados SET bonus_notificado_bloqueio = 0 WHERE id = ?")->execute([$_SESSION['afiliado_id']]);
+    echo json_encode(['success' => true]);
+
+} else if ($action === 'redeem_bonus') {
+    if (!isset($_SESSION['afiliado_id'])) die(json_encode(['error' => 'Não logado']));
+    
+    $rifaId = intval($_POST['rifa_id'] ?? 0);
+    $numero = trim($_POST['numero'] ?? '');
+
+    if (!$rifaId || empty($numero)) die(json_encode(['error' => 'Selecione a rifa e o número.']));
+
+    try {
+        $pdo->beginTransaction();
+        
+        // 1. Fetch Affiliate Details
+        $stmtAf = $pdo->prepare("SELECT * FROM afiliados WHERE id = ? FOR UPDATE");
+        $stmtAf->execute([$_SESSION['afiliado_id']]);
+        $af = $stmtAf->fetch(PDO::FETCH_ASSOC);
+
+        // 2. Validate Rules
+        $now = new DateTime();
+        $isBlocked = $af['bonus_bloqueio_ate'] && new DateTime($af['bonus_bloqueio_ate']) > $now;
+        $isInCycle = $af['bonus_data_resgate'] && (new DateTime($af['bonus_data_resgate']))->modify('+30 days') > $now;
+
+        if ($af['bonus_vendas'] < 7) throw new Exception("Você precisa de pelo menos 7 vendas pagas neste ciclo (Atualmente: {$af['bonus_vendas']}).");
+        if ($isBlocked) throw new Exception("Seu acesso a bônus está bloqueado temporariamente por inatividade.");
+        if ($isInCycle) throw new Exception("Você já resgatou seu bônus. Um novo ciclo será iniciado em breve.");
+
+        // 3. Check Raffle availability
+        $stmtR = $pdo->prepare("SELECT id, nome, status FROM rifas WHERE id = ?");
+        $stmtR->execute([$rifaId]);
+        $rifa = $stmtR->fetch(PDO::FETCH_ASSOC);
+
+        if (!$rifa || $rifa['status'] !== 'aberta') throw new Exception("Esta rifa não está disponível para resgate.");
+
+        $stmtN = $pdo->prepare("SELECT id FROM numeros WHERE rifa_id = ? AND numero = ? AND status != 'disponivel'");
+        $stmtN->execute([$rifaId, $numero]);
+        if ($stmtN->fetch()) throw new Exception("O número {$numero} não está mais disponível.");
+
+        // 4. Create Free Reservation
+        $stmtRes = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, cpf, status, valor_total, data_reserva, pgto_data) VALUES (?, ?, ?, ?, 'pago', 0, NOW(), NOW())");
+        $stmtRes->execute([$rifaId, "BONUS: " . $af['nome'], $af['whatsapp'], '000.000.000-00']);
+        $reservaId = $pdo->lastInsertId();
+
+        // 5. Assign Number
+        $stmtNum = $pdo->prepare("INSERT INTO numeros (rifa_id, reserva_id, numero, status) VALUES (?, ?, ?, 'pago')");
+        $stmtNum->execute([$rifaId, $reservaId, $numero]);
+
+        // 6. Update Affiliate Cycle
+        $pdo->prepare("UPDATE afiliados SET bonus_data_resgate = NOW() WHERE id = ?")->execute([$af['id']]);
+
+        $pdo->commit();
+        registrarLog('acao_afiliado', "Resgatou rifa bônus: Rifa #$rifaId Número $numero", $af['id']);
+        echo json_encode(['success' => true, 'message' => "Parabéns! Seu número $numero foi reservado com sucesso e o ciclo de 30 dias foi iniciado."]);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['error' => $e->getMessage()]);
+    }
 }
