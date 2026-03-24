@@ -151,7 +151,7 @@ try {
                 const res = await fetch('backend/api/get_rifas.php');
                 const data = await res.json();
                 if (!data.maintenance) {
-                    window.location.href = 'index.html';
+                    window.location.href = 'index.php';
                 }
             } catch (e) { }
         }

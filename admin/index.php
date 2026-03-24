@@ -97,7 +97,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     <a href="ganhadores.php" class="w-full bg-yellow-400 text-[#2c3e50] font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-yellow-500 text-xs flex items-center gap-2">
                         <span class="w-6 h-6 bg-black/5 rounded flex items-center justify-center text-sm">🏆</span> Ganhadores
                     </a>
-                    <a href="../index.html" class="w-full bg-gray-100 text-gray-700 font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-gray-200 text-xs flex items-center gap-2">
+                    <a href="../index.php" class="w-full bg-gray-100 text-gray-700 font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-gray-200 text-xs flex items-center gap-2">
                         <span class="w-6 h-6 bg-white rounded flex items-center justify-center text-sm">🏠</span> Voltar para a Loja
                     </a>
 

@@ -46,7 +46,7 @@ if(isset($_SESSION['admin_logged']) && $_SESSION['admin_logged'] === true) {
             </button>
             <div class="flex flex-col gap-2 mt-2">
                 <button type="button" onclick="openRecovery()" class="text-center text-[11px] text-gray-400 hover:text-[#00a650] transition-colors">Esqueceu a senha?</button>
-                <a href="../index.html" class="text-center text-[11px] text-gray-400 underline hover:text-gray-600">Voltar para a Loja</a>
+                <a href="../index.php" class="text-center text-[11px] text-gray-400 underline hover:text-gray-600">Voltar para a Loja</a>
             </div>
         </form>
     </div>

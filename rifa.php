@@ -5,7 +5,7 @@ $rifa = null;
 $baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . dirname($_SERVER['PHP_SELF']);
 
 if ($id <= 0) {
-    header('Location: index.html');
+    header('Location: index.php');
     exit;
 }
 
@@ -15,11 +15,11 @@ try {
     $rifa = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$rifa || $rifa['status'] === 'fechada') {
-        header('Location: index.html');
+        header('Location: index.php');
         exit;
     }
 } catch (Exception $e) {
-    header('Location: index.html');
+    header('Location: index.php');
     exit;
 }
 
@@ -79,7 +79,7 @@ $raffleUrl = $baseUrl . "/rifa.php?id=" . $id;
                     class="text-[10px] md:text-xs font-black text-white bg-[#00a650] hover:bg-[#009647] rounded-full px-3 py-1.5 transition-colors flex items-center gap-1 uppercase tracking-tighter">
                     Ganhe Dinheiro
                 </a>
-                <a href="index.html"
+                <a href="index.php"
                     class="text-[10px] md:text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full px-3 py-1.5 transition-colors flex items-center gap-1">
                     Voltar
                 </a>

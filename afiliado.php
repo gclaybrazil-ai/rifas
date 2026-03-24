@@ -6,7 +6,8 @@ try {
         header('Location: manutencao.php');
         exit;
     }
-} catch (Exception $e) {}
+} catch (Exception $e) {
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -15,7 +16,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Afiliado - $UPER$ORTE</title>
-    
+
     <!-- Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="frontend/png/cifrao_premium.png">
@@ -32,7 +33,10 @@ try {
     <!-- TAGS DE COMPARTILHAMENTO -->
     <meta property="og:title" content="Painel de Afiliados - $UPER$ORTE">
     <meta property="og:description" content="Acesse seu painel, acompanhe suas vendas e gere seus links de divulgação.">
-    <meta property="og:image" content="frontend/jpg/promo-afiliado.jpg">
+    <meta property="og:image" content="<?php echo $site_url; ?>/frontend/jpg/promo-afiliado.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <style>
@@ -132,7 +136,8 @@ try {
                     <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase ml-1 flex items-center gap-1 mb-1">
                             Chave PIX (Para receber)
-                            <span onclick="showPixHelp()" class="inline-flex items-center justify-center w-3 h-3 bg-gray-200 text-gray-500 rounded-full text-[8px] cursor-help hover:bg-purple-100 hover:text-purple-600 transition-all font-bold">?</span>
+                            <span onclick="showPixHelp()"
+                                class="inline-flex items-center justify-center w-3 h-3 bg-gray-200 text-gray-500 rounded-full text-[8px] cursor-help hover:bg-purple-100 hover:text-purple-600 transition-all font-bold">?</span>
                         </label>
                         <input type="text" id="auth-pix" placeholder="CPF, Email, Celular ou Aleatória"
                             class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-semibold focus:ring-2 focus:ring-purple-500 outline-none transition-all">
@@ -172,16 +177,21 @@ try {
         <div id="section-dash" class="hidden space-y-6">
 
             <!-- PWA INSTALL BANNER -->
-            <div id="pwa-install-container" class="hidden bg-gradient-to-r from-gray-900 to-indigo-900 rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden border border-white/5">
+            <div id="pwa-install-container"
+                class="hidden bg-gradient-to-r from-gray-900 to-indigo-900 rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden border border-white/5">
                 <div class="absolute right-0 top-0 opacity-10 transform scale-150 rotate-12 -mr-8 -mt-8">
-                     <img src="afiliado-app.png" class="w-40 grayscale brightness-200">
+                    <img src="afiliado-app.png" class="w-40 grayscale brightness-200">
                 </div>
-                <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                <div
+                    class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                     <div>
                         <h3 class="text-xl font-black uppercase italic tracking-tight">Aplicativo do Afiliado</h3>
-                        <p class="text-[11px] opacity-60 font-medium uppercase tracking-widest mt-1">Instale nosso atalho na sua tela inicial e tenha acesso instantâneo ao seu painel.</p>
+                        <p class="text-[11px] opacity-60 font-medium uppercase tracking-widest mt-1">Instale nosso
+                            atalho na sua tela inicial e tenha acesso instantâneo ao seu painel.</p>
                     </div>
-                    <button id="btn-pwa-install" class="bg-white text-gray-900 font-black px-8 py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-xl hover:bg-gray-100 transition-all active:scale-95 whitespace-nowrap">Instalar Agora</button>
+                    <button id="btn-pwa-install"
+                        class="bg-white text-gray-900 font-black px-8 py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-xl hover:bg-gray-100 transition-all active:scale-95 whitespace-nowrap">Instalar
+                        Agora</button>
                 </div>
             </div>
 
@@ -189,25 +199,27 @@ try {
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center">
                     <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Saldo Atual</p>
                     <h3 class="text-2xl font-black text-purple-600 mb-2" id="dash-saldo">R$ 0,00</h3>
-                    
+
                     <div class="w-full bg-gray-100 h-1.5 rounded-full mb-3 overflow-hidden">
-                        <div id="payout-progress" class="bg-purple-600 h-full transition-all duration-1000" style="width: 0%"></div>
+                        <div id="payout-progress" class="bg-purple-600 h-full transition-all duration-1000"
+                            style="width: 0%"></div>
                     </div>
-                    
-                    <button id="btn-request-payout" onclick="requestPayout()" 
+
+                    <button id="btn-request-payout" onclick="requestPayout()"
                         class="w-full bg-purple-600 text-white text-[10px] font-black py-2.5 rounded-xl uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-purple-700">
                         Solicitar Saque
                     </button>
-                    
-                    <p class="text-[8px] text-gray-400 font-bold mt-2 uppercase text-center" id="dash-proximo-pgto">VERIFICANDO CICLO...</p>
+
+                    <p class="text-[8px] text-gray-400 font-bold mt-2 uppercase text-center" id="dash-proximo-pgto">
+                        VERIFICANDO CICLO...</p>
                 </div>
-                
+
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center">
                     <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Ganhos do Ciclo</p>
                     <h3 class="text-2xl font-black text-green-600 mb-2" id="dash-total">R$ 0,00</h3>
                     <p class="text-[9px] text-gray-400 font-bold mb-3 uppercase" id="dash-vendas">0 VENDAS PAGAS</p>
-                    
-                    <button onclick="showPayouts()" 
+
+                    <button onclick="showPayouts()"
                         class="w-full bg-gray-100 text-gray-600 text-[10px] font-black py-2.5 rounded-xl uppercase tracking-widest hover:bg-gray-200 transition-all border border-gray-200">
                         Ver Extrato
                     </button>
@@ -217,9 +229,10 @@ try {
             <!-- Seção Rifa Grátis -->
             <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
-                
+
                 <h3 class="text-sm font-black text-gray-800 uppercase mb-4 flex items-center gap-2 relative z-10">
-                    <span class="w-5 h-5 bg-purple-100 text-purple-600 rounded flex items-center justify-center">🎁</span>
+                    <span
+                        class="w-5 h-5 bg-purple-100 text-purple-600 rounded flex items-center justify-center">🎁</span>
                     Meta: Rifa Grátis
                 </h3>
 
@@ -227,29 +240,37 @@ try {
                     <div class="flex justify-between items-end mb-1">
                         <div>
                             <p class="text-[9px] font-black text-gray-400 uppercase">Seu Progresso</p>
-                            <h4 class="text-xs font-bold text-gray-700" id="bonus-counter-text">0 de 7 vendas para o bônus</h4>
+                            <h4 class="text-xs font-bold text-gray-700" id="bonus-counter-text">0 de 7 vendas para o
+                                bônus</h4>
                         </div>
                         <div class="text-right">
-                            <span id="bonus-status-badge" class="text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest bg-gray-100 text-gray-400">DISPONÍVEL EM BREVE</span>
+                            <span id="bonus-status-badge"
+                                class="text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest bg-gray-100 text-gray-400">DISPONÍVEL
+                                EM BREVE</span>
                         </div>
                     </div>
 
                     <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden border border-gray-50 p-0.5">
-                        <div id="bonus-progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-600 h-full rounded-full transition-all duration-1000 shadow-sm" style="width: 0%"></div>
+                        <div id="bonus-progress-bar"
+                            class="bg-gradient-to-r from-purple-500 to-indigo-600 h-full rounded-full transition-all duration-1000 shadow-sm"
+                            style="width: 0%"></div>
                     </div>
 
                     <div id="bonus-cycle-info" class="hidden bg-blue-50 border border-blue-100 rounded-2xl p-4">
                         <p class="text-[10px] text-blue-600 font-bold uppercase tracking-tight flex items-center gap-2">
-                             ⏳ Ciclo Ativo: Bônus resgatado! Reinício em: <span id="bonus-timer" class="font-black">...</span>
+                            ⏳ Ciclo Ativo: Bônus resgatado! Reinício em: <span id="bonus-timer"
+                                class="font-black">...</span>
                         </p>
                     </div>
 
-                    <button id="btn-redeem-bonus" onclick="openRedeemModal()" disabled 
+                    <button id="btn-redeem-bonus" onclick="openRedeemModal()" disabled
                         class="w-full bg-[#00a650] text-white font-black py-4 rounded-2xl shadow-xl shadow-green-100 hover:bg-[#009647] transition-all uppercase tracking-widest text-xs disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed">
                         RESGATAR RIFA GRÁTIS
                     </button>
-                    
-                    <p id="bonus-block-info" class="hidden text-center text-[9px] font-black text-red-500 uppercase tracking-widest">⚠️ Resgates bloqueados por inatividade</p>
+
+                    <p id="bonus-block-info"
+                        class="hidden text-center text-[9px] font-black text-red-500 uppercase tracking-widest">⚠️
+                        Resgates bloqueados por inatividade</p>
                 </div>
             </div>
 
@@ -267,9 +288,11 @@ try {
                     <h3 class="text-sm font-black uppercase mb-4 opacity-50">Configurações de Segurança</h3>
                     <div class="space-y-4">
                         <div>
-                            <label class="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1 flex items-center gap-1">
+                            <label
+                                class="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1 flex items-center gap-1">
                                 Chave PIX
-                                <span onclick="showPixHelp()" class="inline-flex items-center justify-center w-3 h-3 bg-white/20 text-white rounded-full text-[8px] cursor-help hover:bg-purple-500 transition-all font-bold">?</span>
+                                <span onclick="showPixHelp()"
+                                    class="inline-flex items-center justify-center w-3 h-3 bg-white/20 text-white rounded-full text-[8px] cursor-help hover:bg-purple-500 transition-all font-bold">?</span>
                             </label>
                             <div class="flex gap-2">
                                 <input type="text" id="dash-pix-key"
@@ -298,21 +321,32 @@ try {
             <!-- Seção Regras -->
             <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
                 <h3 class="text-sm font-black text-gray-800 uppercase mb-6 flex items-center gap-2">
-                    <span class="w-5 h-5 bg-orange-100 text-orange-600 rounded flex items-center justify-center">📜</span>
+                    <span
+                        class="w-5 h-5 bg-orange-100 text-orange-600 rounded flex items-center justify-center">📜</span>
                     Regras de Bonificação
                 </h3>
                 <div class="space-y-4">
                     <div class="flex gap-4">
-                        <div class="w-6 h-6 bg-purple-50 text-purple-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">01</div>
-                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">Venda 7 rifas pagas e ganhe o direito de escolher 1 número grátis na rifa ativa.</p>
+                        <div
+                            class="w-6 h-6 bg-purple-50 text-purple-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">
+                            01</div>
+                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">Venda 7 rifas pagas e
+                            ganhe o direito de escolher 1 número grátis na rifa ativa.</p>
                     </div>
                     <div class="flex gap-4">
-                        <div class="w-6 h-6 bg-purple-50 text-purple-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">02</div>
-                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">Após o resgate, inicia-se um ciclo de 30 dias. Durante esse período, as vendas não acumulam novo bônus.</p>
+                        <div
+                            class="w-6 h-6 bg-purple-50 text-purple-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">
+                            02</div>
+                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">Após o resgate,
+                            inicia-se um ciclo de 30 dias. Durante esse período, as vendas não acumulam novo bônus.</p>
                     </div>
                     <div class="flex gap-4">
-                        <div class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">03</div>
-                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">INATIVIDADE: Venda mínimo 1 rifa a cada 2 concursos para evitar bloqueio de 15 dias. Caso fique 4 concursos sem vendas, o acesso de afiliado será desativado permanentemente.</p>
+                        <div
+                            class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">
+                            03</div>
+                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">INATIVIDADE: Venda
+                            mínimo 1 rifa a cada 2 concursos para evitar bloqueio de 15 dias. Caso fique 4 concursos sem
+                            vendas, o acesso de afiliado será desativado permanentemente.</p>
                     </div>
                 </div>
             </div>
@@ -322,10 +356,13 @@ try {
     </main>
 
     <!-- Modal Extrato de Pagamentos -->
-    <div id="modal-payouts" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl relative border border-gray-100 max-h-[85vh] flex flex-col">
-            <h2 class="text-xl font-black text-[#2c3e50] mb-6 uppercase tracking-tight italic text-center">EXTRATO DE PAGAMENTOS</h2>
-            
+    <div id="modal-payouts"
+        class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div
+            class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl relative border border-gray-100 max-h-[85vh] flex flex-col">
+            <h2 class="text-xl font-black text-[#2c3e50] mb-6 uppercase tracking-tight italic text-center">EXTRATO DE
+                PAGAMENTOS</h2>
+
             <div id="payouts-list" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                 <!-- Populado via JS -->
                 <p class="text-center text-xs text-gray-400 py-10">Carregando histórico...</p>
@@ -339,14 +376,25 @@ try {
     <!-- Modal Notificação Premium -->
     <div id="modal-notif"
         class="fixed inset-0 bg-black/80 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300">
-        <div id="notif-box" class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative border-t-8 border-purple-500 transform scale-90 transition-transform duration-300">
-            <div id="notif-icon-container" class="w-20 h-20 bg-purple-50 text-purple-600 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner">
+        <div id="notif-box"
+            class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative border-t-8 border-purple-500 transform scale-90 transition-transform duration-300">
+            <div id="notif-icon-container"
+                class="w-20 h-20 bg-purple-50 text-purple-600 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner">
                 <!-- Icon Error -->
-                <svg id="icon-error" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <svg id="icon-error" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
                 <!-- Icon Success -->
-                <svg id="icon-success" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <svg id="icon-success" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
                 <!-- Icon Info -->
-                <svg id="icon-info" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <svg id="icon-info" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
             </div>
             <h2 id="notif-title" class="text-2xl font-black text-gray-800 mb-2 uppercase tracking-tight italic"></h2>
             <p id="notif-message" class="text-[11px] font-bold text-gray-400 uppercase mb-8 leading-relaxed px-4"></p>
@@ -356,22 +404,28 @@ try {
     </div>
 
     <!-- Modal Resgate Bônus -->
-    <div id="modal-redeem" class="fixed inset-0 bg-black/80 z-[150] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative border-t-8 border-green-500">
+    <div id="modal-redeem"
+        class="fixed inset-0 bg-black/80 z-[150] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div
+            class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative border-t-8 border-green-500">
             <h2 class="text-2xl font-black text-gray-800 mb-6 uppercase tracking-tight italic">Resgatar Número</h2>
-            
+
             <form id="form-redeem" onsubmit="event.preventDefault(); redeemBonus();" class="space-y-6 text-left">
                 <div>
-                   <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Rifa para Resgate</label>
-                   <select id="redeem-rifa" name="rifa_id" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold outline-none"></select>
+                    <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Rifa para Resgate</label>
+                    <select id="redeem-rifa" name="rifa_id"
+                        class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold outline-none"></select>
                 </div>
                 <div>
-                   <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Escolha seu Número</label>
-                   <input type="number" id="redeem-numero" name="numero" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold outline-none" placeholder="Ex: 00">
+                    <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Escolha seu Número</label>
+                    <input type="number" id="redeem-numero" name="numero"
+                        class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold outline-none"
+                        placeholder="Ex: 00">
                 </div>
-                
+
                 <button type="submit" id="btn-confirm-redeem"
-                    class="w-full bg-[#00a650] text-white font-black py-5 rounded-2xl shadow-xl shadow-green-100 uppercase text-xs tracking-widest hover:bg-[#009647] transition-all">CONCLUIR RESGATE</button>
+                    class="w-full bg-[#00a650] text-white font-black py-5 rounded-2xl shadow-xl shadow-green-100 uppercase text-xs tracking-widest hover:bg-[#009647] transition-all">CONCLUIR
+                    RESGATE</button>
                 <button type="button" onclick="document.getElementById('modal-redeem').classList.add('hidden')"
                     class="w-full text-xs font-bold text-gray-400 uppercase tracking-widest py-2 hover:text-gray-600">Cancelar</button>
             </form>
@@ -379,13 +433,22 @@ try {
     </div>
 
     <!-- Modal Alerta Bloqueio -->
-    <div id="modal-bloqueio" class="fixed inset-0 bg-black/80 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300">
-        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative border-t-8 border-red-500 transform scale-100">
-            <div class="w-20 h-20 bg-red-50 text-red-600 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <div id="modal-bloqueio"
+        class="fixed inset-0 bg-black/80 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300">
+        <div
+            class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative border-t-8 border-red-500 transform scale-100">
+            <div
+                class="w-20 h-20 bg-red-50 text-red-600 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
             </div>
             <h2 class="text-2xl font-black text-gray-800 mb-2 uppercase tracking-tight italic">BLOQUEIO ADICIONAL</h2>
-            <p class="text-[11px] font-bold text-gray-400 uppercase mb-8 leading-relaxed px-4">Você ficou 2 concursos sem realizar vendas. Por isso, após o término do seu ciclo atual, será aplicado um bloqueio adicional de 15 dias.</p>
+            <p class="text-[11px] font-bold text-gray-400 uppercase mb-8 leading-relaxed px-4">Você ficou 2 concursos
+                sem realizar vendas. Por isso, após o término do seu ciclo atual, será aplicado um bloqueio adicional de
+                15 dias.</p>
             <button onclick="confirmBloqueioNotif()"
                 class="w-full bg-red-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-red-200 uppercase text-xs tracking-widest hover:bg-red-700 transition-all">ENTENDIDO</button>
         </div>
@@ -396,7 +459,7 @@ try {
 
         // PWA SERVICE WORKER
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js').catch(() => {});
+            navigator.serviceWorker.register('service-worker.js').catch(() => { });
         }
 
         let deferredPrompt;
@@ -405,7 +468,7 @@ try {
             deferredPrompt = e;
             // Only show install banner if not already installed and on the dashboard
             if (document.getElementById('section-dash').classList.contains('hidden') === false) {
-                 document.getElementById('pwa-install-container').classList.remove('hidden');
+                document.getElementById('pwa-install-container').classList.remove('hidden');
             }
         });
 
@@ -446,7 +509,7 @@ try {
                 secondsLeft = parseInt(data.expires_in) || 300;
                 startTimer();
                 showDash(data);
-                
+
                 if (data.afiliado.bonus_notificado_bloqueio == 1) {
                     document.getElementById('modal-bloqueio').classList.remove('hidden');
                 }
@@ -621,15 +684,15 @@ try {
             document.getElementById('dash-vendas').textContent = `${af.vendas_pagas} VENDAS PAGAS`;
             document.getElementById('dash-pix-key').value = af.pix_key;
             document.getElementById('dash-email').value = af.email;
-            
+
             // Botão de Saque Logic
             const btnPay = document.getElementById('btn-request-payout');
             const ultimaData = af.data_ultimo_saque ? new Date(af.data_ultimo_saque) : null;
             const hoje = new Date();
             let diasParaProximo = 0;
-            
+
             if (ultimaData) {
-                ultimaData.setHours(0,0,0,0);
+                ultimaData.setHours(0, 0, 0, 0);
                 const proximoSaque = new Date(ultimaData);
                 proximoSaque.setDate(proximoSaque.getDate() + 15);
                 diasParaProximo = Math.ceil((proximoSaque - hoje) / (1000 * 60 * 60 * 24));
@@ -656,7 +719,7 @@ try {
             data.rifas.forEach(r => {
                 rifasData[r.id] = r;
                 const link = `${data.site_url}/rifa.php?id=${r.id}&ref=${af.id}`;
-                
+
                 const item = `
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                         <p class="text-[10px] font-black text-purple-600 uppercase mb-1">${r.nome}</p>
@@ -707,7 +770,7 @@ try {
                 badge.innerText = 'CICLO ATIVO';
                 badge.classList.add('bg-blue-100', 'text-blue-500');
                 cycleInfo.classList.remove('hidden');
-                
+
                 // Timer Ciclo
                 const end = new Date(resgateData.getTime() + (30 * 24 * 60 * 60 * 1000));
                 const diff = Math.ceil((end - agora) / (1000 * 60 * 60 * 24));
@@ -728,13 +791,13 @@ try {
         async function openRedeemModal() {
             const select = document.getElementById('redeem-rifa');
             select.innerHTML = '';
-            
+
             // Popula com as rifas que vieram no get_stats (rifasData)
             Object.values(rifasData).forEach(r => {
                 select.innerHTML += `<option value="${r.id}">${r.nome}</option>`;
             });
 
-            if(select.options.length === 0) {
+            if (select.options.length === 0) {
                 showAlert('Não há rifas abertas disponíveis no momento.', 'Atenção');
                 return;
             }
@@ -754,14 +817,14 @@ try {
             try {
                 const res = await fetch(API, { method: 'POST', body: fd });
                 const data = await res.json();
-                if(data.success) {
+                if (data.success) {
                     document.getElementById('modal-redeem').classList.add('hidden');
                     showAlert(data.message, 'Sucesso');
                     setTimeout(() => location.reload(), 3000);
                 } else {
                     showAlert(data.error);
                 }
-            } catch(e) {
+            } catch (e) {
                 showAlert('Erro ao processar resgate. Tente novamente.');
             } finally {
                 btn.disabled = false;
@@ -776,7 +839,7 @@ try {
 
         function shareWAById(id, link) {
             const r = rifasData[id];
-            if(!r) return;
+            if (!r) return;
             const premios = [r.premio1 || "", r.premio2 || "", r.premio3 || "", r.premio4 || "", r.premio5 || ""];
             shareWA(link, r.nome, r.preco_numero, premios);
         }
@@ -794,7 +857,7 @@ try {
             for (let i = 1; i <= 5; i++) {
                 const val = premios[i - 1];
                 const placeholder = `{premio${i}}`;
-                
+
                 if (val && val.trim() !== '') {
                     finalMsg = finalMsg.replace(new RegExp(placeholder, 'g'), val.trim());
                 } else {
@@ -836,13 +899,13 @@ try {
             const btn = document.getElementById('btn-request-payout');
             btn.disabled = true;
             btn.textContent = 'SOLICITANDO...';
-            
+
             const fd = new FormData();
             fd.append('action', 'request_payout');
-            
+
             const res = await fetch(API, { method: 'POST', body: fd });
             const data = await res.json();
-            
+
             if (data.success) {
                 showAlert(data.message, 'Sucesso');
                 checkSession(); // Refresh dash
@@ -857,26 +920,26 @@ try {
             const list = document.getElementById('payouts-list');
             list.innerHTML = '<p class="text-center text-xs text-gray-400 py-10">Carregando histórico...</p>';
             document.getElementById('modal-payouts').classList.remove('hidden');
-            
+
             const res = await fetch(`${API}?action=get_payouts`);
             const data = await res.json();
-            
+
             list.innerHTML = '';
             if (!data.success || data.payouts.length === 0) {
                 list.innerHTML = '<p class="text-center text-xs text-gray-400 py-10">Você ainda não possui saques solicitados.</p>';
                 return;
             }
-            
+
             data.payouts.forEach(p => {
                 const isPaid = p.status === 'pago';
                 const statusColor = isPaid ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
                 const statusIcon = isPaid ? '✓' : '⌛';
                 const statusText = isPaid ? 'PAGO' : 'PENDENTE';
-                
+
                 list.insertAdjacentHTML('beforeend', `
                     <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 flex justify-between items-center">
                         <div>
-                            <p class="text-xs font-black text-gray-800">R$ ${parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                            <p class="text-xs font-black text-gray-800">R$ ${parseFloat(p.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                             <p class="text-[10px] text-gray-400 tracking-widest uppercase mt-1">${new Date(p.data_solicitacao).toLocaleDateString('pt-BR')}</p>
                         </div>
                         <div class="${statusColor} text-[9px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest flex items-center gap-1 shadow-sm">
@@ -895,7 +958,7 @@ try {
             const m = document.getElementById('modal-notif');
             const box = document.getElementById('notif-box');
             const iconCont = document.getElementById('notif-icon-container');
-            
+
             // Set Title & Msg
             document.getElementById('notif-title').textContent = title;
             document.getElementById('notif-message').textContent = msg;
