@@ -110,6 +110,23 @@ try {
         ultima_pagina VARCHAR(255),
         ultima_atividade DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )");
+ 
+    $pdo->exec("CREATE TABLE IF NOT EXISTS banidos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ip VARCHAR(45) UNIQUE NOT NULL,
+        motivo VARCHAR(255),
+        admin_id INT,
+        data_bloqueio DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+ 
+    // IP Blocking Security Check (Now using established $pdo and after table creation)
+    $client_ip = $_SERVER['REMOTE_ADDR'];
+    $stmtBanned = $pdo->prepare("SELECT id FROM banidos WHERE ip = ?");
+    $stmtBanned->execute([$client_ip]);
+    if ($stmtBanned->fetch()) {
+        http_response_code(403);
+        die("<div style='font-family:sans-serif; text-align:center; padding:50px;'><h1 style='color:#e74c3c;'>ACESSO BLOQUEADO 🚫</h1><p>Seu endereço IP ($client_ip) foi bloqueado por motivos de segurança.</p><p>Se acredita que isso é um erro, entre em contato com o suporte.</p></div>");
+    }
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS assistant_messages (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -129,7 +146,7 @@ try {
         'rifas' => ['imagem_url', 'premio1', 'premio2', 'premio3', 'premio4', 'premio5', 'sorteio_por'],
         'usuarios' => ['email'],
         'reservas' => ['afiliado_id'],
-        'site_logs' => ['latitude', 'longitude']
+        'site_logs' => ['latitude', 'longitude', 'dispositivo']
     ];
     
     foreach($cols as $table => $tableCols) {
@@ -229,7 +246,13 @@ function getGeoInfo($ip) {
         if ($res) {
             $data = json_decode($res, true);
             if ($data['status'] == 'success') {
-                $info = ['pais' => $data['country'] ?? 'Desconhecido', 'cidade' => $data['city'] ?? 'Desconhecido', 'slug' => strtolower(($data['city']??'city').'-'.($data['country']??'country'))];
+                $info = [
+                    'pais' => $data['country'] ?? 'Desconhecido', 
+                    'cidade' => $data['city'] ?? 'Desconhecido', 
+                    'lat' => $data['lat'] ?? null,
+                    'lon' => $data['lon'] ?? null,
+                    'slug' => strtolower(($data['city']??'city').'-'.($data['country']??'country'))
+                ];
                 $_SESSION['geo_cache'][$ip] = $info;
             }
         }
@@ -279,8 +302,19 @@ function registrarLog($categoria, $acao, $user_id = null, $admin_id = null, $lat
     $ip = $_SERVER['REMOTE_ADDR'];
     $geo = getGeoInfo($ip);
     $pagina = $_SERVER['REQUEST_URI'] ?? '/';
-    $stmt = $pdo->prepare("INSERT INTO site_logs (user_id, admin_id, ip, categoria, acao, pagina, pais, cidade, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$user_id, $admin_id, $ip, $categoria, $acao, $pagina, $geo['pais'], $geo['cidade'], $lat, $lng]);
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    
+    // Simple Device Detect
+    $disp = 'Desktop';
+    if (preg_match('/(android|iphone|ipad|mobile)/i', $ua)) {
+        if (preg_match('/android/i', $ua)) $disp = 'Android';
+        else if (preg_match('/iphone|ipad/i', $ua)) $disp = 'iOS';
+        else $disp = 'Mobile';
+    } else if (preg_match('/(macintosh|mac os x)/i', $ua)) $disp = 'Mac';
+    else if (preg_match('/windows/i', $ua)) $disp = 'Windows';
+ 
+    $stmt = $pdo->prepare("INSERT INTO site_logs (user_id, admin_id, ip, categoria, acao, pagina, pais, cidade, latitude, longitude, dispositivo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$user_id, $admin_id, $ip, $categoria, $acao, $pagina, $geo['pais'], $geo['cidade'], $lat ?? ($geo['lat'] ?? null), $lng ?? ($geo['lon'] ?? null), $disp]);
 }
 
 function checkLocationChallenge($user_type, $user_id, $email, $nome, $lat = null, $lng = null) {

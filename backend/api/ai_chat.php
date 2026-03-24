@@ -28,12 +28,27 @@ $attendant = $siteConf['assistant_attendant'] ?? 'David';
 $wa = $siteConf['assistant_whatsapp'] ?? '5511999999999';
 
 // Get Active Raffle for context
-$stmtR = $pdo->query("SELECT nome, preco_numero, premio1 FROM rifas WHERE status = 'aberta' ORDER BY id DESC LIMIT 1");
+$stmtR = $pdo->query("SELECT nome, preco_numero, premio1, premio2, premio3, premio4, premio5 FROM rifas WHERE status = 'aberta' ORDER BY id DESC LIMIT 1");
 $rifa = $stmtR->fetch(PDO::FETCH_ASSOC);
 
 $rifaContext = "";
 if($rifa) {
-    $rifaContext = "Atualmente temos a rifa '" . $rifa['nome'] . "' ativa, custando R$ " . number_format($rifa['preco_numero'], 2, ',', '.') . " cada número. O prêmio principal é " . $rifa['premio1'] . ".";
+    $prizes = "1º: " . $rifa['premio1'];
+    if($rifa['premio2']) $prizes .= ", 2º: " . $rifa['premio2'];
+    if($rifa['premio3']) $prizes .= ", 3º: " . $rifa['premio3'];
+    if($rifa['premio4']) $prizes .= ", 4º: " . $rifa['premio4'];
+    if($rifa['premio5']) $prizes .= ", 5º: " . $rifa['premio5'];
+
+    $rifaContext = "Atualmente temos a rifa '" . $rifa['nome'] . "' ativa, custando R$ " . number_format($rifa['preco_numero'], 2, ',', '.') . " cada número. Os prêmios são: $prizes.";
+}
+
+// Get Custom Answers from Admin Panel
+$stmtCustom = $pdo->query("SELECT pergunta, resposta FROM assistant_messages");
+$customAnswers = $stmtCustom->fetchAll(PDO::FETCH_ASSOC);
+
+$baseConhecimento = "MANUAL DE RESPOSTAS ESPECÍFICAS:\n";
+foreach($customAnswers as $ca) {
+    $baseConhecimento .= "- Pergunta: " . $ca['pergunta'] . " | Resposta: " . $ca['resposta'] . "\n";
 }
 
 $systemPrompt = "Você é o $botName, um assistente virtual inteligente e amigável da plataforma de rifas online '\$UPER\$ORTE'.
@@ -48,7 +63,9 @@ REGRAS DO SITE:
 5. ATENDENTE HUMANO: Se o cliente pedir para falar com alguém real, diga que ele pode clicar no botão de 'Falar com Atendente' ou entrar em contato pelo WhatsApp $wa. O nome do atendente responsável é $attendant.
 6. CONTEXTO ATUAL: $rifaContext
 
-IMPORTANTE: Seja conciso, use emojis e nunca invente informações que não estão no manual acima. Se não souber algo, peça para o cliente falar com a equipe de suporte.";
+$baseConhecimento
+
+IMPORTANTE: Seja conciso, use emojis e PRIORIZE as respostas do 'MANUAL DE RESPOSTAS ESPECÍFICAS' se o assunto for mencionado. Se não souber algo, peça para o cliente falar com a equipe de suporte.";
 
 // Correct the payload for Gemini 1.5 API
 $payload = [

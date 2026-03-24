@@ -15,6 +15,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="../frontend/png/cifrao.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
@@ -46,6 +50,13 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             #modal-integrations > div {
                 scrollbar-gutter: stable; /* Preveit layout shift but keep it clean */
             }
+        }
+        #security-map {
+            height: 250px;
+            width: 100%;
+            border-radius: 0.75rem; /* rounded-xl */
+            margin-bottom: 1.5rem; /* mb-6 */
+            z-index: 1; /* Ensure map is above other elements if needed */
         }
     </style>
 </head>
@@ -723,7 +734,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     <!-- Modal Faturamento (FIN) -->
     <div id="modal-billing"
         class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-2xl p-7 max-w-md w-full shadow-2xl relative">
+        <div class="bg-white rounded-2xl p-7 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button id="btn-close-billing" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -809,6 +820,40 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         Exportar Relatório Detalhado (Excel)
                     </button>
+ 
+                    <button onclick="document.getElementById('advanced-stats').classList.toggle('hidden')" class="w-full bg-indigo-50 text-indigo-600 font-bold py-3 rounded-xl uppercase text-[10px] hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 border border-indigo-100 mt-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Ver Estatísticas Avançadas
+                    </button>
+ 
+                    <!-- Advanced Stats Panel -->
+                    <div id="advanced-stats" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-xl">
+                            <h4 class="text-[9px] font-black text-gray-400 uppercase mb-3">Inteligência de Vendas</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="text-center">
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase">Ticket Médio</p>
+                                    <p id="stat-ticket-medio" class="text-lg font-black text-indigo-600">R$ 0,00</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase">Conversão</p>
+                                    <p id="stat-conversao" class="text-lg font-black text-green-600">0%</p>
+                                </div>
+                            </div>
+                        </div>
+ 
+                        <div class="space-y-3">
+                            <div>
+                                <h4 class="text-[9px] font-black text-gray-400 uppercase mb-2">🏆 Top 3 Rifas (Receita)</h4>
+                                <div id="top-rifas-list" class="space-y-1"></div>
+                            </div>
+                            <div>
+                                <h4 class="text-[9px] font-black text-gray-400 uppercase mb-2">🤝 Top 3 Afiliados</h4>
+                                <div id="top-afiliados-list" class="space-y-1"></div>
+                            </div>
+                        </div>
+                    </div>
+ 
                     <p class="text-[9px] text-gray-400 text-center uppercase font-bold">* Cálculos baseados nas taxas atuais</p>
                 </div>
             </div>
@@ -1304,6 +1349,12 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </div>
             </div>
 
+            <div class="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <h3 class="text-[9px] font-black text-gray-400 uppercase mb-2">Pico de Atividade (Últimas 24h)</h3>
+                <canvas id="security-peaks-chart" height="100"></canvas>
+            </div>
+            <div id="security-map" class="mb-6 rounded-xl"></div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">
                     <h3 class="text-[10px] font-black text-gray-400 uppercase mb-3">Quem está Online</h3>
@@ -1337,10 +1388,12 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     <table class="w-full text-left text-[11px]">
                         <thead>
                             <tr class="text-[10px] font-black text-gray-400 uppercase">
-                                <th class="pb-3 pr-4">Data/Hora</th>
-                                <th class="pb-3 pr-4">IP / Local</th>
-                                <th class="pb-3 pr-4">Categoria</th>
-                                <th class="pb-3">Ação</th>
+                                <th class="pb-3 pr-4 text-left">Data/Hora</th>
+                                <th class="pb-3 pr-4 text-left">Atividade</th>
+                                <th class="pb-3 pr-4 text-left">IP / Local</th>
+                                <th class="pb-3 pr-4 text-left">Ação</th>
+                                <th class="pb-3 pr-4 text-left">Categoria</th>
+                                <th class="pb-3 text-left">Mapa</th>
                             </tr>
                         </thead>
                         <tbody id="security-logs-tbody" class="divide-y divide-gray-50">
@@ -1378,6 +1431,105 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
     <script>
         const API = '../backend/api/admin.php';
+        let securityMap = null;
+        let markersGroup = null;
+        let manualMapFocus = false;
+        let isUpdatingMap = false;
+        let peaksChart = null;
+        let lastLogId = 0;
+ 
+        // Audio Alerts
+        const soundBeep = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+        const soundAlarm = new Audio('https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3');
+ 
+        function playBeep() { soundBeep.play().catch(e => {}); }
+        function playAlarm() { soundAlarm.play().catch(e => {}); }
+ 
+        function initPeaksChart(data) {
+            const ctx = document.getElementById('security-peaks-chart').getContext('2d');
+            if (peaksChart) {
+                peaksChart.data.labels = data.labels;
+                peaksChart.data.datasets[0].data = data.values;
+                peaksChart.update();
+                return;
+            }
+ 
+            peaksChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Acessos por Hora',
+                        data: data.values,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, display: false },
+                        x: { grid: { display: false }, ticks: { font: { size: 8 } } }
+                    }
+                }
+            });
+        }
+ 
+        function initSecurityMap() {
+            if (securityMap) return;
+            securityMap = L.map('security-map', {
+                zoomControl: false,
+                scrollWheelZoom: false,
+                attributionControl: false
+            }).setView([-15.78, -47.93], 3);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(securityMap);
+            markersGroup = L.layerGroup().addTo(securityMap);
+            L.control.zoom({ position: 'bottomright' }).addTo(securityMap);
+ 
+            // Detect manual user interaction
+            securityMap.on('dragstart zoomstart', () => {
+                if (!isUpdatingMap) manualMapFocus = true;
+            });
+        }
+ 
+        window.focusOnMarker = (lat, lng) => {
+            if (!securityMap) return;
+            manualMapFocus = true;
+            securityMap.setView([lat, lng], 15, { animate: true });
+            
+            // Re-open popup at this location if a marker exists
+            markersGroup.eachLayer(layer => {
+                if (layer instanceof L.CircleMarker && 
+                    layer.getLatLng().lat == lat && 
+                    layer.getLatLng().lng == lng) {
+                    layer.openPopup();
+                }
+            });
+ 
+            // Smoothly scroll back to the map if screen is small
+            document.getElementById('security-map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+ 
+        async function banIP(ip) {
+            if (!confirm(`Deseja realmente bloquear o IP ${ip} permanentemente?`)) return;
+            try {
+                const fd = new FormData();
+                fd.append('action', 'ban_ip');
+                fd.append('ip', ip);
+                const res = await fetch(API, { method: 'POST', body: fd });
+                const json = await res.json();
+                if (json.success) showNotification('Sucesso', 'IP Banido com sucesso!');
+                else showNotification('Erro', json.error || 'Erro ao banir');
+            } catch (e) { showNotification('Erro', 'Conexão falhou'); }
+        }
 
         function showNotification(title, message, type = 'success', callback = null) {
             const modal = document.getElementById('modal-notif');
@@ -2232,6 +2384,37 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 if (period === '7') label = 'Faturamento (7 dias)';
                 if (period === '30') label = 'Faturamento (30 dias)';
                 document.getElementById('bill-label').textContent = label;
+ 
+                // Advanced Stats Update
+                if (data.resumo) {
+                    document.getElementById('stat-ticket-medio').textContent = data.resumo.ticket_medio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    
+                    // Conversion %
+                    const pagos = data.resumo.conversao['pago'] || 0;
+                    const pendentes = data.resumo.conversao['pendente'] || 0;
+                    const expirados = data.resumo.conversao['expirado'] || 0;
+                    const total = pagos + pendentes + expirados;
+                    const convRate = total > 0 ? (pagos / total) * 100 : 0;
+                    document.getElementById('stat-conversao').textContent = convRate.toFixed(1) + '%';
+ 
+                    // Top Rifas
+                    const topR = document.getElementById('top-rifas-list');
+                    topR.innerHTML = (data.resumo.top_rifas || []).slice(0, 3).map((r, i) => `
+                        <div class="flex justify-between items-center text-[10px] bg-white p-2 rounded-lg border border-gray-100">
+                            <span class="font-bold text-gray-600">${i+1}. ${r.nome}</span>
+                            <span class="font-black text-indigo-600">R$ ${parseFloat(r.total).toLocaleString('pt-BR')}</span>
+                        </div>
+                    `).join('');
+ 
+                    // Top Afiliados
+                    const topA = document.getElementById('top-afiliados-list');
+                    topA.innerHTML = (data.resumo.top_afiliados || []).slice(0, 3).map((a, i) => `
+                        <div class="flex justify-between items-center text-[10px] bg-white p-2 rounded-lg border border-gray-100">
+                            <span class="font-bold text-gray-600">${i+1}. ${a.nome}</span>
+                            <span class="font-black text-purple-600">R$ ${parseFloat(a.total).toLocaleString('pt-BR')}</span>
+                        </div>
+                    `).join('');
+                }
             }
         }
 
@@ -2492,7 +2675,12 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         document.getElementById('btn-open-security-monitor').addEventListener('click', () => {
             const m = document.getElementById('modal-security-monitor');
             m.classList.remove('hidden');
-            setTimeout(() => m.classList.add('opacity-100'), 10);
+            manualMapFocus = false; // Reset on open
+            setTimeout(() => {
+                m.classList.add('opacity-100');
+                initSecurityMap();
+                securityMap.invalidateSize();
+            }, 10);
             fetchSecurityStats();
         });
 
@@ -2508,6 +2696,19 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 const ip = document.getElementById('filter-log-ip').value;
                 const res = await fetch(`${API}?action=security_stats&category=${cat}&ip=${ip}`);
                 const data = await res.json();
+ 
+                // Render Chart 
+                if (data.peaks) initPeaksChart(data.peaks);
+                
+                // Audio Notifications for NEW critical logs
+                if (data.logs.length > 0) {
+                    const latest = data.logs[0];
+                    if (latest.id > lastLogId && lastLogId !== 0) {
+                        if (latest.acao.includes('falhou') || latest.categoria === 'acao_admin') playAlarm();
+                        else playBeep();
+                    }
+                    lastLogId = latest.id;
+                }
                 
                 // Render Online
                 const onlineCont = document.getElementById('security-online-list');
@@ -2532,30 +2733,95 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <span class="flex-1">${p.pagina}</span>
                     </div>
                 `).join('');
-
-                // Render Logs
+ 
+                // Render Logs & Map Markers
+                if (markersGroup) markersGroup.clearLayers();
+                let points = [];
+ 
                 const tbody = document.getElementById('security-logs-tbody');
                 const cats = {
                     'acesso_site': '<span class="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full font-black text-[9px] uppercase">Acesso</span>',
                     'acao_admin': '<span class="px-1.5 py-0.5 bg-red-100 text-red-600 rounded-full font-black text-[9px] uppercase">Admin</span>',
                     'acao_afiliado': '<span class="px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded-full font-black text-[9px] uppercase">Afiliado</span>'
                 };
-
-                tbody.innerHTML = data.logs.map(l => `
-                    <tr class="text-gray-600 hover:bg-gray-50 transition-colors">
-                        <td class="py-3 pr-4 font-mono">${new Date(l.data_hora).toLocaleString('pt-BR', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})}</td>
-                        <td class="py-3 pr-4">
-                            <div class="font-bold text-gray-800">${l.ip}</div>
-                            <div class="text-[9px] text-gray-400 uppercase">${l.cidade}, ${l.pais}</div>
-                        </td>
-                        <td class="py-3 pr-4">${cats[l.categoria] || l.categoria}</td>
-                        <td class="py-3 leading-tight">
-                            ${l.acao.includes('falhou') ? '<span class="text-red-600 font-bold">⚠️ '+l.acao+'</span>' : l.acao} 
-                            <div class="text-[9px] text-gray-300 font-mono">${l.pagina}</div>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch(e) {}
+ 
+                tbody.innerHTML = data.logs.map(l => {
+                    // Map Markers
+                    if (l.latitude && l.longitude && markersGroup) {
+                        const marker = L.circleMarker([l.latitude, l.longitude], {
+                            radius: 6,
+                            fillColor: l.categoria === 'acao_admin' ? '#ef4444' : '#6366f1',
+                            color: '#fff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }).bindPopup(`<b>${l.ip}</b><br>${l.cidade}, ${l.pais}<br>${l.acao}`);
+                        markersGroup.addLayer(marker);
+                        points.push([l.latitude, l.longitude]);
+                    }
+ 
+                    const locBtn = (l.latitude && l.longitude) ? 
+                        `<button onclick="focusOnMarker(${l.latitude}, ${l.longitude})" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 p-1.5 rounded-lg transition-colors" title="Ver no Mapa">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </button>` : '';
+ 
+                    const banBtn = `
+                        <button onclick="banIP('${l.ip}')" class="text-red-400 hover:text-red-600 bg-red-50 p-1.5 rounded-lg transition-colors" title="Banir IP">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                        </button>`;
+ 
+                    return `
+                        <tr class="text-gray-600 hover:bg-gray-50 transition-colors">
+                            <td class="py-3 pr-4 font-mono">${new Date(l.data_hora).toLocaleString('pt-BR', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})}</td>
+                            <td class="py-3 pr-4 leading-tight">
+                                <div class="font-bold border-l-2 border-indigo-500 pl-2">
+                                    ${l.acao.includes('falhou') ? '<span class="text-red-600 font-black">⚠️ '+l.acao+'</span>' : (l.acao.includes('checkout') || l.acao.includes('pix') ? '<span class="text-green-600 font-black">💰 '+l.acao+'</span>' : l.acao)} 
+                                </div>
+                                <div class="text-[9px] text-gray-400 font-mono mt-1 pl-2">${l.pagina}</div>
+                            </td>
+                            <td class="py-3 pr-4">
+                                <div class="font-bold text-gray-800 flex items-center gap-1">
+                                    ${l.ip}
+                                    ${l.dispositivo === 'Android' ? '📱' : (l.dispositivo === 'iOS' ? '🍎' : '💻')}
+                                </div>
+                                <div class="text-[9px] text-gray-400 uppercase">${l.cidade}, ${l.pais}</div>
+                            </td>
+                            <td class="py-3 pr-4">
+                                ${banBtn}
+                            </td>
+                            <td class="py-3 pr-4">
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-gray-500 bg-gray-100">${cats[l.categoria] ? cats[l.categoria].replace('AÇÕES ', '') : l.categoria}</span>
+                            </td>
+                            <td class="py-3">
+                                ${locBtn}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+ 
+                // Update Map Markers Colors
+                if (markersGroup) markersGroup.clearLayers();
+                data.logs.forEach(l => {
+                    if (l.latitude && l.longitude) {
+                        let color = '#6366f1'; // Blue
+                        if (l.categoria === 'acao_admin') color = '#ef4444'; // Red
+                        if (l.acao.includes('checkout') || l.acao.includes('pix')) color = '#10b981'; // Green
+ 
+                        const marker = L.circleMarker([l.latitude, l.longitude], {
+                            radius: 7,
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.9
+                        }).bindPopup(`<b>${l.ip}</b><br>${l.dispositivo} - ${l.cidade}<br>${l.acao}`);
+                        markersGroup.addLayer(marker);
+                        points.push([l.latitude, l.longitude]);
+                    }
+                });
+            } catch(e) {
+                console.error("Fetch stats error:", e);
+            }
         }
 
         let lastFailedAlert = 0;

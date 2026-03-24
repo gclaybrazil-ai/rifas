@@ -230,13 +230,37 @@ if ($action === 'stats') {
     $stmtLogs->execute($paramsLogs);
     $logs = $stmtLogs->fetchAll(PDO::FETCH_ASSOC);
 
+    // 4. Picos de Acesso (Últimas 24h)
+    $labels = [];
+    $values = [];
+    for($i = 23; $i >= 0; $i--) {
+        $h = date('H', strtotime("-$i hour"));
+        $labels[] = $h . "h";
+        $stmtP = $pdo->prepare("SELECT COUNT(*) FROM site_logs WHERE data_hora BETWEEN DATE_SUB(NOW(), INTERVAL ? + 1 HOUR) AND DATE_SUB(NOW(), INTERVAL ? HOUR)");
+        $stmtP->execute([$i, $i]);
+        $values[] = $stmtP->fetchColumn();
+    }
+ 
     echo json_encode([
         'online' => $online,
         'total_online' => $totalOnline,
         'top_pages' => $topPages,
-        'logs' => $logs
+        'logs' => $logs,
+        'peaks' => [
+            'labels' => $labels,
+            'values' => $values
+        ]
     ]);
 
+} else if ($action === 'ban_ip') {
+    $ip = $_POST['ip'] ?? '';
+    if (empty($ip)) echo json_encode(['error' => 'IP necessário']);
+    else {
+        $stmt = $pdo->prepare("INSERT IGNORE INTO banidos (ip, motivo) VALUES (?, 'Bloqueio Manual via Painel')");
+        $stmt->execute([$ip]);
+        registrarLog('acao_admin', "IP Banido Permanentemente: $ip", null, 1);
+        echo json_encode(['success' => true]);
+    }
 } else if ($action === 'billing_report') {
     $start = $_GET['start'] ?? '';
     $end = $_GET['end'] ?? '';
@@ -291,6 +315,26 @@ if ($action === 'stats') {
         $count++;
     }
 
+    // Métricas Avançadas
+    $ticketMedio = $count > 0 ? $totalFaturado / $count : 0;
+ 
+    // Conversão (Pagos vs Geral) no período
+    $whereAll = str_replace("status = 'pago'", "1=1", $where);
+    $stmtConv = $pdo->prepare("SELECT status, COUNT(*) as qtd FROM reservas $whereAll GROUP BY status");
+    $stmtConv->execute($params);
+    $statsConv = $stmtConv->fetchAll(PDO::FETCH_KEY_PAIR);
+ 
+    // Ranking de Rifas
+    $stmtTopR = $pdo->prepare("SELECT r.nome, SUM(r.valor_total) as total FROM reservas r $where GROUP BY r.nome ORDER BY total DESC LIMIT 5");
+    $stmtTopR->execute($params);
+    $topRifas = $stmtTopR->fetchAll(PDO::FETCH_ASSOC);
+ 
+    // Top Afiliados
+    $whereAfil = str_replace("r.", "res.", $where);
+    $stmtTopA = $pdo->prepare("SELECT a.nome, SUM(res.valor_total) as total FROM reservas res JOIN afiliados a ON res.afiliado_id = a.id $whereAfil GROUP BY a.nome ORDER BY total DESC LIMIT 5");
+    $stmtTopA->execute($params);
+    $topAfiliados = $stmtTopA->fetchAll(PDO::FETCH_ASSOC);
+ 
     echo json_encode([
         'success' => true,
         'total' => $totalFaturado,
@@ -298,6 +342,12 @@ if ($action === 'stats') {
         'repasse' => $totalRepasse,
         'bank' => $totalBanco,
         'count' => $count,
+        'resumo' => [
+            'ticket_medio' => round($ticketMedio, 2),
+            'conversao' => $statsConv,
+            'top_rifas' => $topRifas,
+            'top_afiliados' => $topAfiliados
+        ],
         'rows' => $rows // Enviamos as linhas para o exportador no JS
     ]);
 } else if ($action === 'mark_paid') {

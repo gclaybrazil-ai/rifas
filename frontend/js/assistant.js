@@ -344,9 +344,7 @@
 
         render() {
             let quickRepliesHtml = '';
-            this.config.messages.forEach(m => {
-                quickRepliesHtml += `<button class="quick-reply" data-id="${m.id}">${m.pergunta}</button>`;
-            });
+            // Quick replies removed by user request
 
             const html = `
                 <div id="assistant-container">
@@ -367,9 +365,6 @@
                         </div>
                         <div id="assistant-body">
                             <!-- Messages -->
-                        </div>
-                        <div id="assistant-quick-replies" style="display: none;">
-                            ${quickRepliesHtml}
                         </div>
                         <div id="assistant-footer">
                             <input type="text" id="assistant-input" placeholder="Digite sua pergunta...">
@@ -420,14 +415,6 @@
             input.addEventListener('keypress', (e) => {
                 if(e.key === 'Enter') this.handleSend();
             });
-
-            // Handle quick replies dynamically using delegation
-            document.getElementById('assistant-quick-replies').addEventListener('click', (e) => {
-                const btn = e.target.closest('.quick-reply');
-                if(btn) {
-                    this.handleQuickReply(btn.textContent, btn.getAttribute('data-id'));
-                }
-            });
         }
 
         async showWelcome() {
@@ -436,7 +423,6 @@
                 msg = `Olá! 👋 Sou o assistente da ${this.config.name.replace('Assistente ', '')}!<br><br>Estou aqui para te ajudar com qualquer dúvida sobre o sorteio. Como posso te ajudar hoje?`;
             }
             await this.addMessage(msg, 'bot');
-            document.getElementById('assistant-quick-replies').style.display = 'flex';
         }
 
         async addMessage(text, side) {
@@ -472,7 +458,6 @@
             if(!userText) return;
 
             input.value = '';
-            document.getElementById('assistant-quick-replies').style.display = 'none';
             await this.addMessage(userText, 'user');
             
             // 1. TRY AI CHAT (Gemini)
@@ -488,8 +473,6 @@
                 
                 if(data.success && data.response) {
                     await this.addMessage(data.response, 'bot');
-                    // Ensure buttons are hidden when AI takes over
-                    document.getElementById('assistant-quick-replies').style.display = 'none';
                     
                     const lowerResp = data.response.toLowerCase();
                     if(lowerResp.includes('atendente') || lowerResp.includes('whatsapp') || lowerResp.includes('suporte')) {
@@ -502,9 +485,9 @@
             }
 
             // 2. FALLBACK: INTENT MATCHING (Smart Match)
-            // If we are here, AI failed or was not set - SHOW BUTTONS AS FALLBACK
-            document.getElementById('assistant-quick-replies').style.display = 'flex';
+            // If we are here, AI failed or was not set
             let match = null;
+            const lowerText = userText.toLowerCase();
 
             // Search for keywords in our registered messages
             for (const m of this.config.messages) {
@@ -524,10 +507,9 @@
                 }
             } else {
                 // Generic AI-like response if no match
-                await this.addMessage("Legal! Ainda estou aprendendo sobre esse assunto específico. 😅<br><br>Gostaria de falar com um atendente humano ou prefere ver esses tópicos:", 'bot');
+                await this.addMessage("Legal! Ainda estou aprendendo sobre esse assunto específico. 😅<br><br>Gostaria de falar com um atendente humano para te ajudar melhor?", 'bot');
+                this.showWhatsAppButton();
             }
-
-            document.getElementById('assistant-quick-replies').style.display = 'flex';
         }
 
         showWhatsAppButton() {
@@ -540,23 +522,6 @@
             btn.innerHTML = `📲 Falar com ${this.config.attendant}`;
             body.appendChild(btn);
             body.scrollTop = body.scrollHeight;
-        }
-
-        async handleQuickReply(label, id) {
-            document.getElementById('assistant-quick-replies').style.display = 'none';
-            await this.addMessage(label, 'user');
-
-            const msgData = this.config.messages.find(m => m.id == id);
-            if(!msgData) return;
-
-            let response = msgData.resposta;
-            await this.addMessage(response, 'bot');
-            
-            if(label.toLowerCase().includes('atendente') || label.toLowerCase().includes('atendimento')) {
-                this.showWhatsAppButton();
-            }
-
-            document.getElementById('assistant-quick-replies').style.display = 'flex';
         }
     }
 

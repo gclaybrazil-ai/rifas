@@ -6,16 +6,20 @@ $baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOS
 
 if ($id > 0) {
     try {
-        $stmt = $pdo->prepare("SELECT nome, preco_numero, imagem_url FROM rifas WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT nome, preco_numero, imagem_url, premio1, premio2, premio3, premio4, premio5 FROM rifas WHERE id = ?");
         $stmt->execute([$id]);
         $rifa = $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {}
 }
 
-$brand = '$' . 'UPER' . '$' . 'ORTE';
+$brand = '$UPER$ORTE';
 $title = $rifa ? $rifa['nome'] . " - $brand" : "$brand - Rifa Online";
 $desc = $rifa ? 'Concorra a ' . $rifa['nome'] . ' por apenas R$ ' . number_format($rifa['preco_numero'], 2, ',', '.') : 'Sua sorte está aqui. Participe das nossas rifas online.';
-$image = ($rifa && !empty($rifa['imagem_url'])) ? $baseUrl . "/" . $rifa['imagem_url'] : $baseUrl . "/frontend/png/cifrao.png";
+
+// Robust image path logic
+$imgPath = ($rifa && !empty($rifa['imagem_url'])) ? $rifa['imagem_url'] : 'frontend/png/cifrao_premium.png';
+$image = $baseUrl . "/" . ltrim(str_replace(' ', '%20', $imgPath), '/');
+$raffleUrl = $baseUrl . "/rifa.php?id=" . $id;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -25,22 +29,28 @@ $image = ($rifa && !empty($rifa['imagem_url'])) ? $baseUrl . "/" . $rifa['imagem
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $title; ?></title>
     
-    <!-- TAGS DE COMPARTILHAMENTO (WhatsApp/Social) -->
+    <!-- TAGS DE COMPARTILHAMENTO PREMIUM (WhatsApp/Instagram/Facebook) -->
+    <meta property="og:site_name" content="<?php echo $brand; ?>">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?php echo $raffleUrl; ?>">
     <meta property="og:title" content="<?php echo $title; ?>">
     <meta property="og:description" content="<?php echo $desc; ?>">
     <meta property="og:image" content="<?php echo $image; ?>">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="<?php echo $baseUrl . "/rifa.php?id=" . $id; ?>">
+    <meta property="og:image:secure_url" content="<?php echo $image; ?>">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="720">
     
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="<?php echo $title; ?>">
     <meta name="twitter:description" content="<?php echo $desc; ?>">
     <meta name="twitter:image" content="<?php echo $image; ?>">
+    <meta name="description" content="<?php echo $desc; ?>">
 
     <!-- Tailwind CSS (via CDN para simplicidade) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="frontend/css/style.css">
-    <link rel="icon" type="image/png" href="frontend/png/cifrao.png">
+    <link rel="icon" type="image/png" href="frontend/png/cifrao_premium.png">
 
     <!-- Mercado Pago SDK -->
     <script src="https://sdk.mercadopago.com/js/v2"></script>
@@ -80,6 +90,14 @@ $image = ($rifa && !empty($rifa['imagem_url'])) ? $baseUrl . "/" . $rifa['imagem
                 </span>
             </div>
             <p class="text-xs text-gray-400 mt-2 font-medium">Selecione os números em verde</p>
+
+            <!-- Botão de Compartilhar Rifa -->
+            <div class="mt-6 flex justify-center">
+                <button onclick="shareRaffle()" class="flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-[#128C7E] active:scale-95 transition-all outline-none">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 21.41a10.985 10.985 0 0 1-5.6-1.53l-6.22 1.63 1.66-6.07a10.992 10.992 0 1 1 10.16 5.97zm0-19.14a8.77 8.77 0 1 0 8.77 8.77 8.78 8.78 0 0 0-8.77-8.77zm4.8 12c-.22-.11-1.3-.64-1.5-.71-.2-.07-.35-.11-.5.11s-.57.71-.7.86-.26.16-.48.05a6.044 6.044 0 0 1-1.78-1.09 6.64 6.64 0 0 1-1.23-1.53c-.11-.2-.01-.31.1-.42.1-.1.22-.26.33-.4.11-.14.15-.22.22-.38.07-.15.03-.3-.02-.42-.05-.11-.5-.1.22-.68.21s-.33.27-.33.32a2.02 2.02 0 0 0 .61 1.41 5.925 5.925 0 0 0 1.94 1.34 13.4 13.4 0 0 0 2.44.82 2.924 2.924 0 0 0 1.34 0 2.053 2.053 0 0 0 .54-1.77 1.68 1.68 0 0 0-.25-.43z"></path></svg>
+                    Compartilhar
+                </button>
+            </div>
         </div>
 
         <!-- Legenda -->
@@ -323,6 +341,46 @@ $image = ($rifa && !empty($rifa['imagem_url'])) ? $baseUrl . "/" . $rifa['imagem
     </div>
 
     <script src="frontend/js/app.js?v=<?= time() ?>"></script>
+    <script>
+        function shareRaffle() {
+            const title = "<?php echo str_replace('"', '\"', $title); ?>";
+            let msg = "🚨 *NOVA RIFA LANÇADA!* 🚨\n\n🎟️ *<?php echo str_replace('"', '\"', $rifa['nome'] ?? 'Rifa'); ?>*\n💰 Apenas R$ <?php echo number_format($rifa['preco_numero'] ?? 0, 2, ',', '.'); ?> por número!";
+            
+            const premios = [
+                "<?php echo str_replace('"', '\"', $rifa['premio1']); ?>",
+                "<?php echo str_replace('"', '\"', $rifa['premio2']); ?>",
+                "<?php echo str_replace('"', '\"', $rifa['premio3']); ?>",
+                "<?php echo str_replace('"', '\"', $rifa['premio4']); ?>",
+                "<?php echo str_replace('"', '\"', $rifa['premio5']); ?>"
+            ];
+
+            let premioStr = "";
+            let medalhas = ["🏆", "🥈", "🥉", "🏅", "🎖️"];
+            
+            premios.forEach((p, index) => {
+                if(p && p.trim() !== "") {
+                    premioStr += `\n${medalhas[index]} *${index + 1}º:* ${p.trim()}`;
+                }
+            });
+
+            if(premioStr) {
+                msg += "\n\n🎁 *PRÊMIOS:*" + premioStr;
+            }
+
+            msg += "\n\n👇 *PARTICIPE AGORA:* \n" + window.location.href;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: msg,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                const waLink = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+                window.open(waLink, '_blank');
+            }
+        }
+    </script>
 </body>
 
 </html>
