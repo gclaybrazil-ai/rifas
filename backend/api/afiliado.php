@@ -29,6 +29,7 @@ if ($action === 'login_register') {
     if ($afiliado) {
         // Login flow
         if (empty($senha)) die(json_encode(['error' => 'Informe sua senha.']));
+        if ($afiliado['status'] === 'expulso') die(json_encode(['error' => 'Seu acesso de afiliado foi desativado permanentemente por inatividade prolongada.']));
         if (password_verify($senha, $afiliado['senha'])) {
             $check = checkLocationChallenge('afiliado', $afiliado['id'], $afiliado['email'], $afiliado['nome'], $lat, $lng);
             if (isset($check['challenge'])) {

@@ -989,7 +989,7 @@ if ($action === 'stats') {
 
     // Lógica de Inatividade de Afiliados ao fechar rifa
     if ($status === 'fechada') {
-        $stmtAfs = $pdo->query("SELECT id, bonus_data_resgate, bonus_bloqueio_ate FROM afiliados");
+        $stmtAfs = $pdo->query("SELECT id, nome, email, bonus_concursos_inativos, bonus_data_resgate, bonus_bloqueio_ate, status FROM afiliados WHERE status != 'expulso'");
         $allAfs = $stmtAfs->fetchAll(PDO::FETCH_ASSOC);
         
         foreach($allAfs as $af) {
@@ -999,31 +999,42 @@ if ($action === 'stats') {
             
             if ($numSales === 0) {
                 // Afiliado não vendeu nada nesta rifa
-                $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = bonus_concursos_inativos + 1 WHERE id = ?")->execute([$af['id']]);
+                $newInactiveCount = $af['bonus_concursos_inativos'] + 1;
+                $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = ? WHERE id = ?")->execute([$newInactiveCount, $af['id']]);
                 
-                $stmtCheck = $pdo->prepare("SELECT bonus_concursos_inativos, bonus_data_resgate, bonus_bloqueio_ate FROM afiliados WHERE id = ?");
-                $stmtCheck->execute([$af['id']]);
-                $afCheck = $stmtCheck->fetch(PDO::FETCH_ASSOC);
-                
-                if ($afCheck['bonus_concursos_inativos'] >= 2) {
+                // TIER 1: 15 DIAS DE BLOQUEIO (2 CONCURSOS)
+                if ($newInactiveCount == 2) {
                     $now = new DateTime();
                     $blockStart = clone $now;
-                    
-                    if ($afCheck['bonus_data_resgate']) {
-                        $cycleEnd = (new DateTime($afCheck['bonus_data_resgate']))->modify('+30 days');
+                    if ($af['bonus_data_resgate']) {
+                        $cycleEnd = (new DateTime($af['bonus_data_resgate']))->modify('+30 days');
                         if ($cycleEnd > $now) $blockStart = $cycleEnd;
                     }
-                    
-                    if ($afCheck['bonus_bloqueio_ate'] && new DateTime($afCheck['bonus_bloqueio_ate']) > $blockStart) {
-                         $blockStart = new DateTime($afCheck['bonus_bloqueio_ate']);
+                    if ($af['bonus_bloqueio_ate'] && new DateTime($af['bonus_bloqueio_ate']) > $blockStart) {
+                         $blockStart = new DateTime($af['bonus_bloqueio_ate']);
                     }
-                    
                     $blockEnd = $blockStart->modify('+15 days');
                     $pdo->prepare("UPDATE afiliados SET bonus_bloqueio_ate = ?, bonus_notificado_bloqueio = 1 WHERE id = ?")
                         ->execute([$blockEnd->format('Y-m-d H:i:s'), $af['id']]);
+                } 
+                // TIER 2: AVISO DE EXPULSÃO (3 CONCURSOS)
+                else if ($newInactiveCount == 3) {
+                    $expDate = (new DateTime())->modify('+7 days')->format('Y-m-d H:i:s');
+                    $pdo->prepare("UPDATE afiliados SET bonus_data_expulsao = ?, bonus_notif_fase = 7 WHERE id = ?")
+                        ->execute([$expDate, $af['id']]);
+                }
+                // TIER 3: EXPULSÃO (4 CONCURSOS)
+                else if ($newInactiveCount >= 4) {
+                    $pdo->prepare("UPDATE afiliados SET status = 'expulso', bonus_data_expulsao = NULL, bonus_notif_fase = 0 WHERE id = ?")
+                        ->execute([$af['id']]);
+                    
+                    $msgExp = "Olá {$af['nome']},\n\nLamentamos informar que seu acesso de afiliado foi desativado permanentemente devido à inatividade prolongada (4 concursos sem vendas).\n\nEquipe Top Sorte";
+                    sendMailer($af['email'], $af['nome'], "Acesso de Afiliado Desativado", $msgExp);
                 }
             } else {
-                $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = 0, last_raffle_id_with_sale = ? WHERE id = ?")->execute([$id, $af['id']]);
+                // Vendeu nesta rifa, reseta TUDO
+                $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = 0, last_raffle_id_with_sale = ?, bonus_data_expulsao = NULL, bonus_notif_fase = 0 WHERE id = ?")
+                    ->execute([$id, $af['id']]);
             }
         }
     }

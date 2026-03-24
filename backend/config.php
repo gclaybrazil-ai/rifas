@@ -450,3 +450,69 @@ function validatePasswordComplexity($password) {
 
     return true; // Valid
 }
+function checkAffiliateInactivity() {
+    global $pdo;
+
+    // Throttle check to once per hour
+    $stmtT = $pdo->prepare("SELECT valor FROM configuracoes WHERE chave = 'last_inactivity_check'");
+    $stmtT->execute();
+    $lastCheck = $stmtT->fetchColumn();
+    $nowTS = time();
+    if ($lastCheck && ($nowTS - (int)$lastCheck) < 3600) return;
+    $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('last_inactivity_check', ?) ON DUPLICATE KEY UPDATE valor = ?")->execute([$nowTS, $nowTS]);
+
+    $stmtAfs = $pdo->query("SELECT id, nome, email, bonus_data_expulsao, bonus_notif_fase, status FROM afiliados WHERE bonus_data_expulsao IS NOT NULL AND status = 'ativo'");
+    $afs = $stmtAfs->fetchAll(PDO::FETCH_ASSOC);
+
+    $now = new DateTime();
+
+    foreach ($afs as $af) {
+        $expDate = new DateTime($af['bonus_data_expulsao']);
+        $diff = $now->diff($expDate);
+        $daysRem = $diff->invert ? 0 : $diff->days;
+        if ($now > $expDate) $daysRem = 0;
+
+        $fase = (int)$af['bonus_notif_fase'];
+        $shouldEmail = false;
+        $newFase = $fase;
+        $subject = "";
+        $msg = "";
+
+        if ($daysRem <= 0) {
+            // DIA 0: EXPULSÃO
+            $pdo->prepare("UPDATE afiliados SET status = 'expulso', bonus_data_expulsao = NULL, bonus_notif_fase = 0 WHERE id = ?")->execute([$af['id']]);
+            $subject = "Acesso de Afiliado Encerrado";
+            $msg = "Olá {$af['nome']},\n\nConforme avisado anteriormente, seu acesso de afiliado foi encerrado hoje devido à inatividade prolongada.\n\nEquipe Top Sorte";
+            $shouldEmail = true;
+        } else if ($daysRem <= 1 && $fase > 1) {
+            $newFase = 1;
+            $subject = "ÚLTIMO AVISO: Seu acesso de afiliado expira em 24h";
+            $msg = "Olá {$af['nome']},\n\nEste é o seu último aviso. Para manter seu acesso ativo, você precisa realizar pelo menos 1 venda nas próximas 24 horas.\n\nEquipe Top Sorte";
+            $shouldEmail = true;
+        } else if ($daysRem <= 2 && $fase > 2) {
+            $newFase = 2;
+            $subject = "Aviso: Restam 2 dias para manter seu acesso de afiliado";
+            $msg = "Olá {$af['nome']},\n\nSua conta de afiliado continua em risco de desligamento por inatividade. Você tem mais 2 dias para realizar pelo menos 1 venda.\n\nEquipe Top Sorte";
+            $shouldEmail = true;
+        } else if ($daysRem <= 3 && $fase > 3) {
+            $newFase = 3;
+            $subject = "Aviso: Restam 3 dias para manter seu acesso de afiliado";
+            $msg = "Olá {$af['nome']},\n\nVocê tem 3 dias para realizar pelo menos 1 venda e evitar a perda do seu acesso como parceiro.\n\nEquipe Top Sorte";
+            $shouldEmail = true;
+        } else if ($daysRem <= 7 && $fase > 7) {
+            // Initial 7 day warning (already set to 7 in admin.php, but just in case)
+            $newFase = 6; // Move to next threshold
+            $subject = "Atenção: Risco de perda de acesso de parceiro";
+            $msg = "Olá {$af['nome']},\n\nNotamos que você está há 3 concursos sem realizar vendas. Você tem 1 semana para realizar ao menos 1 venda, caso contrário seu acesso será desativado permanentemente no 4º concurso consecutivo sem vendas.\n\nEquipe Top Sorte";
+            $shouldEmail = true;
+        }
+
+        if ($shouldEmail) {
+            sendMailer($af['email'], $af['nome'], $subject, $msg);
+            $pdo->prepare("UPDATE afiliados SET bonus_notif_fase = ? WHERE id = ?")->execute([$newFase, $af['id']]);
+        }
+    }
+}
+
+// Run the inactivity check
+checkAffiliateInactivity();

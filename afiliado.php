@@ -290,7 +290,7 @@ try {
                     </div>
                     <div class="flex gap-4">
                         <div class="w-6 h-6 bg-red-50 text-red-600 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black">03</div>
-                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">INATIVIDADE: Caso fique 2 concursos consecutivos sem vendas, será aplicado um bloqueio de 15 dias após o ciclo atual.</p>
+                        <p class="text-[11px] font-bold text-gray-500 uppercase leading-relaxed">INATIVIDADE: Venda mínimo 1 rifa a cada 2 concursos para evitar bloqueio de 15 dias. Caso fique 4 concursos sem vendas, o acesso de afiliado será desativado permanentemente.</p>
                     </div>
                 </div>
             </div>
