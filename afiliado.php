@@ -21,6 +21,14 @@ try {
     <link rel="icon" type="image/png" href="frontend/png/cifrao_premium.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6d28d9">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="afiliado-app.png">
+
     <!-- TAGS DE COMPARTILHAMENTO -->
     <meta property="og:title" content="Painel de Afiliados - $UPER$ORTE">
     <meta property="og:description" content="Acesse seu painel, acompanhe suas vendas e gere seus links de divulgação.">
@@ -162,6 +170,20 @@ try {
 
         <!-- Dashboard Layout -->
         <div id="section-dash" class="hidden space-y-6">
+
+            <!-- PWA INSTALL BANNER -->
+            <div id="pwa-install-container" class="hidden bg-gradient-to-r from-gray-900 to-indigo-900 rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden border border-white/5">
+                <div class="absolute right-0 top-0 opacity-10 transform scale-150 rotate-12 -mr-8 -mt-8">
+                     <img src="afiliado-app.png" class="w-40 grayscale brightness-200">
+                </div>
+                <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                    <div>
+                        <h3 class="text-xl font-black uppercase italic tracking-tight">Aplicativo do Afiliado</h3>
+                        <p class="text-[11px] opacity-60 font-medium uppercase tracking-widest mt-1">Instale nosso atalho na sua tela inicial e tenha acesso instantâneo ao seu painel.</p>
+                    </div>
+                    <button id="btn-pwa-install" class="bg-white text-gray-900 font-black px-8 py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-xl hover:bg-gray-100 transition-all active:scale-95 whitespace-nowrap">Instalar Agora</button>
+                </div>
+            </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center">
@@ -371,6 +393,33 @@ try {
 
     <script>
         const API = 'backend/api/afiliado.php';
+
+        // PWA SERVICE WORKER
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').catch(() => {});
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Only show install banner if not already installed and on the dashboard
+            if (document.getElementById('section-dash').classList.contains('hidden') === false) {
+                 document.getElementById('pwa-install-container').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('btn-pwa-install')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('pwa-install-container').classList.add('hidden');
+                }
+                deferredPrompt = null;
+            }
+        });
+
         let currentToken = '';
         let timerInterval = null;
         let secondsLeft = 0;

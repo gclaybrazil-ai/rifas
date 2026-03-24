@@ -1,22 +1,17 @@
 {
-  "name": "$UPER$ORTE - Prêmios Online",
-  "short_name": "$UPER$orte",
-  "description": "Participe dos melhores sorteios online com segurança e agilidade.",
-  "start_url": "index.html",
+  "name": "Afiliados $UPER$ORTE",
+  "short_name": "Afiliados",
+  "description": "Painel de Gestão para Afiliados $UPER$ORTE",
+  "start_url": "afiliado.php",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#00a650",
+  "theme_color": "#6d28d9",
   "icons": [
     {
-      "src": "frontend/png/cifrao_premium.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "frontend/png/cifrao_premium.png",
+      "src": "afiliado-app.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ],
-  "orientation": "portrait"
+  ]
 }
