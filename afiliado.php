@@ -32,7 +32,7 @@ try {
     <!-- TAGS DE COMPARTILHAMENTO -->
     <meta property="og:title" content="Painel de Afiliados - $UPER$ORTE">
     <meta property="og:description" content="Acesse seu painel, acompanhe suas vendas e gere seus links de divulgação.">
-    <meta property="og:image" content="frontend/png/cifrao_premium.png">
+    <meta property="og:image" content="frontend/jpg/promo-afiliado.jpg">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <style>
