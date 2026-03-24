@@ -961,53 +961,63 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     </div>
 
     <!-- Modal Configurações de Email -->
-    <div id="modal-smtp" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full text-left shadow-2xl relative">
-            <button id="btn-close-smtp" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+    <div id="modal-smtp" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-8 max-w-xl w-full text-left shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative">
+            <button id="btn-close-smtp" class="absolute top-6 right-6 text-gray-400 hover:text-gray-700 transition-colors">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            <div class="flex items-center gap-3 mb-6">
-                <div class="p-3 bg-indigo-100 rounded-lg text-indigo-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            
+            <div class="flex items-center gap-4 mb-8">
+                <div class="p-4 bg-indigo-50 rounded-2xl text-indigo-600 shadow-inner">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h2 class="text-xl font-black text-gray-800">Parâmetros de Email</h2>
-                        <button type="button" id="btn-help-smtp" class="w-5 h-5 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-[10px] font-bold hover:bg-gray-300 transition-colors" title="Como configurar?">?</button>
+                        <h2 class="text-2xl font-black text-gray-800 tracking-tight">Parâmetros de Email</h2>
+                        <button type="button" id="btn-help-smtp" class="w-6 h-6 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center text-xs font-bold hover:bg-gray-200 transition-colors" title="Como configurar?">?</button>
                     </div>
-                    <p class="text-xs text-gray-500">Configuração para Recuperação de Senha</p>
+                    <p class="text-sm text-gray-400 font-medium">Configurações globais de notificações SMTP</p>
                 </div>
             </div>
-            <form id="form-smtp" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <form id="form-smtp" class="grid grid-cols-1 md:grid-cols-6 gap-5">
+                <div class="md:col-span-6">
+                   <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Servidor SMTP</label>
+                   <input type="text" id="smtp-host" name="smtp_host" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all" placeholder="smtp.hostinger.com">
+                </div>
+                
                 <div class="md:col-span-2">
-                   <label class="text-[10px] font-bold text-gray-400 uppercase">Servidor SMTP</label>
-                   <input type="text" id="smtp-host" name="smtp_host" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="smtp.exemplo.com">
+                   <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Porta SMTP</label>
+                   <input type="text" id="smtp-port" name="smtp_port" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all" placeholder="465">
                 </div>
-                <div>
-                   <label class="text-[10px] font-bold text-gray-400 uppercase">Porta SMTP</label>
-                   <input type="text" id="smtp-port" name="smtp_port" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="587">
+                
+                <div class="md:col-span-4">
+                   <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Usuário SMTP</label>
+                   <input type="text" id="smtp-user" name="smtp_user" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all" placeholder="vendas@seusite.com">
                 </div>
-                <div>
-                   <label class="text-[10px] font-bold text-gray-400 uppercase">Usuário SMTP</label>
-                   <input type="text" id="smtp-user" name="smtp_user" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="login@email.com">
+                
+                <div class="md:col-span-3">
+                   <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Senha SMTP</label>
+                   <input type="password" id="smtp-pass" name="smtp_pass" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all" placeholder="••••••••">
                 </div>
-                <div>
-                   <label class="text-[10px] font-bold text-gray-400 uppercase">Senha SMTP</label>
-                   <input type="password" id="smtp-pass" name="smtp_pass" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="******">
+                
+                <div class="md:col-span-3">
+                   <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Nome do Remetente</label>
+                   <input type="text" id="smtp-from-name" name="smtp_from_name" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all" placeholder="Admin Sistema">
                 </div>
-                <div>
-                   <label class="text-[10px] font-bold text-gray-400 uppercase">Nome do Remetente</label>
-                   <input type="text" id="smtp-from-name" name="smtp_from_name" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="Admin Sorte">
+                
+                <div class="md:col-span-6">
+                   <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">E-mail do Remetente</label>
+                   <input type="email" id="smtp-from-email" name="smtp_from_email" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all" placeholder="nao-responda@seusite.com">
                 </div>
-                <div>
-                   <label class="text-[10px] font-bold text-gray-400 uppercase">Email do Remetente</label>
-                   <input type="email" id="smtp-from-email" name="smtp_from_email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none" placeholder="noreply@site.com">
-                </div>
-                <div class="md:col-span-2 flex gap-2">
-                    <button type="submit" id="btn-save-smtp" class="flex-1 bg-[#00a650] text-white font-bold py-4 rounded-xl shadow uppercase text-sm mt-2 hover:bg-[#009647] transition-colors">Salvar Configuração</button>
-                    <button type="button" id="btn-test-email" class="bg-blue-500 text-white font-bold py-4 px-6 rounded-xl shadow uppercase text-sm mt-2 hover:bg-blue-600 transition-colors flex items-center gap-2">
+
+                <div class="md:col-span-6 flex flex-col sm:flex-row gap-3 mt-4">
+                    <button type="submit" id="btn-save-smtp" class="flex-1 bg-[#00a650] text-white font-black py-4 px-6 rounded-2xl shadow-[0_10px_20px_rgba(0,166,80,0.2)] uppercase text-xs tracking-widest hover:bg-[#009647] hover:-translate-y-0.5 transition-all">
+                        Salvar Configuração
+                    </button>
+                    <button type="button" id="btn-test-email" class="bg-indigo-600 text-white font-black py-4 px-8 rounded-2xl shadow-[0_10px_20px_rgba(79,70,229,0.2)] uppercase text-xs tracking-widest hover:bg-indigo-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3">
                         <span>Testar Envio</span>
-                        <i id="icon-test-email">📧</i>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                     </button>
                 </div>
             </form>
@@ -2262,6 +2272,38 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             }
         });
 
+        // Test SMTP Email Listener
+        document.getElementById('btn-test-email').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-test-email');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="animate-pulse">Enviando...</span>';
+            btn.disabled = true;
+
+            const fd = new URLSearchParams();
+            fd.append('action', 'send_test_email');
+            fd.append('smtp_host', document.getElementById('smtp-host').value);
+            fd.append('smtp_port', document.getElementById('smtp-port').value);
+            fd.append('smtp_user', document.getElementById('smtp-user').value);
+            fd.append('smtp_pass', document.getElementById('smtp-pass').value);
+            fd.append('smtp_from_name', document.getElementById('smtp-from-name').value);
+            fd.append('smtp_from_email', document.getElementById('smtp-from-email').value);
+
+            try {
+                const res = await fetch(API, { method: 'POST', body: fd });
+                const data = await res.json();
+                if(data.success) {
+                    showNotification('E-mail Enviado!', `O teste foi para <b>${data.email}</b>. Verifique sua caixa de entrada (e spam). 🚀`, 'success');
+                } else {
+                    showNotification('Falha no Teste', data.error || 'Verifique se os dados SMTP estão corretos.', 'error');
+                }
+            } catch(e) {
+                showNotification('Erro Fatal', 'Erro de conexão com o servidor', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
         // SMTP Help Modal
         document.getElementById('btn-help-smtp').addEventListener('click', () => {
             const m = document.getElementById('modal-help-smtp');
@@ -2960,33 +3002,6 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             }
         });
 
-        // Test Email
-        document.getElementById('btn-test-email').addEventListener('click', async () => {
-            const btn = document.getElementById('btn-test-email');
-            const icon = document.getElementById('icon-test-email');
-            const form = document.getElementById('form-smtp');
-            const fd = new FormData(form);
-            fd.append('action', 'send_test_email');
-
-            const originalText = btn.innerHTML;
-            btn.innerHTML = 'Enviando...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(API, { method: 'POST', body: fd });
-                const data = await res.json();
-                if(data.success) {
-                    alert('✅ Sucesso! O e-mail de teste foi enviado para ' + data.email);
-                } else {
-                    alert('❌ Erro no envio: ' + (data.error || 'Verifique as configurações.'));
-                }
-            } catch(e) {
-                alert('Erro na comunicação com o servidor.');
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        });
         
         // Test WhatsApp
         document.getElementById('btn-test-whatsapp').addEventListener('click', async () => {

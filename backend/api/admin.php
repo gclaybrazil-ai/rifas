@@ -3,6 +3,9 @@ session_start();
 header('Content-Type: application/json');
 require_once '../config.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
     die(json_encode(['error' => 'Não autorizado']));
 }
@@ -410,17 +413,23 @@ if ($action === 'stats') {
                 $port = (int)($confMail['smtp_port'] ?? 465);
                 $from_name = $confMail['smtp_from_name'] ?? 'Rifas Online';
                 $from_email = $confMail['smtp_from_email'] ?? 'noreply@seusite.com';
-                $admin_email = $confMail['smtp_user'] ?? $from_email;
+                $stmtAdmEmail = $pdo->query("SELECT email FROM usuarios LIMIT 1");
+                $admin_email = $stmtAdmEmail->fetchColumn();
+
+                if (!$admin_email) {
+                    $stmtConfAdmin = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'admin_email'");
+                    $admin_email = $stmtConfAdmin->fetchColumn() ?: ($confMail['smtp_user'] ?? $from_email);
+                }
 
                 if (!empty($host) && !empty($user_smtp) && !empty($pass_smtp)) {
                     try {
-                        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                        $mail = new PHPMailer(true);
                         $mail->isSMTP();
                         $mail->Host       = $host;
                         $mail->SMTPAuth   = true;
                         $mail->Username   = $user_smtp;
                         $mail->Password   = $pass_smtp;
-                        $mail->SMTPSecure = ($port == 465) ? 'ssl' : 'tls';
+                        $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
                         $mail->Port       = $port;
                         $mail->CharSet    = 'UTF-8';
                         $mail->setFrom($from_email, $from_name);
@@ -1124,18 +1133,14 @@ if ($action === 'stats') {
         die(json_encode(['error' => 'Preencha todos os campos do SMTP antes de testar.']));
     }
 
-    require_once __DIR__ . '/../libs/PHPMailer/PHPMailer.php';
-    require_once __DIR__ . '/../libs/PHPMailer/SMTP.php';
-    require_once __DIR__ . '/../libs/PHPMailer/Exception.php';
-
-    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
         $mail->Host       = $host;
         $mail->SMTPAuth   = true;
         $mail->Username   = $user_smtp;
         $mail->Password   = $pass_smtp;
-        $mail->SMTPSecure = ($port == 465) ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = $port;
         $mail->CharSet    = 'UTF-8';
 
@@ -1143,13 +1148,38 @@ if ($action === 'stats') {
         $mail->addAddress($admin_email);
 
         $mail->isHTML(true);
-        $mail->Subject = '📧 Teste de Configuração de E-mail - Riffas';
-        $mail->Body    = "<h1>Sucesso!</h1><p>Sua configuração SMTP no site de Rifas está funcionando corretamente.</p><hr><p>Enviado em: " . date('d/m/Y H:i:s') . "</p>";
+        $mail->Subject = '📧 Teste de Configuração de E-mail - $UPER$ORTE';
+        $mail->Body    = "
+            <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
+                <div style='background: #4f46e5; color: white; padding: 30px; text-align: center;'>
+                    <h1 style='margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;'>$UPER$ORTE</h1>
+                    <p style='margin: 10px 0 0 0; opacity: 0.8;'>Teste de Integração de Sistema</p>
+                </div>
+                <div style='padding: 30px; color: #374151; line-height: 1.6;'>
+                    <h2 style='color: #111827; margin-top: 0;'>Configuração Validada com Sucesso! 🚀</h2>
+                    <p>Este é um e-mail de teste disparado pelo seu painel administrativo para confirmar que sua <strong>configuração SMTP</strong> está ativa e operando corretamente.</p>
+                    <div style='background: #f9fafb; padding: 20px; border-radius: 10px; border-left: 4px solid #4f46e5; margin: 20px 0;'>
+                        <p style='margin: 0; font-weight: bold;'>O que isso significa?</p>
+                        <ul style='margin: 10px 0 0 0; padding-left: 20px;'>
+                            <li>Alertas de <strong>Rifas 100% Vendidas</strong> chegarão neste e-mail.</li>
+                            <li>Recuperações de senha para você e seus afiliados estão funcionando.</li>
+                            <li>Notificações do sistema estão seguras.</li>
+                        </ul>
+                    </div>
+                    <p style='font-size: 14px; color: #6b7280;'>Destinatário: <strong>{$admin_email}</strong></p>
+                </div>
+                <div style='background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #9ca3af;'>
+                    <p style='margin: 0;'>Enviado em: " . date('d/m/Y H:i:s') . "</p>
+                </div>
+            </div>
+        ";
 
         $mail->send();
-        echo json_encode(['success' => true, 'email' => $admin_email]);
+        ob_clean();
+        die(json_encode(['success' => true, 'email' => $admin_email]));
     } catch (Exception $e) {
-        echo json_encode(['error' => 'Falha no PHPMailer: ' . $mail->ErrorInfo]);
+        ob_clean();
+        die(json_encode(['error' => 'Falha no PHPMailer: ' . $mail->ErrorInfo]));
     }
 } else if ($action === 'get_affiliates') {
     $stmt = $pdo->query("SELECT a.id, a.nome, a.whatsapp, a.email, a.saldo, a.total_ganho, a.vendas_pagas, a.data_ultimo_saque, a.data_cadastro,

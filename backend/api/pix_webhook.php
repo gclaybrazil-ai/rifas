@@ -20,11 +20,14 @@ if ($tokenRecebido !== 'RIFA_SECURE_123' && !$isMP) {
 }
 
 try {
-    require_once '../config.php';
+    require_once __DIR__ . '/../config.php';
 } catch (Exception $e) {
     file_put_contents(__DIR__ . '/webhook_debug.txt', "ERRO CONFIG: " . $e->getMessage() . PHP_EOL, FILE_APPEND);
     die();
 }
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 $data = json_decode($rawPayload, true);
 $txid = '';
@@ -125,6 +128,55 @@ try {
             }
         } catch (Exception $eW) {
              file_put_contents(__DIR__ . '/webhook_debug.txt', "ERRO WHATSAPP: " . $eW->getMessage() . PHP_EOL, FILE_APPEND);
+        }
+
+        // --- 100% SOLD EMAIL NOTIFICATION ---
+        try {
+            $rifaId = $reserva['rifa_id'];
+            $stmtStatus = $pdo->prepare("SELECT nome, quantidade_numeros, (SELECT COUNT(*) FROM numeros WHERE rifa_id = ? AND status = 'pago') AS pagos FROM rifas WHERE id = ?");
+            $stmtStatus->execute([$rifaId, $rifaId]);
+            $sR = $stmtStatus->fetch(PDO::FETCH_ASSOC);
+
+            if ($sR && $sR['pagos'] >= $sR['quantidade_numeros']) {
+                $rifaNome = $sR['nome'];
+                $stmtConfMail = $pdo->query("SELECT chave, valor FROM configuracoes WHERE chave LIKE 'smtp_%'");
+                $confMail = $stmtConfMail->fetchAll(PDO::FETCH_KEY_PAIR);
+
+                $host = $confMail['smtp_host'] ?? '';
+                $user_smtp = $confMail['smtp_user'] ?? '';
+                $pass_smtp = $confMail['smtp_pass'] ?? '';
+                $port = (int)($confMail['smtp_port'] ?? 465);
+                $from_name = $confMail['smtp_from_name'] ?? 'Rifas Online';
+                $from_email = $confMail['smtp_from_email'] ?? 'noreply@seusite.com';
+                
+                $stmtAdmEmail = $pdo->query("SELECT email FROM usuarios LIMIT 1");
+                $admin_email = $stmtAdmEmail->fetchColumn();
+
+                if (!$admin_email) {
+                    $stmtConfAdmin = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'admin_email'");
+                    $admin_email = $stmtConfAdmin->fetchColumn() ?: ($confMail['smtp_user'] ?? $from_email);
+                }
+
+                if (!empty($host) && !empty($user_smtp) && !empty($pass_smtp)) {
+                    $mail = new PHPMailer(true);
+                    $mail->isSMTP();
+                    $mail->Host       = $host;
+                    $mail->SMTPAuth   = true;
+                    $mail->Username   = $user_smtp;
+                    $mail->Password   = $pass_smtp;
+                    $mail->SMTPSecure = ($port == 465) ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port       = $port;
+                    $mail->CharSet    = 'UTF-8';
+                    $mail->setFrom($from_email, $from_name);
+                    $mail->addAddress($admin_email);
+                    $mail->isHTML(true);
+                    $mail->Subject = "RIFA 100% VENDIDA: {$rifaNome}";
+                    $mail->Body    = "<h2>Parabens!</h2><p>A rifa #{$rifaId} atingiu 100% através de pagamento automático (Webhook).</p>";
+                    $mail->send();
+                }
+            }
+        } catch (Exception $eE) {
+            file_put_contents(__DIR__ . '/webhook_debug.txt', "ERRO EMAIL 100%: " . $eE->getMessage() . PHP_EOL, FILE_APPEND);
         }
         // -----------------------------
 
