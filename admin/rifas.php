@@ -180,7 +180,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </div>
 
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Mudar Imagem de Fundo (Deixe em branco para manter)</label>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1 block">Mudar Imagem de Fundo <span class="text-red-500 lowercase font-black ml-2">(MÁX: 300KB p/ foto no WhatsApp)</span></label>
                     <div class="grid grid-cols-2 gap-2 mt-1">
                         <input type="text" id="edit-imagem" name="imagem" placeholder="URL opcional..."
                             class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs">

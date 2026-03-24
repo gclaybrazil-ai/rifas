@@ -83,7 +83,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 origin-top">
                     <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 px-1">Atalhos Rápidos</div>
                     <button id="btn-affiliates" class="w-full bg-orange-600 text-white font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-orange-700 text-xs text-left flex items-center gap-2">
-                        <span class="w-6 h-6 bg-white/20 rounded flex items-center justify-center text-sm">👥</span> COMISSÕES (AFILIADOS)
+                        <span class="w-6 h-6 bg-white/20 rounded flex items-center justify-center text-sm">👥</span> Gestão de Afiliados
                     </button>
                     <button id="btn-new-rifa" class="w-full bg-[#00a650] text-white font-bold px-3 py-2.5 rounded-xl shadow-sm hover:bg-[#009647] text-xs text-left flex items-center gap-2">
                         <span class="w-6 h-6 bg-white/20 rounded flex items-center justify-center text-lg">+</span> Criar Nova Rifa
@@ -551,7 +551,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </div>
 
                 <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Imagem da Rifa <span class="text-[#00a650] lowercase">(Ideal: 1080x1080px ou Quadrada 1:1)</span></label>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Imagem da Rifa <span class="text-[#00a650] lowercase">(Ideal: 1:1 Quadrada | <b>MÁX: 300KB</b> p/ foto no WhatsApp)</span></label>
                     <div class="flex gap-2">
                         <input type="url" id="new-imagem"
                             class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 text-[10px] md:text-xs focus:ring-2 focus:ring-[#00a650] outline-none"
@@ -632,6 +632,27 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </button>
             </div>
 
+            <!-- Affiliate Limit Selector -->
+            <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Limite de Afiliados:</label>
+                    <select id="limit-affiliates-cfg" class="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-pink-500 transition-all">
+                        <option value="0">Ilimitado</option>
+                        <option value="10">10 Afiliados</option>
+                        <option value="20">20 Afiliados</option>
+                        <option value="50">50 Afiliados</option>
+                        <option value="100">100 Afiliados</option>
+                        <option value="200">200 Afiliados</option>
+                        <option value="500">500 Afiliados</option>
+                    </select>
+                    <button onclick="saveLimitAffiliates()" class="bg-pink-600 text-white px-4 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-pink-700 transition-all shadow hover:shadow-pink-200 active:scale-95">Definir</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Cadastrados:</span>
+                    <span id="af-total-count" class="bg-white border border-pink-100 text-pink-700 px-3 py-1 rounded-full text-[10px] font-black shadow-sm">...</span>
+                </div>
+            </div>
+
             <div class="overflow-y-auto flex-1 scrollbar-thin">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead class="bg-gray-50 text-gray-400 uppercase font-black tracking-widest sticky top-0 z-10">
@@ -678,6 +699,45 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Afiliado -->
+    <div id="modal-edit-affiliate" class="fixed inset-0 bg-black bg-opacity-80 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl relative border border-gray-100 transform scale-95 transition-all duration-300" id="modal-edit-affiliate-box">
+            <button onclick="closeModal('modal-edit-affiliate')" class="absolute top-6 right-6 text-gray-400 hover:text-gray-700">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="mb-8">
+                <h2 class="text-2xl font-black text-gray-800 uppercase italic tracking-tight">Editar Afiliado</h2>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Atualize os dados cadastrais</p>
+            </div>
+            <form id="form-edit-affiliate" class="space-y-4">
+                <input type="hidden" id="edit-af-id">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">Nome Completo</label>
+                    <input type="text" id="edit-af-nome" required class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs font-bold focus:ring-2 focus:ring-pink-500 outline-none transition-all">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">WhatsApp</label>
+                        <input type="text" id="edit-af-whatsapp" required class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs font-bold focus:ring-2 focus:ring-pink-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">Senha (vazio=manter)</label>
+                        <input type="password" id="edit-af-senha" placeholder="Nova senha" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs font-bold focus:ring-2 focus:ring-pink-500 outline-none transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">Email</label>
+                    <input type="email" id="edit-af-email" required class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs font-bold focus:ring-2 focus:ring-pink-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1 block mb-1">Chave PIX</label>
+                    <input type="text" id="edit-af-pix" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs font-bold focus:ring-2 focus:ring-pink-500 outline-none transition-all">
+                </div>
+                <button type="submit" id="btn-save-edit-af" class="w-full bg-pink-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-pink-700 transition-all uppercase tracking-widest text-xs mt-4">Salvar Alterações</button>
+            </form>
         </div>
     </div>
 
@@ -1389,11 +1449,11 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <thead>
                             <tr class="text-[10px] font-black text-gray-400 uppercase">
                                 <th class="pb-3 pr-4 text-left">Data/Hora</th>
-                                <th class="pb-3 pr-4 text-left">Atividade</th>
                                 <th class="pb-3 pr-4 text-left">IP / Local</th>
                                 <th class="pb-3 pr-4 text-left">Ação</th>
                                 <th class="pb-3 pr-4 text-left">Categoria</th>
-                                <th class="pb-3 text-left">Mapa</th>
+                                <th class="pb-3 pr-4 text-left">Mapa</th>
+                                <th class="pb-3 text-left">Atividade</th>
                             </tr>
                         </thead>
                         <tbody id="security-logs-tbody" class="divide-y divide-gray-50">
@@ -2773,12 +2833,6 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     return `
                         <tr class="text-gray-600 hover:bg-gray-50 transition-colors">
                             <td class="py-3 pr-4 font-mono">${new Date(l.data_hora).toLocaleString('pt-BR', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})}</td>
-                            <td class="py-3 pr-4 leading-tight">
-                                <div class="font-bold border-l-2 border-indigo-500 pl-2">
-                                    ${l.acao.includes('falhou') ? '<span class="text-red-600 font-black">⚠️ '+l.acao+'</span>' : (l.acao.includes('checkout') || l.acao.includes('pix') ? '<span class="text-green-600 font-black">💰 '+l.acao+'</span>' : l.acao)} 
-                                </div>
-                                <div class="text-[9px] text-gray-400 font-mono mt-1 pl-2">${l.pagina}</div>
-                            </td>
                             <td class="py-3 pr-4">
                                 <div class="font-bold text-gray-800 flex items-center gap-1">
                                     ${l.ip}
@@ -2792,8 +2846,14 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                             <td class="py-3 pr-4">
                                 <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-gray-500 bg-gray-100">${cats[l.categoria] ? cats[l.categoria].replace('AÇÕES ', '') : l.categoria}</span>
                             </td>
-                            <td class="py-3">
+                            <td class="py-3 pr-4">
                                 ${locBtn}
+                            </td>
+                            <td class="py-3 pr-4 leading-tight">
+                                <div class="font-bold border-l-2 border-indigo-500 pl-2">
+                                    ${l.acao.includes('falhou') ? '<span class="text-red-600 font-black">⚠️ '+l.acao+'</span>' : (l.acao.includes('checkout') || l.acao.includes('pix') ? '<span class="text-green-600 font-black">💰 '+l.acao+'</span>' : l.acao)} 
+                                </div>
+                                <div class="text-[9px] text-gray-400 font-mono mt-1 pl-2">${l.pagina}</div>
                             </td>
                         </tr>
                     `;
@@ -3125,9 +3185,17 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             fetchAffiliates();
         });
 
+        let affiliatesData = [];
         async function fetchAffiliates() {
             const res = await fetch(`${API}?action=get_affiliates`);
             const data = await res.json();
+            
+            affiliatesData = data.affiliates || [];
+
+            // Sync limit and count
+            if (data.limit !== undefined) document.getElementById('limit-affiliates-cfg').value = data.limit;
+            if (data.total_count !== undefined) document.getElementById('af-total-count').innerText = data.total_count;
+
             const tbody = document.getElementById('table-affiliates');
             tbody.innerHTML = '';
 
@@ -3141,24 +3209,28 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed';
                 
                 let cycleMsg = af.can_payout 
-                    ? '<span class="text-[10px] text-green-600 font-bold">✓ Ciclo Completo</span>' 
-                    : `<span class="text-[10px] text-red-400">Faltam ${af.days_remaining} dias</span>`;
+                    ? '<span class="text-[9px] text-green-600 font-bold uppercase tracking-tighter">✓ Ciclo OK</span>' 
+                    : `<span class="text-[9px] text-red-400 font-bold uppercase tracking-tighter">Faltam ${af['days_remaining']} dias</span>`;
 
                 tr.innerHTML = `
                     <td class="p-3">
                         <div class="font-bold">${af.nome}</div>
                         <div class="text-[10px] text-gray-400">${af.whatsapp}</div>
+                        <div class="text-[9px] text-blue-400 mt-1">${af.email}</div>
                     </td>
-                    <td class="p-3 font-bold">${af.vendas_pagas}</td>
+                    <td class="p-3 font-bold text-center">${af.vendas_pagas}</td>
                     <td class="p-3 font-bold text-[#8e44ad]">R$ ${af.saldo.replace('.', ',')}</td>
-                    <td class="p-3 text-gray-400">R$ ${af.total_ganho.replace('.', ',')}</td>
-                    <td class="p-3 space-y-1 text-center">
-                        <div class="flex flex-col gap-1 items-center">
-                            <button onclick="viewAffiliateSales(${af.id}, '${af.nome}')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 font-bold w-32">Ver Detalhes</button>
+                    <td class="p-3 text-orange-500 font-bold">R$ ${parseFloat(af.total_pendente).toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                    <td class="p-3 text-green-600 font-bold">R$ ${parseFloat(af.total_pago).toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                    <td class="p-3">
+                        <div class="flex flex-col gap-1 items-stretch">
+                            <button onclick="viewAffiliateSales(${af.id}, '${af.nome}')" class="text-[9px] bg-blue-50 text-blue-600 px-2 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 font-black uppercase">Vendas</button>
                             ${cycleMsg}
-                            <button onclick="payoutAffiliate(${af.id}, '${af.nome}', ${af.saldo})" ${btnAttr} class="text-[10px] font-black px-2 py-2 rounded-lg w-32 transition-all ${btnClass}">
-                                PAGAR AGORA
-                            </button>
+                            <button onclick="payoutAffiliate(${af.id}, '${af.nome}', ${af.saldo})" ${btnAttr} class="text-[9px] font-black px-2 py-1.5 rounded-lg transition-all ${btnClass}">PAGAR</button>
+                            <div class="flex gap-1 mt-1">
+                                <button onclick="openEditAffiliate(${af.id})" class="flex-1 bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition-colors" title="Editar"><svg class="w-3.5 h-3.5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                <button onclick="deleteAffiliate(${af.id})" class="flex-1 bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition-colors" title="Excluir"><svg class="w-3.5 h-3.5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            </div>
                         </div>
                     </td>
                 `;
@@ -3210,6 +3282,90 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 showNotification('Erro', data.error, 'error');
             }
         }
+
+        window.saveLimitAffiliates = async function() {
+            const lim = document.getElementById('limit-affiliates-cfg').value;
+            const fd = new URLSearchParams();
+            fd.append('action', 'save_limit_affiliates');
+            fd.append('limit', lim);
+
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+            if(data.success) {
+                showNotification('Sucesso!', 'Limite de afiliados atualizado.', 'success');
+                fetchAffiliates();
+            } else {
+                showNotification('Erro', data.error, 'error');
+            }
+        };
+
+        window.openEditAffiliate = function(id) {
+            const af = affiliatesData.find(a => a.id == id);
+            if (!af) return;
+
+            document.getElementById('edit-af-id').value = id;
+            document.getElementById('edit-af-nome').value = af.nome;
+            document.getElementById('edit-af-whatsapp').value = af.whatsapp;
+            document.getElementById('edit-af-email').value = af.email;
+            document.getElementById('edit-af-pix').value = af.pix_key;
+            document.getElementById('edit-af-senha').value = '';
+
+            const m = document.getElementById('modal-edit-affiliate');
+            const box = document.getElementById('modal-edit-affiliate-box');
+            m.classList.remove('hidden');
+            setTimeout(() => {
+                m.classList.add('opacity-100');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        };
+
+        document.getElementById('form-edit-affiliate').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-edit-af');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Salvando...';
+            btn.disabled = true;
+
+            const fd = new URLSearchParams();
+            fd.append('action', 'edit_affiliate');
+            fd.append('id', document.getElementById('edit-af-id').value);
+            fd.append('nome', document.getElementById('edit-af-nome').value);
+            fd.append('whatsapp', document.getElementById('edit-af-whatsapp').value);
+            fd.append('email', document.getElementById('edit-af-email').value);
+            fd.append('pix_key', document.getElementById('edit-af-pix').value);
+            fd.append('senha', document.getElementById('edit-af-senha').value);
+
+            const res = await fetch(API, { method: 'POST', body: fd });
+            const data = await res.json();
+
+            if (data.success) {
+                showNotification('$UPER$ORTE', 'Dados do afiliado atualizados com sucesso!');
+                closeModal('modal-edit-affiliate');
+                fetchAffiliates();
+            } else {
+                showNotification('Erro', data.error, 'error');
+            }
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+
+        window.deleteAffiliate = function(id) {
+            showConfirmModal('Excluir Afiliado', 'Tem certeza que deseja remover este afiliado?<br><br><span class="text-red-600 font-bold uppercase text-[10px]">Atenção: Isso não apagará as vendas vinculadas a ele, mas ele perderá o acesso ao painel e futuros créditos de comissão.</span>', async () => {
+                const fd = new URLSearchParams();
+                fd.append('action', 'delete_affiliate');
+                fd.append('id', id);
+
+                const res = await fetch(API, { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    showNotification('Excluído!', 'O cadastro do afiliado foi removido.');
+                    fetchAffiliates();
+                } else {
+                    showNotification('Erro', data.error, 'error');
+                }
+            });
+        };
 
         // Helper to close specific modal
         window.closeModal = (id) => {

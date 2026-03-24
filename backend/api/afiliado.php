@@ -45,6 +45,19 @@ if ($action === 'login_register') {
         }
     } else {
         // Register flow
+        
+        // Check Affiliate Limit
+        $stmtLimit = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'limite_afiliados'");
+        $limit = (int)($stmtLimit->fetchColumn() ?: 0);
+        
+        if ($limit > 0) {
+            $stmtCountAf = $pdo->query("SELECT COUNT(*) FROM afiliados");
+            $totalAfNow = (int)$stmtCountAf->fetchColumn();
+            if ($totalAfNow >= $limit) {
+                die(json_encode(['error' => "Limite de $limit afiliados atingido. Temporariamente suspenso novos cadastros."]));
+            }
+        }
+
         $valid = validatePasswordComplexity($senha);
         if ($valid !== true) {
             die(json_encode(['error' => $valid]));

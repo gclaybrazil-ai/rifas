@@ -1173,7 +1173,60 @@ if ($action === 'stats') {
         $af['min_required'] = $minSaque;
     }
 
-    echo json_encode(['success' => true, 'affiliates' => $affiliates]);
+    // Get Limit Config
+    $stmtL = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'limite_afiliados'");
+    $limitAf = (int)($stmtL->fetchColumn() ?: 0);
+    
+    $totalAf = count($affiliates);
+
+    echo json_encode([
+        'success' => true, 
+        'affiliates' => $affiliates, 
+        'limit' => $limitAf, 
+        'total_count' => $totalAf
+    ]);
+
+} else if ($action === 'save_limit_affiliates') {
+    $limit = intval($_POST['limit'] ?? 0);
+    $stmt = $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('limite_afiliados', ?) ON DUPLICATE KEY UPDATE valor = ?");
+    $stmt->execute([$limit, $limit]);
+    echo json_encode(['success' => true]);
+
+} else if ($action === 'edit_affiliate') {
+    $id = intval($_POST['id'] ?? 0);
+    $nome = trim($_POST['nome'] ?? '');
+    $whatsapp = preg_replace('/\D/', '', $_POST['whatsapp'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $pix_key = trim($_POST['pix_key'] ?? '');
+    $senha = $_POST['senha'] ?? '';
+
+    if (!$id || !$nome || !$whatsapp || !$email) {
+        die(json_encode(['error' => 'Preencha todos os campos obrigatórios.']));
+    }
+
+    $sql = "UPDATE afiliados SET nome = ?, whatsapp = ?, email = ?, pix_key = ? WHERE id = ?";
+    $params = [$nome, $whatsapp, $email, $pix_key, $id];
+
+    if (!empty($senha)) {
+        $hash = password_hash($senha, PASSWORD_DEFAULT);
+        $sql = "UPDATE afiliados SET nome = ?, whatsapp = ?, email = ?, pix_key = ?, senha = ? WHERE id = ?";
+        $params = [$nome, $whatsapp, $email, $pix_key, $hash, $id];
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    registrarLog('acao_admin', "Editou dados do afiliado ID $id");
+    echo json_encode(['success' => true]);
+
+} else if ($action === 'delete_affiliate') {
+    $id = intval($_POST['id'] ?? 0);
+    if (!$id) die(json_encode(['error' => 'ID inválido']));
+
+    $pdo->prepare("DELETE FROM afiliados WHERE id = ?")->execute([$id]);
+    $pdo->prepare("DELETE FROM afiliado_tokens WHERE afiliado_id = ?")->execute([$id]);
+    
+    registrarLog('acao_admin', "Excluiu afiliado ID $id");
+    echo json_encode(['success' => true]);
 
 } else if ($action === 'get_affiliate_sales') {
     $afId = intval($_GET['id'] ?? 0);

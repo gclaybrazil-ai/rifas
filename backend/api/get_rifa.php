@@ -61,6 +61,10 @@ if(!$rifa) {
     die(json_encode(['error' => 'Rifa não encontrada']));
 }
 
+if($rifa['status'] === 'fechada') {
+    die(json_encode(['error' => 'Esta rifa já foi finalizada e não está mais disponível para visualização.']));
+}
+
 // Obter os números da rifa
 $stmt = $pdo->prepare("SELECT n.numero, n.status, n.reserva_id, r.nome AS comprador FROM numeros n LEFT JOIN reservas r ON n.reserva_id = r.id WHERE n.rifa_id = ? ORDER BY n.numero ASC");
 $stmt->execute([$rifa_id]);

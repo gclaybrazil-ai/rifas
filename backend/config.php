@@ -199,6 +199,48 @@ try {
     die(json_encode(['error' => 'Erro de conexão com o banco de dados: ' . $e->getMessage()]));
 }
 
+// Global Maintenance Mode Check
+try {
+    $stmtM = $pdo->prepare("SELECT valor FROM configuracoes WHERE chave = ?");
+    $stmtM->execute(['modo_manutencao']);
+    $is_maintenance = ($stmtM->fetchColumn() === '1');
+
+    if ($is_maintenance) {
+        $script = $_SERVER['SCRIPT_NAME'] ?? '';
+        $allowed_paths = [
+            '/admin/',
+            'manutencao.php',
+            'pix_webhook.php',
+            'registrar_webhook.php',
+            'backend/api/admin.php',
+            'backend/api/login.php',
+            'backend/api/logout.php'
+        ];
+
+        $is_allowed = false;
+        foreach ($allowed_paths as $path) {
+            if (strpos($script, $path) !== false) {
+                $is_allowed = true;
+                break;
+            }
+        }
+
+        if (!$is_allowed) {
+            // Se for uma chamada de API (dentro da pasta api/), retorna JSON
+            if (strpos($script, '/api/') !== false) {
+                header('Content-Type: application/json');
+                echo json_encode(['maintenance' => true, 'success' => false, 'message' => 'Site em manutenção']);
+                exit;
+            }
+            
+            // Caso contrário, redireciona para a página de manutenção
+            // Garante que o redirecionamento funcione tanto na raiz quanto em subpastas
+            header("Location: manutencao.php");
+            exit;
+        }
+    }
+} catch (Exception $e) {}
+
 // Global Help Functions for Logs & Security
 function sendMailer($to_email, $to_name, $subject, $message) {
     global $pdo;

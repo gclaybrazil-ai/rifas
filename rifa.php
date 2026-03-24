@@ -4,12 +4,23 @@ $id = intval($_GET['id'] ?? 0);
 $rifa = null;
 $baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . dirname($_SERVER['PHP_SELF']);
 
-if ($id > 0) {
-    try {
-        $stmt = $pdo->prepare("SELECT nome, preco_numero, imagem_url, premio1, premio2, premio3, premio4, premio5 FROM rifas WHERE id = ?");
-        $stmt->execute([$id]);
-        $rifa = $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {}
+if ($id <= 0) {
+    header('Location: index.html');
+    exit;
+}
+
+try {
+    $stmt = $pdo->prepare("SELECT nome, preco_numero, imagem_url, status, premio1, premio2, premio3, premio4, premio5 FROM rifas WHERE id = ?");
+    $stmt->execute([$id]);
+    $rifa = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$rifa || $rifa['status'] === 'fechada') {
+        header('Location: index.html');
+        exit;
+    }
+} catch (Exception $e) {
+    header('Location: index.html');
+    exit;
 }
 
 $brand = '$UPER$ORTE';

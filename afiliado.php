@@ -253,15 +253,22 @@ try {
         </div>
     </div>
 
-    <!-- Modal Notificação -->
+    <!-- Modal Notificação Premium -->
     <div id="modal-notif"
-        class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative border border-gray-100">
-            <h2 id="notif-title" class="text-2xl font-black text-[#2c3e50] mb-4 uppercase tracking-tight italic">
-                $UPER$ORTE</h2>
-            <p id="notif-message" class="text-sm text-gray-500 mb-8 font-medium leading-relaxed">Informação aqui.</p>
-            <button onclick="document.getElementById('modal-notif').classList.add('hidden')"
-                class="w-full bg-[#8e44ad] text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs tracking-widest hover:bg-[#7d3c98] transition-all">Entendido</button>
+        class="fixed inset-0 bg-black/80 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300">
+        <div id="notif-box" class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative border-t-8 border-purple-500 transform scale-90 transition-transform duration-300">
+            <div id="notif-icon-container" class="w-20 h-20 bg-purple-50 text-purple-600 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner">
+                <!-- Icon Error -->
+                <svg id="icon-error" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <!-- Icon Success -->
+                <svg id="icon-success" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <!-- Icon Info -->
+                <svg id="icon-info" class="w-10 h-10 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h2 id="notif-title" class="text-2xl font-black text-gray-800 mb-2 uppercase tracking-tight italic"></h2>
+            <p id="notif-message" class="text-[11px] font-bold text-gray-400 uppercase mb-8 leading-relaxed px-4"></p>
+            <button onclick="closeNotif()"
+                class="w-full bg-purple-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-purple-200 uppercase text-xs tracking-widest hover:bg-purple-700 transition-all active:scale-95">ENTENDIDO</button>
         </div>
     </div>
 
@@ -633,10 +640,53 @@ try {
             showAlert('Para chaves de telefone, use o formato internacional: +55 seguidos do DDD e o número (Ex: +5527999881122). Para CPF ou E-mail, basta digitar normalmente.', 'Instrução do PIX');
         }
 
-        function showAlert(msg, title = '$UPER$ORTE') {
-            document.getElementById('notif-title').textContent = title === 'Atenção' ? 'ATENÇÃO' : title;
+        function showAlert(msg, title = 'Aviso', type = 'info') {
+            const m = document.getElementById('modal-notif');
+            const box = document.getElementById('notif-box');
+            const iconCont = document.getElementById('notif-icon-container');
+            
+            // Set Title & Msg
+            document.getElementById('notif-title').textContent = title;
             document.getElementById('notif-message').textContent = msg;
-            document.getElementById('modal-notif').classList.remove('hidden');
+
+            // Reset Icons
+            document.getElementById('icon-error').classList.add('hidden');
+            document.getElementById('icon-success').classList.add('hidden');
+            document.getElementById('icon-info').classList.add('hidden');
+
+            // Theme based on type
+            const lowMsg = msg.toLowerCase();
+            const lowTitle = title.toLowerCase();
+
+            if (type === 'error' || lowTitle.includes('erro') || lowMsg.includes('erro') || lowMsg.includes('limite') || lowTitle.includes('atenção') || lowMsg.includes('obrigatória')) {
+                document.getElementById('icon-error').classList.remove('hidden');
+                box.style.borderTopColor = '#ef4444';
+                iconCont.className = "w-20 h-20 bg-red-50 text-red-500 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner";
+            } else if (type === 'success' || lowTitle.includes('sucesso') || lowMsg.includes('sucesso')) {
+                document.getElementById('icon-success').classList.remove('hidden');
+                box.style.borderTopColor = '#10b981';
+                iconCont.className = "w-20 h-20 bg-green-50 text-green-500 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner";
+            } else {
+                document.getElementById('icon-info').classList.remove('hidden');
+                box.style.borderTopColor = '#8e44ad';
+                iconCont.className = "w-20 h-20 bg-purple-50 text-purple-600 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner";
+            }
+
+            m.classList.remove('hidden');
+            setTimeout(() => {
+                m.classList.add('opacity-100');
+                box.classList.remove('scale-90');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeNotif() {
+            const m = document.getElementById('modal-notif');
+            const box = document.getElementById('notif-box');
+            m.classList.remove('opacity-100');
+            box.classList.add('scale-90');
+            box.classList.remove('scale-100');
+            setTimeout(() => m.classList.add('hidden'), 300);
         }
 
         checkSession();

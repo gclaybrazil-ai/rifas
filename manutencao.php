@@ -1,3 +1,18 @@
+<?php
+require_once 'backend/config.php';
+try {
+    $stmtWA = $pdo->prepare("SELECT valor FROM configuracoes WHERE chave = ?");
+    $stmtWA->execute(['whatsapp_suporte']);
+    $wa_number = $stmtWA->fetchColumn() ?: '5521981577453';
+
+    $stmtMsg = $pdo->prepare("SELECT valor FROM configuracoes WHERE chave = ?");
+    $stmtMsg->execute(['mensagem_suporte']);
+    $wa_msg = $stmtMsg->fetchColumn() ?: 'Olá, preciso de suporte.';
+    $wa_link = "https://wa.me/" . preg_replace('/\D/', '', $wa_number) . "?text=" . urlencode($wa_msg);
+} catch (Exception $e) {
+    $wa_link = "https://wa.me/5521981577453";
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -101,7 +116,7 @@
                     class="w-full md:w-auto px-6 py-3 bg-white text-gray-900 font-bold rounded-xl shadow-xl hover:scale-105 transition-transform cursor-default text-sm">
                     Voltamos em breve
                 </div>
-                <a href="https://wa.me/5521981577453" target="_blank"
+                <a href="<?php echo $wa_link; ?>" target="_blank"
                     class="w-full md:w-auto px-6 py-3 glass text-white font-bold rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-sm">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path
