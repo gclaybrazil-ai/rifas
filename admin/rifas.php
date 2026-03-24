@@ -246,6 +246,33 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
+    <!-- Modal Confirmação Excluir Rifa (Melhorado) -->
+    <div id="modal-confirm-delete" class="fixed inset-0 bg-black bg-opacity-90 z-[120] hidden flex items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-2xl relative text-center border-t-8 border-red-500 transform scale-95 transition-transform duration-300" id="modal-delete-box">
+            <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </div>
+            <h2 class="text-2xl font-black text-gray-800 mb-2 tracking-tight uppercase">APAGAR RIFA?</h2>
+            <p class="text-[11px] font-bold text-gray-400 uppercase mb-8 leading-relaxed px-4">Esta ação é irreversível e excluirá todos os bilhetes e reservas vinculadas.</p>
+            
+            <div class="mb-8">
+                <label class="text-[9px] font-black text-gray-400 uppercase block mb-2 tracking-widest text-left ml-2">Digite EXCLUIR para confirmar</label>
+                <input type="text" id="input-confirm-delete" 
+                    class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-center font-black text-gray-800 outline-none focus:border-red-500 transition-all placeholder:text-gray-200"
+                    placeholder="E-X-C-L-U-I-R" autocomplete="off">
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button id="btn-do-delete" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-red-100 uppercase text-xs transition-all tracking-widest">
+                    CONFIRMAR EXCLUSÃO
+                </button>
+                <button id="btn-cancel-delete" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 font-black py-4 rounded-2xl uppercase text-[10px] transition-all tracking-widest">
+                    CANCELAR
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API = '../backend/api/admin.php';
         let allRifas = [];
@@ -310,7 +337,21 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         btnAcao = `<button ${btnClick} class="text-xs font-bold px-2 py-1.5 rounded uppercase tracking-wider w-24 transition-all ${btnClass}">Sortear</button>`;
                     }
 
-                    let actions = `<div class="flex justify-end items-center">` + btnEditar + btnAcao + `</div>`;
+                    const btnExcluir = `<button onclick="deleteRifa(${r.id})" class="text-xs bg-red-500 text-white flex items-center justify-center p-2 rounded shadow hover:bg-red-700 transition-colors mr-1 h-[34px] w-9" title="EXCLUIR RIFA">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>`;
+                    
+                    let btnShare = '';
+                    if (r.status === 'aberta') {
+                        const raffleUrl = `${window.location.origin}${window.location.pathname.replace('admin/rifas.php', '')}rifa.php?id=${r.id}`;
+                        const waMsg = encodeURIComponent(`🚨 *NOVA RIFA LANÇADA!* 🚨\n\n🎟️ *${r.nome}*\n💰 Apenas R$ ${parseFloat(r.preco_numero).toFixed(2).replace('.', ',')} por número!\n\n👇 *PARTICIPE AGORA:* \n${raffleUrl}`);
+                        const waLink = `https://api.whatsapp.com/send?text=${waMsg}`;
+                        btnShare = `<a href="${waLink}" target="_blank" class="text-xs bg-[#25D366] text-white flex items-center justify-center p-2 rounded shadow hover:bg-[#128C7E] transition-colors mr-1 h-[34px] w-9" title="Compartilhar WhatsApp">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.29-4.143c1.589.943 3.143 1.416 4.703 1.417 5.432.001 9.853-4.42 9.856-9.853.002-2.633-1.025-5.109-2.892-6.977-1.867-1.868-4.341-2.896-6.976-2.898-5.432 0-9.854 4.421-9.857 9.855-.001 1.737.457 3.432 1.326 4.906l-.527 1.922 2.019-.53zm10.744-7.404c-.232-.117-1.371-.677-1.583-.754-.212-.077-.366-.117-.52.117-.154.234-.597.754-.732.909-.136.155-.271.174-.503.057-.232-.117-.98-.362-1.868-1.152-.69-.615-1.156-1.376-1.291-1.61-.136-.234-.015-.361.102-.477.105-.104.232-.271.348-.407.116-.136.155-.234.232-.39s.039-.291-.019-.407c-.058-.117-.52-1.255-.712-1.714-.187-.449-.377-.388-.52-.395-.135-.007-.29-.008-.444-.008-.154 0-.405.058-.617.291-.212.234-.81.792-.81 1.932 0 1.14.83 2.242.946 2.399.116.156 1.632 2.492 3.954 3.493.552.238.983.38 1.32.487.554.174 1.057.149 1.456.09.444-.066 1.371-.56 1.563-1.103.193-.544.193-1.01.136-1.103-.058-.095-.212-.154-.445-.271z"></path></svg>
+                        </a>`;
+                    }
+
+                    let actions = `<div class="flex justify-end items-center">` + btnExcluir + btnShare + btnEditar + btnAcao + `</div>`;
 
                     const precoNum = parseFloat(r.preco_numero).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -449,17 +490,66 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             }
         };
 
-        window.deleteRifa = async function (id) {
-            if (!confirm('CUIDADO! Isso irá excluir permanentemente a Rifa, suas Vendas e Numerações. Deseja continuar?')) return;
-            if (prompt('Digite EXCLUIR para confirmar') !== 'EXCLUIR') return;
+        /* Variables for the delete */
+        let currentDeleteRifaId = 0;
+
+        window.deleteRifa = function (id) {
+            currentDeleteRifaId = id;
+            document.getElementById('input-confirm-delete').value = '';
+            
+            const m = document.getElementById('modal-confirm-delete');
+            const box = document.getElementById('modal-delete-box');
+            m.classList.remove('hidden');
+            setTimeout(() => {
+                m.classList.remove('opacity-0');
+                m.classList.add('opacity-100');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        };
+
+        document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+            const m = document.getElementById('modal-confirm-delete');
+            const box = document.getElementById('modal-delete-box');
+            m.classList.remove('opacity-100');
+            m.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            setTimeout(() => { m.classList.add('hidden'); }, 300);
+        });
+
+        document.getElementById('btn-do-delete').addEventListener('click', async () => {
+            const input = document.getElementById('input-confirm-delete').value.trim().toUpperCase();
+            if (input !== 'EXCLUIR') {
+                showNotification('Atenção', 'Digite EXCLUIR para confirmar.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-do-delete');
+            btn.innerHTML = 'Excluindo...';
+            btn.disabled = true;
 
             const fd = new URLSearchParams();
             fd.append('action', 'delete_rifa');
-            fd.append('id', id);
+            fd.append('id', currentDeleteRifaId);
 
-            await fetch(API, { method: 'POST', body: fd });
-            fetchRifas();
-        };
+            try {
+                const res = await fetch(API, { method: 'POST', body: fd });
+                const data = await res.json();
+                
+                if(data.success) {
+                    document.getElementById('btn-cancel-delete').click();
+                    fetchRifas();
+                } else {
+                    showNotification('Erro', data.error || 'Erro ao excluir.', 'error');
+                }
+            } catch(e) {
+                showNotification('Erro', 'Erro ao excluir rifa.', 'error');
+            } finally {
+                btn.innerHTML = 'CONFIRMAR EXCLUSÃO';
+                btn.disabled = false;
+            }
+        });
 
         fetchRifas();
 

@@ -729,7 +729,7 @@ if ($action === 'stats') {
 
         $pdo->commit();
         registrarLog('acao_admin', "Criou nova rifa: $nome (ID: $rifa_id)", null, 1);
-        echo json_encode(['success' => true]);
+        echo json_encode(['success' => true, 'id' => $rifa_id]);
     } catch (Exception $e) {
         $pdo->rollBack();
         echo json_encode(['error' => $e->getMessage()]);
@@ -777,6 +777,8 @@ if ($action === 'stats') {
         'popup_title' => $title,
         'popup_content' => $content,
         'popup_image' => $image,
+        'popup_image_fit' => $_POST['popup_image_fit'] ?? 'cover',
+        'popup_image_position' => $_POST['popup_image_position'] ?? 'center',
         'popup_link' => $link,
         'popup_button' => $button,
         'popup_video' => $video_url

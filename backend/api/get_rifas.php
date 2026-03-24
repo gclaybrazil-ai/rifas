@@ -77,6 +77,8 @@ try {
                 'title' => $popupData['popup_title'] ?? '',
                 'content' => $popupData['popup_content'] ?? '',
                 'image' => $popupData['popup_image'] ?? '',
+                'image_fit' => $popupData['popup_image_fit'] ?? 'cover',
+                'image_position' => $popupData['popup_image_position'] ?? 'center',
                 'link' => $popupData['popup_link'] ?? '',
                 'button' => $popupData['popup_button'] ?? 'Entendi',
                 'video' => $popupData['popup_video'] ?? ''

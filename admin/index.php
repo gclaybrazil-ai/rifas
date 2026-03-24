@@ -459,6 +459,27 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
+    <!-- Modal Sucesso Nova Rifa -->
+    <div id="modal-new-rifa-success" class="fixed inset-0 bg-black bg-opacity-90 z-[120] hidden flex items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-2xl relative text-center border-t-8 border-green-500 transform scale-95 transition-transform duration-300" id="modal-success-box">
+            <div class="w-24 h-24 bg-green-50 text-green-500 rounded-full mx-auto flex items-center justify-center mb-8 shadow-inner animate-bounce">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-3xl font-black text-gray-800 mb-4 tracking-tight">RIFA CRIADA!</h2>
+            <p class="text-sm font-medium text-gray-500 mb-10 leading-relaxed">Sua nova rifa já está ativa e pronta para receber pedidos. Comece a divulgar agora!</p>
+            
+            <div class="flex flex-col gap-4">
+                <a id="btn-share-rifa-wa" href="#" target="_blank" class="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-5 rounded-2xl shadow-xl shadow-green-200 uppercase text-xs transition-all flex items-center justify-center gap-3 tracking-widest">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.29-4.143c1.589.943 3.143 1.416 4.703 1.417 5.432.001 9.853-4.42 9.856-9.853.002-2.633-1.025-5.109-2.892-6.977-1.867-1.868-4.341-2.896-6.976-2.898-5.432 0-9.854 4.421-9.857 9.855-.001 1.737.457 3.432 1.326 4.906l-.527 1.922 2.019-.53zm10.744-7.404c-.232-.117-1.371-.677-1.583-.754-.212-.077-.366-.117-.52.117-.154.234-.597.754-.732.909-.136.155-.271.174-.503.057-.232-.117-.98-.362-1.868-1.152-.69-.615-1.156-1.376-1.291-1.61-.136-.234-.015-.361.102-.477.105-.104.232-.271.348-.407.116-.136.155-.234.232-.39s.039-.291-.019-.407c-.058-.117-.52-1.255-.712-1.714-.187-.449-.377-.388-.52-.395-.135-.007-.29-.008-.444-.008-.154 0-.405.058-.617.291-.212.234-.81.792-.81 1.932 0 1.14.83 2.242.946 2.399.116.156 1.632 2.492 3.954 3.493.552.238.983.38 1.32.487.554.174 1.057.149 1.456.09.444-.066 1.371-.56 1.563-1.103.193-.544.193-1.01.136-1.103-.058-.095-.212-.154-.445-.271z"></path></svg>
+                    DIVULGAR NO WHATSAPP
+                </a>
+                <button onclick="window.location.reload()" class="w-full bg-gray-900 hover:bg-black text-white font-black py-5 rounded-2xl shadow-xl uppercase text-xs transition-all tracking-widest">
+                    IR PARA O PAINEL
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Ajuda Senha -->
     <div id="modal-password-help" class="fixed inset-0 bg-black bg-opacity-80 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full text-left shadow-2xl relative">
@@ -519,7 +540,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 </div>
 
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Imagem Banner (URL ou Arquivo Próprio)</label>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Imagem da Rifa <span class="text-[#00a650] lowercase">(Ideal: 1080x1080px ou Quadrada 1:1)</span></label>
                     <div class="flex gap-2">
                         <input type="url" id="new-imagem"
                             class="w-1/2 bg-gray-50 border border-gray-200 rounded-lg p-2 text-[10px] md:text-xs focus:ring-2 focus:ring-[#00a650] outline-none"
@@ -649,20 +670,21 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         </div>
     </div>
 
-    <!-- Modal Confirm Custom -->
-    <div id="modal-confirm" class="fixed inset-0 bg-black bg-opacity-90 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative text-center border-t-8 border-indigo-500 transform scale-95 transition-transform duration-300" id="modal-confirm-box">
+    <!-- Modal Confirm Custom (Premium) -->
+    <div id="modal-confirm" class="fixed inset-0 bg-black bg-opacity-90 z-[250] hidden flex items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-2xl relative text-center border-t-8 border-indigo-500 transform scale-95 transition-transform duration-300" id="modal-confirm-box">
             <div id="confirm-icon" class="w-20 h-20 bg-indigo-50 text-indigo-500 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <h2 id="confirm-title" class="text-2xl font-black text-gray-800 mb-3 tracking-tight">Confirmação</h2>
-            <p id="confirm-message" class="text-sm font-medium text-gray-500 mb-8 leading-relaxed">Mensagem de confirmação.</p>
-            <div class="flex gap-3">
-                <button id="btn-confirm-cancel" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 rounded-xl shadow-sm uppercase text-xs transition-colors">
-                    Cancelar
+            <h2 id="confirm-title" class="text-2xl font-black text-gray-800 mb-2 tracking-tight uppercase italic">Confirmação</h2>
+            <p id="confirm-message" class="text-[11px] font-bold text-gray-400 uppercase mb-8 leading-relaxed px-4">Mensagem de confirmação.</p>
+            
+            <div class="flex flex-col gap-3">
+                <button id="btn-confirm-ok" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-indigo-100 uppercase text-xs transition-all tracking-widest">
+                    CONFIRMAR AÇÃO
                 </button>
-                <button id="btn-confirm-ok" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs transition-colors shadow-indigo-500/30">
-                    Confirmar
+                <button id="btn-confirm-cancel" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 font-black py-4 rounded-2xl uppercase text-[10px] transition-all tracking-widest">
+                    CANCELAR
                 </button>
             </div>
         </div>
@@ -1037,7 +1059,7 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     </div>
                 </div>
                 <div>
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Banner Promocional (Opcional)</label>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Banner Promocional (Opcional) <span class="text-orange-500 lowercase">(Ideal: 800x400px ou Proporção 2:1)</span></label>
                     <div class="flex flex-col gap-2">
                         <input type="file" id="popup-image-file" name="popup_image_file" accept="image/*" class="text-xs font-bold text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 transition-all">
                         <div id="popup-image-preview" class="hidden h-32 w-full rounded-2xl border-2 border-dashed border-gray-100 bg-gray-50 overflow-hidden flex items-center justify-center relative group">
@@ -1047,6 +1069,23 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                             </button>
                         </div>
                         <input type="hidden" id="current-popup-image" name="current_popup_image">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block italic">Enquadramento</label>
+                        <select id="popup-image-fit" name="popup_image_fit" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-2xl text-[11px] font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all cursor-pointer">
+                            <option value="cover">PREENCHER TUDO (Cortar)</option>
+                            <option value="contain">MOSTRAR INTEIRA (Sem cortes)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block italic">Posição do Corte</label>
+                        <select id="popup-image-position" name="popup_image_position" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-2xl text-[11px] font-bold focus:ring-2 focus:ring-orange-500 outline-none transition-all cursor-pointer">
+                            <option value="center">CENTRALIZADO</option>
+                            <option value="top">TOPO (Cabeçalho)</option>
+                            <option value="bottom">BASE (Rodapé)</option>
+                        </select>
                     </div>
                 </div>
                 <div>
@@ -1432,13 +1471,17 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
                 // Populate Assistant (only if modal is closed)
                 const modalAssistant = document.getElementById('modal-assistant');
-                if(modalAssistant && modalAssistant.classList.contains('hidden') && data.assistant) {
-                    if(document.getElementById('assistant_name')) document.getElementById('assistant_name').value = data.assistant.name || '';
-                    if(document.getElementById('assistant_attendant')) document.getElementById('assistant_attendant').value = data.assistant.attendant || '';
-                    if(document.getElementById('assistant_whatsapp')) document.getElementById('assistant_whatsapp').value = data.assistant.whatsapp || '';
-                    if(document.getElementById('assistant_welcome_message')) document.getElementById('assistant_welcome_message').value = data.assistant.welcome_message || '';
-                    if(document.getElementById('gemini_api_key')) document.getElementById('gemini_api_key').value = data.assistant.gemini_api_key || '';
+                if(modalAssistant && data.assistant) {
+                    // Preencher campos apenas se o modal estiver fechado (para não sobrescrever o que o usuário está digitando)
+                    if(modalAssistant.classList.contains('hidden')) {
+                        if(document.getElementById('assistant_name')) document.getElementById('assistant_name').value = data.assistant.name || '';
+                        if(document.getElementById('assistant_attendant')) document.getElementById('assistant_attendant').value = data.assistant.attendant || '';
+                        if(document.getElementById('assistant_whatsapp')) document.getElementById('assistant_whatsapp').value = data.assistant.whatsapp || '';
+                        if(document.getElementById('assistant_welcome_message')) document.getElementById('assistant_welcome_message').value = data.assistant.welcome_message || '';
+                        if(document.getElementById('gemini_api_key')) document.getElementById('gemini_api_key').value = data.assistant.gemini_api_key || '';
+                    }
                     
+                    // Sempre atualizar a lista de mensagens (estando o modal aberto ou não)
                     const msgList = document.getElementById('assistant-messages-list');
                     if(msgList) {
                         msgList.innerHTML = '';
@@ -2126,15 +2169,17 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
             m.classList.remove('hidden');
         };
 
-        window.deleteAssistantMsg = async function(id) {
-            if(!confirm('Deseja excluir esta resposta?')) return;
-            const fd = new URLSearchParams();
-            fd.append('action', 'delete_assistant_msg');
-            fd.append('id', id);
-            const res = await fetch(API, { method: 'POST', body: fd });
-            if((await res.json()).success) {
-                fetchStats();
-            }
+        window.deleteAssistantMsg = function(id) {
+            showConfirmModal('Excluir Resposta', 'Deseja realmente apagar esta resposta automática?', async () => {
+                const fd = new URLSearchParams();
+                fd.append('action', 'delete_assistant_msg');
+                fd.append('id', id);
+                const res = await fetch(API, { method: 'POST', body: fd });
+                if((await res.json()).success) {
+                    fetchStats();
+                    showNotification('Sucesso', 'Resposta excluída com sucesso.', 'success');
+                }
+            });
         };
 
         document.getElementById('btn-close-msg-modal').addEventListener('click', () => {
@@ -2410,9 +2455,27 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 const res = await req.json();
 
                 if (res.success) {
-                    showNotification('$UPER$ORTE', 'Rifa criada com sucesso!', 'success', () => {
-                        window.location.reload();
-                    });
+                    // Fechar modal de criação
+                    document.getElementById('btn-close-new').click();
+                    
+                    // Configurar Link de Compartilhamento
+                    const raffleUrl = `${window.location.origin}${window.location.pathname.replace('admin/index.php', '')}rifa.php?id=${res.id}`;
+                    const waMsg = encodeURIComponent(`🚨 *NOVA RIFA LANÇADA!* 🚨\n\n🎟️ *${document.getElementById('new-nome').value}*\n💰 Apenas R$ ${parseFloat(document.getElementById('new-preco').value).toFixed(2).replace('.', ',')} por número!\n\n👇 *PARTICIPE AGORA:* \n${raffleUrl}`);
+                    const waLink = `https://api.whatsapp.com/send?text=${waMsg}`;
+                    
+                    document.getElementById('btn-share-rifa-wa').href = waLink;
+                    
+                    // Mostrar modal de sucesso
+                    const mSuccess = document.getElementById('modal-new-rifa-success');
+                    const boxSuccess = document.getElementById('modal-success-box');
+                    mSuccess.classList.remove('hidden');
+                    setTimeout(() => {
+                        mSuccess.classList.remove('opacity-0');
+                        mSuccess.classList.add('opacity-100');
+                        boxSuccess.classList.remove('scale-95');
+                        boxSuccess.classList.add('scale-100');
+                    }, 10);
+
                 } else {
                     showNotification('Erro', res.error || 'Erro ao criar rifa', 'error');
                     btn.disabled = false;
@@ -2645,14 +2708,28 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 document.getElementById('popup-video').value = d.popup_video || '';
                 document.getElementById('current-popup-image').value = d.popup_image || '';
                 
+                const fitSelect = document.getElementById('popup-image-fit');
+                const posSelect = document.getElementById('popup-image-position');
+                fitSelect.value = d.popup_image_fit || 'cover';
+                posSelect.value = d.popup_image_position || 'center';
+
                 const preview = document.getElementById('popup-image-preview');
                 const img = document.getElementById('popup-img-tag');
+
+                // Update preview style based on current values
+                img.style.objectFit = fitSelect.value;
+                img.style.objectPosition = posSelect.value;
+
                 if(d.popup_image) {
                     img.src = '../' + d.popup_image;
                     preview.classList.remove('hidden');
                 } else {
                     preview.classList.add('hidden');
                 }
+
+                // Interaction for live preview
+                fitSelect.onchange = (e) => img.style.objectFit = e.target.value;
+                posSelect.onchange = (e) => img.style.objectPosition = e.target.value;
             }
             
             modal.classList.remove('hidden');

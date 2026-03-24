@@ -54,7 +54,7 @@ $image = ($rifa && !empty($rifa['imagem_url'])) ? $baseUrl . "/" . $rifa['imagem
             <h1 class="text-2xl font-black italic tracking-tighter" style="color: #00a650;">$UPER<span
                     style="color: #2c3e50;">$ORTE</span></h1>
             <div class="flex gap-2">
-                <a href="afiliado.php"
+                <a href="javascript:void(0)" onclick="showAlert('Esta funcionalidade está em desenvolvimento e será liberada em breve.', 'Em breve!', 'info')"
                     class="text-[10px] md:text-xs font-black text-white bg-[#00a650] hover:bg-[#009647] rounded-full px-3 py-1.5 transition-colors flex items-center gap-1 uppercase tracking-tighter">
                     Ganhe Dinheiro
                 </a>

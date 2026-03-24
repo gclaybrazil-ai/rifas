@@ -78,6 +78,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     hasMedia = true;
                 } else if (data.popup.image) {
                     pImg.src = data.popup.image;
+                    pImg.style.objectFit = data.popup.image_fit || 'cover';
+                    pImg.style.objectPosition = data.popup.image_position || 'center';
                     pImg.classList.remove('hidden');
                     pVideo.classList.add('hidden');
                     hasMedia = true;
@@ -301,3 +303,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 });
+
+function showDevInfo() {
+    const modal = document.getElementById('modal-popup');
+    const pTitle = document.getElementById('popup-title');
+    const pContent = document.getElementById('popup-content');
+    const pBtn = document.getElementById('btn-close-popup');
+    const pMedia = document.getElementById('popup-media-container');
+
+    pTitle.innerText = 'Em breve!';
+    pContent.innerHTML = 'Esta funcionalidade está em desenvolvimento e será liberada em breve. Fique ligado!';
+    pBtn.innerText = 'Entendido';
+    pMedia.classList.add('hidden');
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.add('opacity-100');
+        modal.querySelector('div').classList.remove('scale-95');
+    }, 100);
+
+    pBtn.onclick = () => {
+        modal.classList.remove('opacity-100');
+        modal.querySelector('div').classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 500);
+    };
+}
+window.showDevInfo = showDevInfo;
