@@ -380,6 +380,22 @@ if ($action === 'stats') {
                 // Atualiza saldo do afiliado
                 $pdo->prepare("UPDATE afiliados SET saldo = saldo + ?, total_ganho = total_ganho + ?, vendas_pagas = vendas_pagas + 1 WHERE id = ?")
                     ->execute([$comissao, $comissao, $afId]);
+
+                // --- NOVA LOGICA DE BONUS NO ADMIN ---
+                $stmtAf = $pdo->prepare("SELECT bonus_data_resgate, bonus_bloqueio_ate FROM afiliados WHERE id = ?");
+                $stmtAf->execute([$afId]);
+                $afData = $stmtAf->fetch(PDO::FETCH_ASSOC);
+
+                $now = new DateTime();
+                $isBlocked = $afData['bonus_bloqueio_ate'] && new DateTime($afData['bonus_bloqueio_ate']) > $now;
+                $isInCycle = $afData['bonus_data_resgate'] && (new DateTime($afData['bonus_data_resgate']))->modify('+30 days') > $now;
+
+                if (!$isBlocked && !$isInCycle) {
+                    $pdo->prepare("UPDATE afiliados SET bonus_vendas = bonus_vendas + 1 WHERE id = ?")->execute([$afId]);
+                }
+                // Reset inatividade
+                $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = 0, last_raffle_id_with_sale = ? WHERE id = ?")
+                    ->execute([$reserva['rifa_id'], $afId]);
             }
 
             $pdo->commit();
