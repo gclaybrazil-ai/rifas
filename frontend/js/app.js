@@ -65,15 +65,6 @@ async function fetchRifa() {
 
         if (data.error) throw new Error(data.error);
 
-        // Capturar ou Limpar referência de afiliado se houver
-        const ref = urlParams.get('ref');
-        if (ref) {
-            localStorage.setItem('rifa_ref', ref);
-        } else {
-            // Se entrou na rifa sem link direto de indicação, limpa o rastro anterior
-            localStorage.removeItem('rifa_ref');
-        }
-
         if (data.rifa.id) {
             if (els.editionBadge) els.editionBadge.classList.remove('hidden');
             if (els.rifaIdNum) els.rifaIdNum.textContent = data.rifa.id;
@@ -129,10 +120,10 @@ function updateGrid(numerosDoServidor) {
         if (!btn) return;
 
         // Limpa classes anteriores
-        btn.classList.remove('disponivel', 'reservado', 'pago', 'selecionado', 'flex-col');
+        btn.classList.remove('disponivel', 'reservado', 'pago', 'bonus', 'selecionado', 'flex-col');
 
         let contentHtml = `<span class="leading-none">${num.numero}</span>`;
-        if (num.status === 'pago' && num.comprador) {
+        if ((num.status === 'pago' || num.status === 'bonus') && num.comprador) {
             const primeiroNomeCompleto = num.comprador.split(' ')[0].toUpperCase();
             const primeiroNomeCurto = primeiroNomeCompleto.substring(0, 8);
             contentHtml += `<span class="text-[8px] sm:text-[9px] font-bold mt-1 opacity-90 overflow-hidden text-ellipsis whitespace-nowrap w-full px-0.5 text-center leading-none tracking-tighter uppercase block">${primeiroNomeCurto}</span>`;
@@ -388,7 +379,6 @@ document.getElementById('btn-pay-card')?.addEventListener('click', async () => {
                 nome,
                 whatsapp,
                 numeros: arr,
-                afiliado_id: localStorage.getItem('rifa_ref') || '',
                 payment_method: 'credit_card_init'
             }),
             headers: { 'Content-Type': 'application/json' }
@@ -438,7 +428,7 @@ async function processPixPayment(nome, whatsapp, arr) {
                 nome,
                 whatsapp,
                 numeros: arr,
-                afiliado_id: localStorage.getItem('rifa_ref') || ''
+                numeros: arr
             }),
             headers: { 'Content-Type': 'application/json' }
         });

@@ -287,6 +287,15 @@ if ($action === 'login_register') {
     $pdo->prepare("UPDATE afiliados SET bonus_notificado_bloqueio = 0 WHERE id = ?")->execute([$_SESSION['afiliado_id']]);
     echo json_encode(['success' => true]);
 
+} else if ($action === 'get_available_numbers') {
+    $rifaId = intval($_GET['rifa_id'] ?? 0);
+    if (!$rifaId) die(json_encode(['numbers' => []]));
+
+    $stmt = $pdo->prepare("SELECT numero FROM numeros WHERE rifa_id = ? AND status = 'disponivel' ORDER BY numero ASC");
+    $stmt->execute([$rifaId]);
+    $nums = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    echo json_encode(['success' => true, 'numbers' => $nums]);
+
 } else if ($action === 'redeem_bonus') {
     if (!isset($_SESSION['afiliado_id'])) die(json_encode(['error' => 'Não logado']));
     
@@ -324,13 +333,17 @@ if ($action === 'login_register') {
         if ($stmtN->fetch()) throw new Exception("O número {$numero} não está mais disponível.");
 
         // 4. Create Free Reservation
-        $stmtRes = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, cpf, status, valor_total, data_reserva, pgto_data) VALUES (?, ?, ?, ?, 'pago', 0, NOW(), NOW())");
-        $stmtRes->execute([$rifaId, "BONUS: " . $af['nome'], $af['whatsapp'], '000.000.000-00']);
+        $stmtRes = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, status, valor_total, data_reserva, is_bonus) VALUES (?, ?, ?, 'bonus', 0, NOW(), 1)");
+        $stmtRes->execute([$rifaId, $af['nome'], $af['whatsapp']]);
         $reservaId = $pdo->lastInsertId();
 
         // 5. Assign Number
-        $stmtNum = $pdo->prepare("INSERT INTO numeros (rifa_id, reserva_id, numero, status) VALUES (?, ?, ?, 'pago')");
-        $stmtNum->execute([$rifaId, $reservaId, $numero]);
+        $stmtNum = $pdo->prepare("UPDATE numeros SET status = 'bonus', reserva_id = ? WHERE rifa_id = ? AND numero = ? AND status = 'disponivel'");
+        $stmtNum->execute([$reservaId, $rifaId, $numero]);
+
+        if ($stmtNum->rowCount() === 0) {
+            throw new Exception("Não foi possível atribuir o número. Verifique se ele ainda está disponível.");
+        }
 
         // 6. Update Affiliate Cycle
         $pdo->prepare("UPDATE afiliados SET bonus_data_resgate = NOW() WHERE id = ?")->execute([$af['id']]);

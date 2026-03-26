@@ -1,3 +1,4 @@
+<?php require_once 'backend/config.php'; ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -8,7 +9,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="frontend/css/style.css">
-    <link rel="icon" type="image/png" href="frontend/png/cifrao.png">
+    <link rel="icon" type="image/png" href="frontend/png/cifrao_premium.png">
 </head>
 
 <body class="bg-gray-50 text-gray-800 font-sans pb-32">
@@ -18,7 +19,7 @@
         <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-black italic tracking-tighter" style="color: #00a650;">$UPER<span
                     style="color: #2c3e50;">$ORTE</span></h1>
-            <a href="index.html"
+            <a href="index.php"
                 class="text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full px-3 py-1.5 transition-colors flex items-center gap-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
@@ -31,7 +32,8 @@
 
     <!-- Main View -->
     <main class="max-w-md md:max-w-2xl mx-auto mt-6 px-4 mb-10">
-
+        <!-- ... (manter main) ... -->
+<?php /* O corpo do main continua igual */ ?>
         <div class="text-center mb-10 mt-6">
             <h2 class="text-2xl md:text-3xl font-black text-[#2c3e50] tracking-tight mb-2">🏅 Galeria de Ganhadores</h2>
             <p class="text-sm text-gray-500 font-medium">Veja quem já teve a chance de mudar de vida com nossos
@@ -55,11 +57,11 @@
 
     </main>
 
-    <!-- Navigation Bar -->
+    <!-- Navigation Bar (Bottom App Style) -->
     <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 z-50 px-6 py-2 pb-4">
         <div class="max-w-md md:max-w-2xl mx-auto flex justify-around items-center">
-            <a href="index.html"
-                class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+            <!-- Home -->
+            <a href="index.php" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path
                         d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z">
@@ -67,17 +69,14 @@
                 </svg>
                 <span class="text-[10px] font-bold">Início</span>
             </a>
-            <a href="meus_pedidos.html"
+            <!-- Pedidos -->
+            <a href="meus_pedidos.php"
                 class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                 </svg>
                 <span class="text-[10px] font-bold">Meus Nros</span>
-            </a>
-            <a href="#" id="link-ajuda-nav" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <span class="text-[10px] font-bold">Ajuda</span>
             </a>
         </div>
     </nav>

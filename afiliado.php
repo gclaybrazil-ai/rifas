@@ -152,7 +152,7 @@ try {
                     <button type="button" id="btn-forgot"
                         class="text-[10px] font-black text-purple-600 uppercase tracking-widest hover:underline">Esqueci
                         minha senha</button>
-                    <a href="index.html"
+                    <a href="index.php"
                         class="text-center text-[11px] text-gray-400 underline hover:text-gray-600">Voltar para a
                         Loja</a>
                 </div>
@@ -418,9 +418,10 @@ try {
                 </div>
                 <div>
                     <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Escolha seu Número</label>
-                    <input type="number" id="redeem-numero" name="numero"
-                        class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold outline-none"
-                        placeholder="Ex: 00">
+                    <select id="redeem-numero" name="numero"
+                        class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm font-bold outline-none">
+                        <option value="">Selecione a rifa primeiro</option>
+                    </select>
                 </div>
 
                 <button type="submit" id="btn-confirm-redeem"
@@ -803,6 +804,32 @@ try {
             }
 
             document.getElementById('modal-redeem').classList.remove('hidden');
+            loadAvailableNumbers(); // Carrega números da primeira rifa selecionada
+        }
+
+        // Event listener para carregar números quando mudar a rifa
+        document.getElementById('redeem-rifa').addEventListener('change', loadAvailableNumbers);
+
+        async function loadAvailableNumbers() {
+            const rifaId = document.getElementById('redeem-rifa').value;
+            const numSelect = document.getElementById('redeem-numero');
+            numSelect.innerHTML = '<option value="">Carregando...</option>';
+
+            try {
+                const res = await fetch(`${API}?action=get_available_numbers&rifa_id=${rifaId}`);
+                const data = await res.json();
+                
+                numSelect.innerHTML = '';
+                if (data.numbers && data.numbers.length > 0) {
+                    data.numbers.forEach(n => {
+                        numSelect.innerHTML += `<option value="${n}">${n}</option>`;
+                    });
+                } else {
+                    numSelect.innerHTML = '<option value="">Nenhum número disponível</option>';
+                }
+            } catch (e) {
+                numSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
         }
 
         async function redeemBonus() {

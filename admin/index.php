@@ -183,6 +183,8 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                     class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-gray-200 text-gray-700">Todos</button>
                 <button onclick="setStatusFilter('pago')" id="tab-pago"
                     class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Pagos</button>
+                <button onclick="setStatusFilter('bonus')" id="tab-bonus"
+                    class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Bônus</button>
                 <button onclick="setStatusFilter('pendente')" id="tab-pendente"
                     class="status-tab px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all bg-white border border-gray-200 text-gray-500">Pendentes</button>
                 <button onclick="setStatusFilter('expirado')" id="tab-expirado"
@@ -1515,6 +1517,15 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
         function playBeep() { soundBeep.play().catch(e => {}); }
         function playAlarm() { soundAlarm.play().catch(e => {}); }
  
+        function formatWhatsApp(phone) {
+            if(!phone) return '';
+            let p = String(phone).replace(/\D/g, '');
+            if (p.startsWith('55')) p = p.substring(2);
+            if (p.length === 11) return `(${p.substring(0, 2)}) ${p.substring(2, 7)}-${p.substring(7)}`;
+            if (p.length === 10) return `(${p.substring(0, 2)}) ${p.substring(2, 6)}-${p.substring(6)}`;
+            return phone;
+        }
+ 
         function initPeaksChart(data) {
             const ctx = document.getElementById('security-peaks-chart').getContext('2d');
             if (peaksChart) {
@@ -1755,9 +1766,13 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
 
                     let bgStatus = 'bg-gray-100 text-gray-600';
                     let timerHtml = '';
-
-                    if (r.status === 'pago') bgStatus = 'bg-purple-100 text-purple-700';
-                    else if (r.status === 'pendente') {
+                    let dispStatus = r.status ? r.status.toUpperCase() : 'N/A';
+                    if (r.is_bonus == '1') {
+                        bgStatus = 'bg-green-100 text-green-700'; // Cor diferente para bônus
+                        dispStatus = 'BÔNUS';
+                    } else if (r.status === 'pago') {
+                        bgStatus = 'bg-purple-100 text-purple-700';
+                    } else if (r.status === 'pendente') {
                         bgStatus = 'bg-yellow-100 text-yellow-700';
                         // Calc expiry
                         const dataReserva = new Date(r.data_reserva_iso).getTime();
@@ -1782,10 +1797,10 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                         <td class="p-4 align-top text-gray-700 font-semibold text-sm">
                             <span class="bg-gray-100 border border-gray-200 px-2 py-1 rounded inline-block truncate max-w-[150px]" title="${r.nome}">${r.nome}</span>
                         </td>
-                        <td class="p-4 font-mono text-xs text-[#00a650] align-top whitespace-nowrap">${r.whatsapp}</td>
+                        <td class="p-4 font-mono text-xs text-[#00a650] align-top whitespace-nowrap">${formatWhatsApp(r.whatsapp)}</td>
                         <td class="p-4 text-sm font-bold text-gray-700 align-top">${parseFloat(r.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         <td class="p-4 align-top">
-                            <span class="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider ${bgStatus}">${r.status}</span>
+                            <span class="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider ${bgStatus}">${dispStatus}</span>
                             ${timerHtml}
                         </td>
                         <td class="p-4 text-right align-top">${btn}</td>
@@ -1912,10 +1927,12 @@ if (!isset($_SESSION['admin_logged']) || $_SESSION['admin_logged'] !== true) {
                 tab.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-500');
             });
 
-            const activeId = status === '' ? 'tab-all' : `tab-${status}`;
+            const activeId = (status === '' ? 'tab-all' : `tab-${status}`);
             const activeTab = document.getElementById(activeId);
-            activeTab.classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-500');
-            activeTab.classList.add('bg-gray-200', 'text-gray-700');
+            if (activeTab) {
+                activeTab.classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-500');
+                activeTab.classList.add('bg-gray-200', 'text-gray-700');
+            }
 
             fetchStats();
         }

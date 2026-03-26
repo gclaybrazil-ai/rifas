@@ -120,12 +120,14 @@ try {
     )");
  
     // IP Blocking Security Check (Now using established $pdo and after table creation)
-    $client_ip = $_SERVER['REMOTE_ADDR'];
-    $stmtBanned = $pdo->prepare("SELECT id FROM banidos WHERE ip = ?");
-    $stmtBanned->execute([$client_ip]);
-    if ($stmtBanned->fetch()) {
-        http_response_code(403);
-        die("<div style='font-family:sans-serif; text-align:center; padding:50px;'><h1 style='color:#e74c3c;'>ACESSO BLOQUEADO 🚫</h1><p>Seu endereço IP ($client_ip) foi bloqueado por motivos de segurança.</p><p>Se acredita que isso é um erro, entre em contato com o suporte.</p></div>");
+    if (isset($_SERVER['REMOTE_ADDR'])) {
+        $client_ip = $_SERVER['REMOTE_ADDR'];
+        $stmtBanned = $pdo->prepare("SELECT id FROM banidos WHERE ip = ?");
+        $stmtBanned->execute([$client_ip]);
+        if ($stmtBanned->fetch()) {
+            http_response_code(403);
+            die("<div style='font-family:sans-serif; text-align:center; padding:50px;'><h1 style='color:#e74c3c;'>ACESSO BLOQUEADO 🚫</h1><p>Seu endereço IP ($client_ip) foi bloqueado por motivos de segurança.</p><p>Se acredita que isso é um erro, entre em contato com o suporte.</p></div>");
+        }
     }
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS assistant_messages (
@@ -409,7 +411,7 @@ function checkLocationChallenge($user_type, $user_id, $email, $nome, $lat = null
 // Track online activity
 if (session_status() === PHP_SESSION_NONE) session_start();
 $sessao_id = session_id();
-if (!empty($sessao_id)) {
+if (!empty($sessao_id) && isset($_SERVER['REMOTE_ADDR'])) {
     $ip_track = $_SERVER['REMOTE_ADDR'];
     $pagina_track = $_SERVER['REQUEST_URI'] ?? '/';
     $user_id_track = $_SESSION['afiliado_id'] ?? null;
@@ -449,6 +451,69 @@ function validatePasswordComplexity($password) {
     }
 
     return true; // Valid
+}
+
+/**
+ * Função centralizada para registrar uma venda para um afiliado.
+ * Cuida de comissão, bônus de performance e reset de inatividade.
+ */
+function registrarVendaAfiliado($afId, $valorTotal, $rifaId, $reservaId = null) {
+    global $pdo;
+    if (!$afId || $afId <= 0) return false;
+
+    $numTickets = 1;
+    if ($reservaId) {
+        $stmtTickets = $pdo->prepare("SELECT COUNT(*) FROM numeros WHERE reserva_id = ?");
+        $stmtTickets->execute([$reservaId]);
+        $numTickets = (int)$stmtTickets->fetchColumn() ?: 1;
+    }
+
+    $logFile = __DIR__ . '/api/webhook_debug.txt';
+    $log = function($m) use ($logFile) { file_put_contents($logFile, "[" . date('H:i:s') . "] [AF_VENDAS] " . $m . PHP_EOL, FILE_APPEND); };
+
+    $log("Iniciando registro: AF=$afId, Valor=$valorTotal, Rifa=$rifaId, Reserva=$reservaId, Qtd=$numTickets");
+
+    try {
+        // 1. Calcular e Pagar Comissão
+        $stmtC = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'comissao_padrao'");
+        $pct = (float)($stmtC->fetchColumn() ?: 10);
+        $comission = round(($valorTotal * $pct) / 100, 2);
+        
+        $res1 = $pdo->prepare("UPDATE afiliados SET saldo = saldo + ?, total_ganho = total_ganho + ?, vendas_pagas = vendas_pagas + ? WHERE id = ?")
+            ->execute([$comission, $comission, $numTickets, $afId]);
+        
+        $log("Comissao R$ $comission paga. Qtd: $numTickets. (Execute: " . ($res1 ? 'OK' : 'FALHA') . ")");
+
+        // 2. Lógica de Bônus de Performance (7 vendas)
+        $stmtAf = $pdo->prepare("SELECT bonus_data_resgate, bonus_bloqueio_ate, bonus_vendas FROM afiliados WHERE id = ?");
+        $stmtAf->execute([$afId]);
+        $afData = $stmtAf->fetch(PDO::FETCH_ASSOC);
+
+        if ($afData) {
+            $now = new DateTime();
+            $isBlocked = $afData['bonus_bloqueio_ate'] && new DateTime($afData['bonus_bloqueio_ate']) > $now;
+            $isInCycle = $afData['bonus_data_resgate'] && (new DateTime($afData['bonus_data_resgate']))->modify('+30 days') > $now;
+
+            $log("Status Bonus: Blocked=" . ($isBlocked ? 'Y' : 'N') . ", InCycle=" . ($isInCycle ? 'Y' : 'N') . ", CurrentBonus=" . $afData['bonus_vendas']);
+
+            if (!$isBlocked && !$isInCycle) {
+                $resB = $pdo->prepare("UPDATE afiliados SET bonus_vendas = bonus_vendas + ? WHERE id = ?")->execute([$numTickets, $afId]);
+                $log("Contador de bonus incrementado em $numTickets. (Execute: " . ($resB ? 'OK' : 'FALHA') . ")");
+            } else {
+                $log("Bonus nao incrementado devido ao status de bloqueio ou ciclo ativo.");
+            }
+
+            // 3. Resetar contadores de inatividade
+            $resI = $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = 0, last_raffle_id_with_sale = ?, bonus_data_expulsao = NULL, bonus_notif_fase = 0 WHERE id = ?")
+                ->execute([$rifaId, $afId]);
+            $log("Inatividade resetada para Rifa $rifaId. (Execute: " . ($resI ? 'OK' : 'FALHA') . ")");
+        }
+
+        return true;
+    } catch (Exception $e) {
+        $log("ERRO FATAL: " . $e->getMessage());
+        return false;
+    }
 }
 function checkAffiliateInactivity() {
     global $pdo;

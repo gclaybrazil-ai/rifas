@@ -1,3 +1,4 @@
+<?php require_once 'backend/config.php'; ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -9,7 +10,7 @@
     <script src="https://sdk.mercadopago.com/js/v2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="frontend/css/style.css">
-    <link rel="icon" type="image/png" href="frontend/png/cifrao.png">
+    <link rel="icon" type="image/png" href="frontend/png/cifrao_premium.png">
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
@@ -20,7 +21,7 @@
     <header class="bg-white shadow">
         <div class="max-w-md md:max-w-2xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-black italic tracking-tighter" style="color: #00a650;">$UPER<span style="color: #2c3e50;">$ORTE</span></h1>
-            <a href="meus_pedidos.html" class="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors uppercase tracking-wider">
+            <a href="meus_pedidos.php" class="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors uppercase tracking-wider">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Voltar
             </a>
@@ -49,7 +50,7 @@
                 Entrar no Grupo VIP
             </a>
 
-            <button onclick="window.location.href='index.html'" class="bg-[#2c3e50] text-white font-bold py-4 px-6 rounded-xl hover:bg-gray-800 transition-colors uppercase text-sm w-full">Voltar ao Início</button>
+            <button onclick="window.location.href='index.php'" class="bg-[#2c3e50] text-white font-bold py-4 px-6 rounded-xl hover:bg-gray-800 transition-colors uppercase text-sm w-full">Voltar ao Início</button>
         </div>
 
         <!-- Checkout View -->
@@ -127,7 +128,7 @@
                 </div>
                 <h2 class="text-2xl font-black text-[#2c3e50] tracking-tight mb-2">Tempo Esgotado!</h2>
                 <p class="text-sm font-medium text-gray-500 mb-6">O tempo para pagamento desta reserva expirou e seus números foram liberados.</p>
-                <button onclick="window.location.href='index.html'" class="w-full bg-[#2c3e50] hover:bg-gray-800 text-white font-black py-4 rounded-xl shadow transition-all flex justify-center items-center gap-2 uppercase tracking-wide">
+                <button onclick="window.location.href='index.php'" class="w-full bg-[#2c3e50] hover:bg-gray-800 text-white font-black py-4 rounded-xl shadow transition-all flex justify-center items-center gap-2 uppercase tracking-wide">
                     Voltar ao Início
                 </button>
             </div>

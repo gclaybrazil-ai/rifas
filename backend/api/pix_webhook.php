@@ -85,28 +85,7 @@ try {
         
         $afId = !empty($reserva['afiliado_id']) ? intval($reserva['afiliado_id']) : 0;
         if ($afId > 0) {
-            $stmtC = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'comissao_padrao'");
-            $pct = (float)($stmtC->fetchColumn() ?: 10);
-            $comission = round(($reserva['valor_total'] * $pct) / 100, 2);
-            $pdo->prepare("UPDATE afiliados SET saldo = saldo + ?, total_ganho = total_ganho + ?, vendas_pagas = vendas_pagas + 1 WHERE id = ?")
-                ->execute([$comission, $comission, $afId]);
-
-            // Lógica de Bônus (7 vendas = 1 grátis)
-            $stmtAf = $pdo->prepare("SELECT bonus_data_resgate, bonus_bloqueio_ate FROM afiliados WHERE id = ?");
-            $stmtAf->execute([$afId]);
-            $afData = $stmtAf->fetch(PDO::FETCH_ASSOC);
-            
-            $now = new DateTime();
-            $isBlocked = $afData['bonus_bloqueio_ate'] && new DateTime($afData['bonus_bloqueio_ate']) > $now;
-            $isInCycle = $afData['bonus_data_resgate'] && (new DateTime($afData['bonus_data_resgate']))->modify('+30 days') > $now;
-
-            if (!$isBlocked && !$isInCycle) {
-                // Incrementa bônus apenas se livre de bloqueio e ciclo
-                $pdo->prepare("UPDATE afiliados SET bonus_vendas = bonus_vendas + 1 WHERE id = ?")->execute([$afId]);
-            }
-            // Independente de bônus, resetamos inatividade pois houve venda
-            $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = 0, last_raffle_id_with_sale = ? WHERE id = ?")
-                ->execute([$reserva['rifa_id'], $afId]);
+            registrarVendaAfiliado($afId, $reserva['valor_total'], $reserva['rifa_id'], $reserva['id']);
         }
         $pdo->commit();
 

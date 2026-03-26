@@ -1,3 +1,25 @@
+<?php
+require_once 'backend/config.php';
+$protocol = (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) ? $_SERVER['HTTP_X_FORWARDED_PROTO'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http"));
+$site_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+
+// --- SISTEMA DE REFERÊNCIA (AFILIADO) ---
+if (isset($_GET['ref']) && is_numeric($_GET['ref'])) {
+    // Salva ID e o Timestamp atual (ID|TIMESTAMP)
+    // Cookie de SESSÃO (expira ao fechar navegador)
+    $val = intval($_GET['ref']) . "|" . time();
+    setcookie('ref_afiliado', $val, 0, "/");
+} else {
+    // Se não tem ?ref= na URL, verificamos se o cliente veio de fora
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    $host = $_SERVER['HTTP_HOST'];
+    if (!empty($referer) && strpos($referer, $host) === false) {
+        setcookie('ref_afiliado', '', time() - 3600, "/");
+    } else if (empty($referer)) {
+        setcookie('ref_afiliado', '', time() - 3600, "/");
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -105,7 +127,7 @@
 
         <!-- Ganhadores Section -->
         <div id="ganhadores-section" class="mt-10 mb-4 hidden">
-            <a href="ganhadores.html" class="flex justify-between items-end mb-4 group">
+            <a href="ganhadores.php" class="flex justify-between items-end mb-4 group">
                 <h2 class="text-xl font-bold text-[#2c3e50] tracking-tight">Últimos Ganhadores</h2>
                 <span class="text-xs font-bold text-blue-500 group-hover:underline">Ver galeria &rarr;</span>
             </a>
@@ -185,11 +207,11 @@
             </div>
 
             <div class="flex justify-center gap-4 mb-4">
-                <a href="termos.html"
+                <a href="termos.php"
                     class="text-[10px] font-black text-gray-500 uppercase hover:text-gray-700 transition-colors">Termos
                     de Uso</a>
                 <span class="text-gray-300">|</span>
-                <a href="privacidade.html"
+                <a href="privacidade.php"
                     class="text-[10px] font-black text-gray-500 uppercase hover:text-gray-700 transition-colors">Política
                     de Privacidade</a>
             </div>
@@ -204,7 +226,7 @@
     <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 z-50 px-6 py-2 pb-4">
         <div class="max-w-md md:max-w-2xl mx-auto flex justify-around items-center">
             <!-- Home -->
-            <a href="index.html" class="flex flex-col items-center gap-1 text-[#00a650]">
+            <a href="index.php" class="flex flex-col items-center gap-1 text-[#00a650]">
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path
                         d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z">
@@ -213,7 +235,7 @@
                 <span class="text-[10px] font-bold">Início</span>
             </a>
             <!-- Pedidos -->
-            <a href="meus_pedidos.html"
+            <a href="meus_pedidos.php"
                 class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -328,7 +350,7 @@
                     <button id="btn-accept-cookies"
                         class="w-full bg-[#00a650] hover:bg-[#008c44] text-white font-black py-2.5 rounded-xl text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-md">Aceitar
                         e Continuar</button>
-                    <a href="privacidade.html"
+                    <a href="privacidade.php"
                         class="text-[9px] text-gray-400 font-bold uppercase hover:underline text-center">Ver
                         Políticas</a>
                 </div>

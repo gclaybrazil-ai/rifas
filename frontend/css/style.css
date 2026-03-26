@@ -49,8 +49,8 @@
     opacity: 0.9;
 }
 
-/* Status: Pago (Roxo) */
-.pago {
+/* Status: Pago (Roxo) e Bônus */
+.pago, .bonus {
     background-color: #8e44ad;
     color: white;
     cursor: not-allowed;

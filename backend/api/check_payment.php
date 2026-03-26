@@ -7,7 +7,7 @@ if (!$reserva_id) {
     die(json_encode(['error' => 'No ID provided']));
 }
 
-$stmt = $pdo->prepare("SELECT status, pix_txid FROM reservas WHERE id = ?");
+$stmt = $pdo->prepare("SELECT status, pix_txid, afiliado_id, valor_total, rifa_id FROM reservas WHERE id = ?");
 $stmt->execute([$reserva_id]);
 $res = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -41,6 +41,12 @@ if ($status === 'pendente') {
                     $pdo->prepare("UPDATE reservas SET status = 'pago' WHERE id = ?")->execute([$reserva_id]);
                     $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$reserva_id]);
                     $status = 'pago';
+
+                    // REGISTRAR AFILIADO
+                    $afId = !empty($res['afiliado_id']) ? intval($res['afiliado_id']) : 0;
+                    if ($afId > 0) {
+                        registrarVendaAfiliado($afId, $res['valor_total'], $res['rifa_id']);
+                    }
 
                     // --- WHATSAPP NOTIFICATION ---
                     try {
@@ -96,6 +102,12 @@ if ($status === 'pendente') {
                         $pdo->prepare("UPDATE reservas SET status = 'pago' WHERE id = ?")->execute([$reserva_id]);
                         $pdo->prepare("UPDATE numeros SET status = 'pago' WHERE reserva_id = ?")->execute([$reserva_id]);
                         $status = 'pago';
+
+                        // REGISTRAR AFILIADO
+                        $afId = !empty($res['afiliado_id']) ? intval($res['afiliado_id']) : 0;
+                        if ($afId > 0) {
+                            registrarVendaAfiliado($afId, $res['valor_total'], $res['rifa_id'], $reserva_id);
+                        }
 
                         // --- WHATSAPP NOTIFICATION ---
                         try {

@@ -1,8 +1,26 @@
 <?php
 require_once 'backend/config.php';
+$protocol = (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) ? $_SERVER['HTTP_X_FORWARDED_PROTO'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http"));
+$site_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+
+// --- SISTEMA DE REFERÊNCIA (AFILIADO) ---
+if (isset($_GET['ref']) && is_numeric($_GET['ref'])) {
+    // Salva ID e o Timestamp atual (ID|TIMESTAMP)
+    // Cookie de SESSÃO (expira ao fechar navegador)
+    $val = intval($_GET['ref']) . "|" . time();
+    setcookie('ref_afiliado', $val, 0, "/");
+} else {
+    // Se não tem ?ref= na URL, verificamos se o cliente veio de fora
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    $host = $_SERVER['HTTP_HOST'];
+    if (!empty($referer) && strpos($referer, $host) === false) {
+        setcookie('ref_afiliado', '', time() - 3600, "/");
+    } else if (empty($referer)) {
+        setcookie('ref_afiliado', '', time() - 3600, "/");
+    }
+}
+
 $id = intval($_GET['id'] ?? 0);
-$rifa = null;
-$baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . dirname($_SERVER['PHP_SELF']);
 
 if ($id <= 0) {
     header('Location: index.php');
@@ -29,8 +47,8 @@ $desc = $rifa ? 'Concorra a ' . $rifa['nome'] . ' por apenas R$ ' . number_forma
 
 // Robust image path logic
 $imgPath = ($rifa && !empty($rifa['imagem_url'])) ? $rifa['imagem_url'] : 'frontend/png/cifrao_premium.png';
-$image = $baseUrl . "/" . ltrim(str_replace(' ', '%20', $imgPath), '/');
-$raffleUrl = $baseUrl . "/rifa.php?id=" . $id;
+$image = $site_url . "/" . ltrim(str_replace(' ', '%20', $imgPath), '/');
+$raffleUrl = $site_url . "/rifa.php?id=" . $id;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

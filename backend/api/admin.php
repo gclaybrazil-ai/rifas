@@ -61,6 +61,7 @@ if ($action === 'stats') {
     
     if (isset($resStats['reservado'])) $stats['reservado'] = (int) $resStats['reservado'];
     if (isset($resStats['pago'])) $stats['pago'] = (int) $resStats['pago'];
+    if (isset($resStats['bonus'])) $stats['pago'] += (int) $resStats['bonus'];
 
     $stmtConfig = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'tempo_pagamento'");
     $tempo_pagamento = (int)($stmtConfig->fetchColumn() ?: 3);
@@ -87,9 +88,13 @@ if ($action === 'stats') {
     }
 
     if (!empty($statusFilter)) {
-        $where .= " AND r.status = ? ";
-        $paramsCount[] = $statusFilter;
-        $paramsData[] = $statusFilter;
+        if ($statusFilter === 'bonus') {
+            $where .= " AND r.status = 'bonus' ";
+        } else {
+            $where .= " AND r.status = ? ";
+            $paramsCount[] = $statusFilter;
+            $paramsData[] = $statusFilter;
+        }
     }
 
     // Total de reservas para paginação
@@ -370,32 +375,7 @@ if ($action === 'stats') {
             // Lógica de Comissão de Afiliado
             if (!empty($reserva['afiliado_id'])) {
                 $afId = intval($reserva['afiliado_id']);
-                $valorTotal = (float)$reserva['valor_total'];
-                
-                // Busca % de comissão
-                $stmtC = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'comissao_padrao'");
-                $comissionPct = (float)($stmtC->fetchColumn() ?: 10.00);
-                $comissao = round(($valorTotal * $comissionPct) / 100, 2);
-                
-                // Atualiza saldo do afiliado
-                $pdo->prepare("UPDATE afiliados SET saldo = saldo + ?, total_ganho = total_ganho + ?, vendas_pagas = vendas_pagas + 1 WHERE id = ?")
-                    ->execute([$comissao, $comissao, $afId]);
-
-                // --- NOVA LOGICA DE BONUS NO ADMIN ---
-                $stmtAf = $pdo->prepare("SELECT bonus_data_resgate, bonus_bloqueio_ate FROM afiliados WHERE id = ?");
-                $stmtAf->execute([$afId]);
-                $afData = $stmtAf->fetch(PDO::FETCH_ASSOC);
-
-                $now = new DateTime();
-                $isBlocked = $afData['bonus_bloqueio_ate'] && new DateTime($afData['bonus_bloqueio_ate']) > $now;
-                $isInCycle = $afData['bonus_data_resgate'] && (new DateTime($afData['bonus_data_resgate']))->modify('+30 days') > $now;
-
-                if (!$isBlocked && !$isInCycle) {
-                    $pdo->prepare("UPDATE afiliados SET bonus_vendas = bonus_vendas + 1 WHERE id = ?")->execute([$afId]);
-                }
-                // Reset inatividade
-                $pdo->prepare("UPDATE afiliados SET bonus_concursos_inativos = 0, last_raffle_id_with_sale = ? WHERE id = ?")
-                    ->execute([$reserva['rifa_id'], $afId]);
+                registrarVendaAfiliado($afId, $reserva['valor_total'], $reserva['rifa_id'], $id);
             }
 
             $pdo->commit();

@@ -69,11 +69,7 @@ try {
         
         $afId = !empty($reserva['afiliado_id']) ? intval($reserva['afiliado_id']) : 0;
         if ($afId > 0) {
-            $stmtC = $pdo->query("SELECT valor FROM configuracoes WHERE chave = 'comissao_padrao'");
-            $pct = (float)($stmtC->fetchColumn() ?: 10);
-            $comission = round(($total * $pct) / 100, 2);
-            $pdo->prepare("UPDATE afiliados SET saldo = saldo + ?, total_ganho = total_ganho + ?, vendas_pagas = vendas_pagas + 1 WHERE id = ?")
-                ->execute([$comission, $comission, $afId]);
+            registrarVendaAfiliado($afId, $total, $rifa_id, $reserva_id);
         }
         $pdo->commit();
 

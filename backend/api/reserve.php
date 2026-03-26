@@ -8,7 +8,24 @@ $rifa_id = isset($data['rifa_id']) ? intval($data['rifa_id']) : 1;
 $nome = $data['nome'] ?? '';
 $whatsapp = $data['whatsapp'] ?? '';
 $numerosSelecionados = $data['numeros'] ?? [];
-$afiliado_id = isset($data['afiliado_id']) && is_numeric($data['afiliado_id']) ? intval($data['afiliado_id']) : null;
+// Busca o afiliado prioritariamente pelo cookie (Regra de sessão + limite de 24h)
+$afiliado_id = null;
+if (isset($_COOKIE['ref_afiliado'])) {
+    $parts = explode('|', $_COOKIE['ref_afiliado']);
+    if (count($parts) === 2) {
+        $idAf = intval($parts[0]);
+        $timeAf = intval($parts[1]);
+        
+        // Só aceita se tiver sido clicado nas últimas 24 horas (86400 segundos)
+        if (time() - $timeAf <= 86400) {
+            $afiliado_id = $idAf;
+        }
+    }
+}
+// Fallback apenas se o cookie não existir ou for inválido (retrocompatibilidade)
+if (!$afiliado_id) {
+    $afiliado_id = isset($data['afiliado_id']) && is_numeric($data['afiliado_id']) ? intval($data['afiliado_id']) : null;
+}
 $pay_method = $data['payment_method'] ?? 'pix';
 
 if(empty($nome) || empty($whatsapp) || empty($numerosSelecionados)) {
@@ -269,6 +286,12 @@ try {
     $stmt = $pdo->prepare("INSERT INTO reservas (rifa_id, nome, whatsapp, valor_total, data_reserva, status, pix_txid, pix_qrcode, pix_copiacola, valor_taxa, afiliado_id) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?)");
     $stmt->execute([$rifa_id, $nome, $whatsapp, $total, $finalStatus, $txid, $pix_qrcode, $pix_copiacola, $valor_taxa_calculada, $afiliado_id]);
     $reserva_id = $pdo->lastInsertId();
+
+    // --- NOVA LÓGICA: COMISSÃO E BÔNUS PARA PAGAMENTOS IMEDIATOS (CARTÃO) ---
+    if ($finalStatus === 'pago' && $afiliado_id > 0) {
+        registrarVendaAfiliado($afiliado_id, $total, $rifa_id);
+    }
+    // -----------------------------------------------------------------------
 
     // Atualizar números
     $numStatus = ($finalStatus === 'pago') ? 'pago' : 'reservado';

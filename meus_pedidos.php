@@ -1,3 +1,4 @@
+<?php require_once 'backend/config.php'; ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -19,7 +20,7 @@
     <header class="bg-white shadow">
         <div class="max-w-md md:max-w-2xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-black italic tracking-tighter" style="color: #00a650;">$UPER<span style="color: #2c3e50;">$ORTE</span></h1>
-            <a href="index.html" class="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors uppercase tracking-wider">
+            <a href="index.php" class="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors uppercase tracking-wider">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Voltar
             </a>
@@ -89,14 +90,13 @@
 
     </main>
 
-    <!-- Navigation Bar (Botton App Style) -->
     <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 z-50 px-6 py-2 pb-4">
         <div class="max-w-md md:max-w-2xl mx-auto flex justify-around items-center">
-            <a href="index.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
+            <a href="index.php" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors">
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
                 <span class="text-[10px] font-bold">Início</span>
             </a>
-            <a href="meus_pedidos.html" class="flex flex-col items-center gap-1 text-[#00a650]">
+            <a href="meus_pedidos.php" class="flex flex-col items-center gap-1 text-[#00a650]">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                 <span class="text-[10px] font-bold">Meus Nros</span>
             </a>
@@ -284,7 +284,7 @@
                     if(isPendente) {
                         statusBadge = `<span class="bg-yellow-100 text-yellow-700 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-yellow-200" id="badge-pendente-${item.reserva_id}" data-remaining="${item.remaining_seconds}">Aguardando Pagamento ⏳</span>`;
                         actionHtml = `
-                            <button onclick="window.location.href='checkout.html?id=${item.reserva_id}'" class="w-full bg-[#00a650] hover:bg-[#009647] hover:shadow-lg hover:-translate-y-0.5 text-white font-black py-4 rounded-xl shadow transition-all flex justify-center items-center gap-2 text-sm uppercase cursor-pointer">
+                            <button onclick="window.location.href='checkout.php?id=${item.reserva_id}'" class="w-full bg-[#00a650] hover:bg-[#009647] hover:shadow-lg hover:-translate-y-0.5 text-white font-black py-4 rounded-xl shadow transition-all flex justify-center items-center gap-2 text-sm uppercase cursor-pointer">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                                 Efetuar Pagamento
                             </button>

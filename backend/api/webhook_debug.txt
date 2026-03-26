@@ -1,0 +1,102 @@
+[2026-03-26 14:03:35] WEBHOOK RECEBIDO: {"txid":"TEST_TXID_1774530215","status":"CONCLUIDA"}
+ORIGEM: unknown | TXID: TEST_TXID_1774530215
+[10:03:35] [AF_VENDAS] Iniciando registro: AF=1, Valor=10.00, Rifa=1
+[10:03:35] [AF_VENDAS] Comissao R$ 1 paga. (Execute: OK)
+[10:03:35] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=3
+[10:03:35] [AF_VENDAS] Contador de bonus incrementado. (Execute: OK)
+[10:03:35] [AF_VENDAS] Inatividade resetada para Rifa 1. (Execute: OK)
+[10:09:36] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.11, Rifa=14
+[10:09:36] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[10:09:36] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=4
+[10:09:36] [AF_VENDAS] Contador de bonus incrementado. (Execute: OK)
+[10:09:36] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[10:11:09] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.11, Rifa=14
+[10:11:09] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[10:11:09] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=5
+[10:11:09] [AF_VENDAS] Contador de bonus incrementado. (Execute: OK)
+[10:11:09] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[10:12:09] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.11, Rifa=14
+[10:12:09] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[10:12:09] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=6
+[10:12:09] [AF_VENDAS] Contador de bonus incrementado. (Execute: OK)
+[10:12:09] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[10:14:07] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.11, Rifa=14
+[10:14:07] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[10:14:07] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=7
+[10:14:07] [AF_VENDAS] Contador de bonus incrementado. (Execute: OK)
+[10:14:07] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[10:15:10] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.13, Rifa=14
+[10:15:10] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[10:15:10] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=8
+[10:15:10] [AF_VENDAS] Contador de bonus incrementado. (Execute: OK)
+[10:15:10] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:08:26] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.11, Rifa=14
+[11:08:26] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[11:08:26] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=Y, CurrentBonus=9
+[11:08:26] [AF_VENDAS] Bonus nao incrementado devido ao status de bloqueio ou ciclo ativo.
+[11:08:26] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:09:04] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.13, Rifa=14
+[11:09:04] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[11:09:04] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=Y, CurrentBonus=9
+[11:09:04] [AF_VENDAS] Bonus nao incrementado devido ao status de bloqueio ou ciclo ativo.
+[11:09:04] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:11:05] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.11, Rifa=14
+[11:11:05] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[11:11:05] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=Y, CurrentBonus=9
+[11:11:05] [AF_VENDAS] Bonus nao incrementado devido ao status de bloqueio ou ciclo ativo.
+[11:11:05] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:12:14] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.11, Rifa=14
+[11:12:14] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[11:12:14] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=Y, CurrentBonus=1
+[11:12:14] [AF_VENDAS] Bonus nao incrementado devido ao status de bloqueio ou ciclo ativo.
+[11:12:14] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:14:01] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.11, Rifa=14
+[11:14:01] [AF_VENDAS] Comissao R$ 0.11 paga. (Execute: OK)
+[11:14:01] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=0
+[11:14:01] [AF_VENDAS] Contador de bonus incrementado. (Execute: OK)
+[11:14:01] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:14:51] [AF_VENDAS] Iniciando registro: AF=1, Valor=6.67, Rifa=14
+[11:14:51] [AF_VENDAS] Comissao R$ 0.67 paga. (Execute: OK)
+[11:14:51] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=1
+[11:14:51] [AF_VENDAS] Contador de bonus incrementado. (Execute: OK)
+[11:14:51] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:16:20] [AF_VENDAS] Iniciando registro: AF=1, Valor=2.22, Rifa=14
+[11:16:20] [AF_VENDAS] Comissao R$ 0.22 paga. (Execute: OK)
+[11:16:20] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=2
+[11:16:20] [AF_VENDAS] Contador de bonus incrementado. (Execute: OK)
+[11:16:20] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:24:22] [AF_VENDAS] Iniciando registro: AF=1, Valor=4.44, Rifa=14, Reserva=163, Qtd=4
+[11:24:22] [AF_VENDAS] Comissao R$ 0.44 paga. Qtd: 4. (Execute: OK)
+[11:24:22] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=3
+[11:24:22] [AF_VENDAS] Contador de bonus incrementado em 4. (Execute: OK)
+[11:24:22] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:26:40] [AF_VENDAS] Iniciando registro: AF=1, Valor=3.33, Rifa=14, Reserva=165, Qtd=3
+[11:26:40] [AF_VENDAS] Comissao R$ 0.33 paga. Qtd: 3. (Execute: OK)
+[11:26:40] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=Y, CurrentBonus=7
+[11:26:40] [AF_VENDAS] Bonus nao incrementado devido ao status de bloqueio ou ciclo ativo.
+[11:26:40] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:31:55] [AF_VENDAS] Iniciando registro: AF=1, Valor=7.78, Rifa=14, Reserva=166, Qtd=7
+[11:31:55] [AF_VENDAS] Comissao R$ 0.78 paga. Qtd: 7. (Execute: OK)
+[11:31:55] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=0
+[11:31:55] [AF_VENDAS] Contador de bonus incrementado em 7. (Execute: OK)
+[11:31:55] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:34:08] [AF_VENDAS] Iniciando registro: AF=1, Valor=11.11, Rifa=14, Reserva=168, Qtd=10
+[11:34:08] [AF_VENDAS] Comissao R$ 1.11 paga. Qtd: 10. (Execute: OK)
+[11:34:08] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=7
+[11:34:08] [AF_VENDAS] Contador de bonus incrementado em 10. (Execute: OK)
+[11:34:08] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:35:02] [AF_VENDAS] Iniciando registro: AF=1, Valor=11.11, Rifa=14, Reserva=169, Qtd=10
+[11:35:02] [AF_VENDAS] Comissao R$ 1.11 paga. Qtd: 10. (Execute: OK)
+[11:35:02] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=0
+[11:35:02] [AF_VENDAS] Contador de bonus incrementado em 10. (Execute: OK)
+[11:35:02] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:35:41] [AF_VENDAS] Iniciando registro: AF=1, Valor=2.22, Rifa=14, Reserva=170, Qtd=2
+[11:35:41] [AF_VENDAS] Comissao R$ 0.22 paga. Qtd: 2. (Execute: OK)
+[11:35:41] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=N, CurrentBonus=10
+[11:35:41] [AF_VENDAS] Contador de bonus incrementado em 2. (Execute: OK)
+[11:35:41] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)
+[11:44:19] [AF_VENDAS] Iniciando registro: AF=1, Valor=1.11, Rifa=14, Reserva=, Qtd=1
+[11:44:19] [AF_VENDAS] Comissao R$ 0.11 paga. Qtd: 1. (Execute: OK)
+[11:44:19] [AF_VENDAS] Status Bonus: Blocked=N, InCycle=Y, CurrentBonus=12
+[11:44:19] [AF_VENDAS] Bonus nao incrementado devido ao status de bloqueio ou ciclo ativo.
+[11:44:19] [AF_VENDAS] Inatividade resetada para Rifa 14. (Execute: OK)

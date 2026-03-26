@@ -1,3 +1,4 @@
+<?php require_once 'backend/config.php'; ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,13 +7,14 @@
     <title>Termos de Uso - $UPER$ORTE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="frontend/png/cifrao_premium.png">
     <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased pb-20">
     <header class="bg-white shadow sticky top-0 z-40">
         <div class="max-w-md md:max-w-2xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-xl font-black italic tracking-tighter" style="color: #00a650;">$UPER<span style="color: #2c3e50;">$ORTE</span></h1>
-            <a href="index.html" class="text-xs font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition-colors uppercase tracking-wider">Voltar</a>
+            <a href="index.php" class="text-xs font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition-colors uppercase tracking-wider">Voltar</a>
         </div>
     </header>
 

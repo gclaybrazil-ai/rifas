@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if(!id) {
         alert("ID de Reserva Inválido");
-        window.location.href = 'index.html';
+        window.location.href = 'index.php';
         return;
     }
 
@@ -198,12 +198,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } else {
             alert(json.error || "Reserva não encontrada");
-            window.location.href = 'index.html';
+            window.location.href = 'index.php';
         }
     } catch(err) {
         alert("Erro na conexão");
         console.error(err);
-        window.location.href = 'index.html';
+        window.location.href = 'index.php';
     }
 
     // copy btn
