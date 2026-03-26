@@ -109,6 +109,25 @@ if (isset($_GET['ref']) && is_numeric($_GET['ref'])) {
 
     <main class="max-w-md md:max-w-2xl mx-auto px-4 mt-6">
 
+        <!-- Banner Criar Rifa -->
+        <a href="vender.php" class="relative block bg-gradient-to-r from-gray-900 to-green-900 rounded-[1.8rem] p-6 text-white shadow-xl overflow-hidden mb-8 transform hover:scale-[1.02] transition-all group">
+            <div class="absolute right-0 top-0 opacity-10 transform scale-150 rotate-12 -mr-4 -mt-4 group-hover:rotate-6 transition-transform">
+                <img src="frontend/png/cifrao_premium.png" class="w-32 brightness-200 grayscale">
+            </div>
+            <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="text-center md:text-left">
+                    <h3 class="text-lg font-black uppercase italic tracking-tight italic">Quer criar sua própria rifa?</h3>
+                    <p class="text-[10px] opacity-60 font-medium uppercase tracking-widest mt-1 italic">Comece a vender agora e receba direto na sua conta!</p>
+                </div>
+                <div class="bg-white text-gray-900 font-black px-6 py-2 rounded-xl text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2">
+                    Saiba Mais
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </div>
+            </div>
+        </a>
+
         <!-- Welcome / CTA section -->
         <div class="mb-6 flex justify-between items-end">
             <div>
