@@ -166,7 +166,7 @@ try {
                                     <tr class="hover:bg-gray-50 transition-colors">
                                         <td class="px-8 py-5">
                                             <p class="text-xs font-black text-gray-800 uppercase italic mb-1"><?php echo htmlspecialchars($r['titulo']); ?></p>
-                                            <p class="text-[9px] text-gray-400 uppercase font-bold tracking-widest">TOKEN: <?php echo bin2hex(random_bytes(4)); ?></p>
+                                            <p class="text-[9px] text-gray-400 uppercase font-bold tracking-widest">ID: #<?php echo str_pad($r['id'], 6, '0', STR_PAD_LEFT); ?></p>
                                         </td>
                                         <td class="px-8 py-5">
                                             <?php if (($r['status'] ?? '') === 'ativa'): ?>

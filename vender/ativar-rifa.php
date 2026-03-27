@@ -126,18 +126,49 @@ else $taxa = 7.00;
                         <img id="qr_img" src="" class="w-full h-full mix-blend-multiply">
                     </div>
                     <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">PIX Copia e Cola / Chave:</p>
-                    <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 mb-8 flex items-center justify-between gap-4">
+                    <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 mb-4 flex items-center justify-between gap-4">
                         <p id="pix_key" class="text-gray-800 font-bold text-[10px] truncate">Gerando...</p>
                         <button onclick="copyPix()" class="bg-[#00a650] text-white px-4 py-2 rounded-xl text-[8px] font-black uppercase transition-all active:scale-95">Copiar</button>
                     </div>
-                    <a href="https://wa.me/<?php echo $zap_master; ?>?text=Envio+comprovante+rifa+ID+<?php echo $r_id; ?>+Valor+R%24+<?php echo number_format($taxa, 2, ',', '.'); ?>" class="block w-full text-center bg-[#00a650] text-white font-black py-5 rounded-2xl shadow-xl hover:bg-[#009647] transition-all transform hover:-translate-y-1 uppercase tracking-widest text-[10px]">
-                        Enviar Comprovante
-                    </a>
+
+                    <!-- Botão "Já Paguei" (aparece apenas para PIX manual) -->
+                    <button id="ja_paguei_btn" onclick="jaPaguei()" class="hidden w-full mb-3 text-center bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-blue-700 transition-all uppercase tracking-widest text-[10px]">
+                        ✅ Já Paguei — Enviar Comprovante
+                    </button>
+
+                    <?php if (($_SESSION['usuario_role'] ?? '') === 'admin'): ?>
+                    <!-- Ativação Direta (Admin) -->
+                    <form onsubmit="return ativarDireto(event)" class="mb-3">
+                        <input type="hidden" name="rifa_id" value="<?php echo $r_id; ?>">
+                        <button type="submit" class="w-full text-center bg-yellow-500 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-yellow-600 transition-all uppercase tracking-widest text-[10px]">
+                            ⚡ Ativar Agora (Admin)
+                        </button>
+                    </form>
+                    <script>
+                        async function ativarDireto(e) {
+                            e.preventDefault();
+                            const fd = new FormData(e.target);
+                            const res = await fetch('backend/api/ativar_manual.php', { method: 'POST', body: fd });
+                            const data = await res.json();
+                            if (data.success) {
+                                Swal.fire({ icon: 'success', title: '✅ Ativado!', text: 'Rifa ativada com sucesso!', background: '#1a1a1a', color: '#fff', confirmButtonColor: '#00a650' })
+                                    .then(() => window.location.href = 'dashboard.php');
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Erro', text: data.error, background: '#1a1a1a', color: '#fff', confirmButtonColor: '#00a650' });
+                            }
+                            return false;
+                        }
+                    </script>
+                    <?php endif; ?>
+
+                    <p class="text-center text-[9px] text-gray-400 italic mt-2">Aguardando confirmação automática...</p>
                 </div>
 
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
                 <script>
                     let statusInterval = null;
+                    let mpPaymentId    = '';
+                    const rifaId       = <?php echo $r_id; ?>;
 
                     async function gerarPix() {
                         const btn = document.getElementById('btn_gerar');
@@ -147,58 +178,85 @@ else $taxa = 7.00;
                             const response = await fetch('backend/api/gerar_pix_ativacao.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ rifa_id: <?php echo $r_id; ?> })
+                                body: JSON.stringify({ rifa_id: rifaId })
                             });
                             const data = await response.json();
                             if (data.success) {
+                                mpPaymentId = data.payment_id || '';
                                 document.getElementById('pix_area').classList.remove('hidden');
                                 document.getElementById('pix_key').innerText = data.copy_paste;
-                                document.getElementById('qr_img').src = data.qr_code.startsWith('http') ? data.qr_code : 'data:image/png;base64,' + data.qr_code;
+                                document.getElementById('qr_img').src = data.qr_code
+                                    ? (data.qr_code.startsWith('http') ? data.qr_code : 'data:image/png;base64,' + data.qr_code)
+                                    : 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.copy_paste);
                                 btn.remove();
-                                
-                                // Iniciar monitoramento automático (Live Update)
-                                startMonitoring();
+                                if (data.is_manual) {
+                                    document.getElementById('ja_paguei_btn').classList.remove('hidden');
+                                }
+                                startPolling();
                             } else {
-                                alert(data.error);
+                                Swal.fire({ icon: 'error', title: 'Erro', text: data.error, background: '#1a1a1a', color: '#fff', confirmButtonColor: '#00a650' });
                                 btn.disabled = false;
                                 btn.innerText = 'GERAR PIX DE ATIVAÇÃO';
                             }
                         } catch (e) {
-                            alert('Erro ao conectar ao servidor.');
+                            Swal.fire({ icon: 'error', title: 'Erro de Conexão', text: 'Servidor indisponível.', background: '#1a1a1a', color: '#fff', confirmButtonColor: '#00a650' });
                             btn.disabled = false;
                             btn.innerText = 'GERAR PIX DE ATIVAÇÃO';
                         }
                     }
 
-                    function startMonitoring() {
+                    // POLLING ATIVO — igual ao check_payment.php do sistema raiz
+                    // Consulta o MP diretamente, sem depender de webhook
+                    function startPolling() {
                         if (statusInterval) clearInterval(statusInterval);
                         statusInterval = setInterval(async () => {
-                            const res = await fetch('backend/api/get_rifa_status.php?id=<?php echo $r_id; ?>');
-                            const data = await res.json();
-                            if (data.status === 'ativa') {
-                                clearInterval(statusInterval);
-                                Swal.fire({
-                                    icon: 'success', 
-                                    title: 'Pagamento Aprovado!', 
-                                    text: 'Sua rifa agora está ATIVA e pronta para vender!',
-                                    background: '#1a1a1a', 
-                                    color: '#fff',
-                                    confirmButtonColor: '#00a650'
-                                }).then(() => { window.location.href = 'dashboard.php'; });
-                            }
-                        }, 3000);
+                            try {
+                                const url = 'backend/api/check_ativacao.php?rifa_id=' + rifaId
+                                          + (mpPaymentId ? '&payment_id=' + mpPaymentId : '');
+                                const res  = await fetch(url);
+                                const data = await res.json();
+
+                                if (data.status === 'ativa') {
+                                    clearInterval(statusInterval);
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: '🎉 Pagamento Aprovado!',
+                                        text:  'Sua rifa agora está ATIVA e pronta para vender!',
+                                        background: '#1a1a1a',
+                                        color:  '#fff',
+                                        confirmButtonColor: '#00a650',
+                                        confirmButtonText:  'Ir para o Dashboard'
+                                    }).then(() => { window.location.href = 'dashboard.php'; });
+                                }
+                            } catch(e) {}
+                        }, 4000); // Verifica a cada 4 segundos
+                    }
+
+                    function jaPaguei() {
+                        const zap = '<?php echo $zap_master; ?>';
+                        const msg = encodeURIComponent('Olá! Paguei a ativação da Rifa ID <?php echo $r_id; ?> - R$ <?php echo number_format($taxa, 2, ',', '.'); ?>. Segue comprovante.');
+                        window.open('https://wa.me/' + zap + '?text=' + msg, '_blank');
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Aguardando Confirmação',
+                            html: 'Comprovante enviado ao suporte.<br><b>Assim que confirmado, sua rifa será ativada.</b>',
+                            background: '#1a1a1a', color: '#fff', confirmButtonColor: '#00a650'
+                        });
                     }
 
                     function copyPix() {
                         const text = document.getElementById('pix_key').innerText;
                         navigator.clipboard.writeText(text).then(() => {
                             const btn = event.target;
-                            const original = btn.innerText;
+                            const orig = btn.innerText;
                             btn.innerText = 'COPIADO!';
-                            setTimeout(() => btn.innerText = original, 2000);
+                            setTimeout(() => btn.innerText = orig, 2000);
                         });
                     }
                 </script>
+
+
+
 
                 <button id="btn_gerar" onclick="gerarPix()" 
                         class="relative z-10 block w-full text-center bg-[#00a650] text-white font-black py-5 rounded-2xl shadow-xl hover:bg-[#009647] transition-all transform hover:-translate-y-1 uppercase tracking-widest text-[11px]">

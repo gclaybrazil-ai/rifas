@@ -1,0 +1,14 @@
+[2026-03-26 21:07:40] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:07:44] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:07:48] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:07:52] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:07:56] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:08:00] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:08:04] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:08:08] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:08:12] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:08:16] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:08:20] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:08:24] check_ativacao: rifa=4 payment_id=151330739011 mp_status=pending
+[2026-03-26 21:08:28] check_ativacao: rifa=4 payment_id=151330739011 mp_status=approved
+✅ Rifa 4 ATIVADA via polling ativo!

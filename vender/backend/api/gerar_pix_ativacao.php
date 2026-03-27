@@ -51,18 +51,26 @@ if (empty($token) && empty($chave)) {
 
 // 3. Generate PIX
 if (!empty($token)) {
+    // Webhook URL dinâmica — usa o host atual (funciona com ngrok, domínio próprio, etc.)
+    $protocol    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host        = $_SERVER['HTTP_HOST'] ?? '';
+    $self        = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+    $api_dir     = dirname($self); // /clone130326/vender/backend/api
+    $webhook_url = $protocol . '://' . $host . $api_dir . '/webhook_ativacao.php';
+
     // Via Mercado Pago
     $payment_data = [
         "transaction_amount" => (float)$taxa,
-        "description" => "Ativação de Campanha SaaS - ID " . $rifa_id,
+        "description"        => "Ativação de Campanha SaaS - ID " . $rifa_id,
         "external_reference" => (string)$rifa_id,
-        "payment_method_id" => "pix",
+        "payment_method_id"  => "pix",
+        "notification_url"   => $webhook_url,
         "payer" => [
-            "email" => "pagamento@saas.com",
-            "first_name" => "Criador",
-            "last_name" => "SaaS",
+            "email"          => "pagamento@saas.com",
+            "first_name"     => "Criador",
+            "last_name"      => "SaaS",
             "identification" => [
-                "type" => "CPF",
+                "type"   => "CPF",
                 "number" => "19119119100"
             ]
         ]
@@ -89,8 +97,9 @@ if (!empty($token)) {
 
     if (isset($result['point_of_interaction']['transaction_data']['qr_code'])) {
         echo json_encode([
-            'success' => true,
-            'qr_code' => $result['point_of_interaction']['transaction_data']['qr_code_base64'] ?? '',
+            'success'    => true,
+            'payment_id' => $result['id'] ?? '',   // ID do pagamento para polling ativo
+            'qr_code'    => $result['point_of_interaction']['transaction_data']['qr_code_base64'] ?? '',
             'copy_paste' => $result['point_of_interaction']['transaction_data']['qr_code']
         ]);
     } else {

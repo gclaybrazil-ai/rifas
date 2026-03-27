@@ -334,14 +334,14 @@ $status_info = $status_map[$rifa['status']] ?? ['label' => strtoupper($rifa['sta
                             </svg>
                             Visualizar Demonstração
                         </button>
-                        <button onclick="copiarLink()"
-                            class="flex items-center gap-2 px-8 py-3 bg-[#00a650] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-[#009647] transition-all">
+                        <a href="ativar-rifa.php?id=<?php echo $r_id; ?>"
+                            class="flex-grow sm:flex-none flex items-center gap-2 px-8 py-3 bg-[#00a650] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-[#009647] transition-all transform hover:-translate-y-0.5"
+                            style="background-color:#00a650;">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                    d="M5 13l4 4L19 7" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                             </svg>
                             Publicar Campanha
-                        </button>
+                        </a>
                     </div>
                 </div>
 
